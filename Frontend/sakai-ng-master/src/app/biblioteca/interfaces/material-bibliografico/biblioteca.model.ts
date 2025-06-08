@@ -86,6 +86,7 @@ export interface DetalleBibliotecaDTO {
   usuarioModificacion?: string;
   fechaModificacion?: string;
   idEstado?: number;
+  biblioteca?: BibliotecaDTO;
 }
 
 export interface DetalleInput {
