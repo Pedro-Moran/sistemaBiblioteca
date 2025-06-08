@@ -67,7 +67,7 @@ import { Output, EventEmitter } from '@angular/core';
                         <div class="flex flex-col gap-4 w-full">
                         </div>
                       </div>
-                      <div class="flex flex-col md:flex-row gap-x-4 gap-y-2" *ngIf="formLibro.get('enSilabo')?.value?.length > 0">
+                      <div class="flex flex-col md:flex-row gap-x-4 gap-y-2" *ngIf="formLibro.get('enSilabo')?.value">
                         <div class="flex flex-col gap-2 w-full py-2">
                           <label class="font-semibold">Seleccione los ciclos:</label>
                           <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 gap-2">
@@ -87,7 +87,7 @@ import { Output, EventEmitter } from '@angular/core';
                       </div>
                       <div class="flex flex-col md:flex-row gap-x-4 gap-y-2">
                         <div class="flex flex-col gap-2 w-full"
-                          *ngIf="formLibro.get('formatoDigital')?.value != null && formLibro.get('formatoDigital')?.value.length > 0">
+                          *ngIf="formLibro.get('formatoDigital')?.value">
                           <label for="urlPublicacion">Link de Publicaci&oacute;n</label>
                           <input pInputText id="urlPublicacion" type="text" formControlName="urlPublicacion" />
                           <app-input-validation [form]="formLibro" modelo="urlPublicacion" ver="urlPublicacion"></app-input-validation>
@@ -284,7 +284,7 @@ import { Output, EventEmitter } from '@angular/core';
                               </div>
                               <app-input-validation [form]="formPortada" modelo="portada" ver="portada"></app-input-validation>
                             </div>
-                            <div class="flex flex-col gap-2 w-full" *ngIf="formPortada.get('portada')?.value.length>0">
+                            <div class="flex flex-col gap-2 w-full" *ngIf="formPortada.get('portada')?.value">
                               <label for="adjunto">Portada</label>
                               <p-fileupload #fu mode="basic" chooseLabel="Seleccionar" chooseIcon="pi pi-upload" name="adjunto"
                                 accept="image/*" maxFileSize="1000000" (onSelect)="onFileSelect($event)">
@@ -765,7 +765,7 @@ export class ModalLibroComponent implements OnInit {
 
     toggleCiclos() {
         const enSilabo = this.formLibro.get('enSilabo')?.value;
-        if (enSilabo.length == 0) {
+        if (!enSilabo) {
             this.ciclos.forEach(ciclo => {
                 this.formLibro.get(ciclo.formControl)?.setValue(false); // Desmarcar ciclos si enSilabo es false
             });
@@ -900,8 +900,8 @@ private buildDto(): BibliotecaDTO {
     notaGeneral        : libro.notaGeneral,
     numeroPaginas      : editorial.cantidad,
 
-    flasyllabus     : !!libro.enSilabo?.length,
-    fladigitalizado : !!libro.formatoDigital?.length,
+    flasyllabus     : !!libro.enSilabo,
+    fladigitalizado : !!libro.formatoDigital,
     linkPublicacion : libro.urlPublicacion,
 
     usuarioCreacion   : decoded.sub,

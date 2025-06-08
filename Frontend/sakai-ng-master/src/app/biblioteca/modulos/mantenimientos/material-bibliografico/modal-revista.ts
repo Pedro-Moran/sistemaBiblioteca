@@ -208,7 +208,7 @@ import { AuthService } from '../../../services/auth.service';
                   modelo="portada"
                   ver="portada"></app-input-validation>
 </div>
-<div class="flex flex-col gap-2 w-full" *ngIf="formPortada.get('portada')?.value.length>0">
+<div class="flex flex-col gap-2 w-full" *ngIf="formPortada.get('portada')?.value">
       <label for="adjunto">Portada</label>
       <p-fileupload
         #fu

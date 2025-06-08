@@ -196,7 +196,7 @@ import { TemplateModule } from '../../../template.module';
                             <label for="checkDevolver" class="ml-2">¿Desea devolver?</label>
                         </div>
 </div> 
-<div class="flex flex-col md:flex-row gap-x-4 gap-y-2" *ngIf="formOtroUsuario.get('devolver')?.value.length>0">
+<div class="flex flex-col md:flex-row gap-x-4 gap-y-2" *ngIf="formOtroUsuario.get('devolver')?.value">
 
 <div class="flex flex-col gap-2 w-full">
                       <label for="fechaDevolucion">Fecha de devoluci&oacute;n</label>
