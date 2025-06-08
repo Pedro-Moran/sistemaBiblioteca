@@ -770,6 +770,10 @@ export class ModalOtrosComponent implements OnInit {
             }
             nuevoEjemplar(){
                 this.formValidarDetalle();
+                if (this.tipoMaterialId) {
+                    const tipoObj = this.tipoMaterialLista.find(t => t.id === this.tipoMaterialId) ?? null;
+                    this.formDetalle.patchValue({ tipoMaterial: tipoObj });
+                }
                 this.displayEjemplar = true;
             }
             guardarEjemplar() {
