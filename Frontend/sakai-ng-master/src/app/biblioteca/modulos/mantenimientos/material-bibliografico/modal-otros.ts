@@ -225,7 +225,7 @@ import { AuthService } from '../../../services/auth.service';
                     <ng-template pTemplate="body" let-objeto>
                         <tr>
                             <td>
-                                {{objeto.sede.descripcion}}
+                                {{objeto.sede?.descripcion}}
                             </td>
                             <td>
                                 {{objeto.fechaIngreso}}
@@ -475,8 +475,6 @@ export class ModalOtrosComponent implements OnInit {
         const detalles: DetalleBibliotecaDTO[] = this.detalles.map(d => ({
             idDetalleBiblioteca: d.idDetalleBiblioteca ?? undefined,
             codigoSede: d.codigoSede ?? null,
-            tipoAdquisicionId: (d.tipoAdquisicion as any)?.id ?? d.tipoAdquisicionId ?? null,
-            tipoMaterialId: (d.tipoMaterial as any)?.id ?? d.tipoMaterialId ?? null,
             costo: d.costo ?? null,
             numeroFactura: d.numeroFactura ?? null,
             fechaIngreso: d.fechaIngreso ?? null,
@@ -734,20 +732,20 @@ export class ModalOtrosComponent implements OnInit {
                 rejectLabel: 'NO',
                 accept: () => {
                   const sedeId  = this.formDetalle.value.sede as number;
-                  const tipoMat = this.formDetalle.value.tipoMaterial as number;
-                  const tipoAdq = this.formDetalle.value.tipoAdquisicion as number;
+                  const tipoMat = this.formDetalle.value.tipoMaterial as number | null;
+                  const tipoAdq = this.formDetalle.value.tipoAdquisicion as number | null;
 
                   const detalle: DetalleDisplay = {
                     codigoSede:        sedeId,
-                    tipoMaterialId:    tipoMat,
-                    tipoAdquisicionId: tipoAdq,
+                    tipoMaterialId:    tipoMat ?? null,
+                    tipoAdquisicionId: tipoAdq ?? null,
                     costo:             null,
                     numeroFactura:     null,
                     fechaIngreso:      this.formatDateTime(this.formDetalle.value.fechaIngreso),
 
                     sede: this.sedesLista.find(s => s.id === sedeId) ?? null,
-                    tipoMaterial: this.tipoMaterialLista.find(t => t.id === tipoMat) ?? null,
-                    tipoAdquisicion: this.tipoAdquisicionLista.find(t => t.id === tipoAdq) ?? null,
+                    tipoMaterial: tipoMat ? this.tipoMaterialLista.find(t => t.id === tipoMat) ?? null : null,
+                    tipoAdquisicion: tipoAdq ? this.tipoAdquisicionLista.find(t => t.id === tipoAdq) ?? null : null,
                     idEstado: 1
                   };
 
