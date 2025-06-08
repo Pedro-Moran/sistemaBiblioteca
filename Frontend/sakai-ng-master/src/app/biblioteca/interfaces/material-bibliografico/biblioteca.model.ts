@@ -28,7 +28,7 @@ export interface BibliotecaDTO {
   tipoConteo?: number;
   numeroConteo?: string;
   numeroConteo2?: string;
-  edicion?: number;
+  edicion?: string;
   reimpresion?: number;
   descriptor?: string;
   notaContenido?: string;
@@ -53,7 +53,9 @@ export interface BibliotecaDTO {
   flasyllabus?: boolean;
   fladigitalizado?: boolean;
   linkPublicacion?: string;
-  numeroPaginas?: string;
+  numeroPaginas?: number;
+  /** Numero generado en BD */
+  numeroDeIngreso?: number;
   sedeId?: number;
   tipoAdquisicionId?: number;
   fechaIngreso?: string;
@@ -86,6 +88,8 @@ export interface DetalleBibliotecaDTO {
   usuarioModificacion?: string;
   fechaModificacion?: string;
   idEstado?: number;
+  /** Detalle puede venir anidado con datos de la biblioteca */
+  biblioteca?: BibliotecaDTO;
 }
 
 export interface DetalleInput {

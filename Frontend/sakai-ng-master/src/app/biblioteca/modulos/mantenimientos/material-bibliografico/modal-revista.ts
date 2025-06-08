@@ -623,7 +623,7 @@ export class ModalRevistaComponent implements OnInit {
       });
     });
 
-    if (this.formRevista.invalid || this.formDetalle.invalid) {
+    if (this.formRevista.invalid || this.detalles.length === 0) {
       this.messageService.add({severity:'warn', summary:'Campos obligatorios', detail:'Revisa los formularios'});
       return;
     }
@@ -656,7 +656,7 @@ export class ModalRevistaComponent implements OnInit {
     async ListaEspecialidad() {
         try {
             const result: any = await this.materialBibliograficoService.lista_especialidad('material-bibliografico/especialidad').toPromise();
-            if (result.status === "0") {
+            if (result.status == 0) {
                 console.log("dentro");
                 this.especialidadLista = result.data;
             }
@@ -721,7 +721,7 @@ export class ModalRevistaComponent implements OnInit {
     async ListaPeriodicidad() {
         try {
             const result: any = await this.materialBibliograficoService.lista_periodicidad('material-bibliografico/ciudad').toPromise();
-            if (result.status === "0") {
+            if (result.status == 0) {
                 this.periodicidadLista = result.data;
             }
         } catch (error) {
@@ -733,7 +733,7 @@ export class ModalRevistaComponent implements OnInit {
     async ListaDescripcionFisica() {
         try {
             const result: any = await this.materialBibliograficoService.lista_descripcion_fisica('material-bibliografico/ciudad').toPromise();
-            if (result.status === "0") {
+            if (result.status == 0) {
                 this.descripcionFisicaLista = result.data;
             }
         } catch (error) {
@@ -745,7 +745,7 @@ export class ModalRevistaComponent implements OnInit {
     async ListaAnioPublicacion() {
         try {
             const result: any = await this.materialBibliograficoService.lista_anio_publicacion('material-bibliografico/ciudad').toPromise();
-            if (result.status === "0") {
+            if (result.status == 0) {
                 this.anioPublicacionLista = result.data;
             }
         } catch (error) {
@@ -769,7 +769,7 @@ export class ModalRevistaComponent implements OnInit {
     async ListaTipoMaterial() {
         try {
             const result: any = await this.genericoService.sedes_get('api/equipos/sedes').toPromise();
-            if (result.status === "0") {
+            if (result.status == 0) {
                 this.tipoMaterialLista = result.data;
             }
         } catch (error) {
@@ -799,7 +799,7 @@ export class ModalRevistaComponent implements OnInit {
     async ListaDetalle() {
         try {console.log("detalle");
             const result: any = await this.materialBibliograficoService.lista_ejemplares('material-bibliografico/ciudad').toPromise();
-            if (result.status === "0") {
+            if (result.status == 0) {
                 this.detalles = result.data;
             }
         } catch (error) {
@@ -961,7 +961,7 @@ export class ModalRevistaComponent implements OnInit {
 
           return {
             /* ------ claves y datos propios de Biblioteca ------ */
-            id               : revista.id ?? null,
+            id               : revista.id > 0 ? revista.id : null,
             idEspecialidad   : revista.especialidad,
             paisId           : revista.pais,
             ciudadCodigo     : revista.ciudad,

@@ -873,7 +873,7 @@ private buildDto(): BibliotecaDTO {
 
   return {
     /* ------ claves y datos propios de Biblioteca ------ */
-    id               : libro.id ?? null,
+    id               : libro.id > 0 ? libro.id : null,
     idEspecialidad   : libro.especialidad,
     idiomaId         : editorial.idioma,
     paisId           : editorial.pais,
@@ -931,7 +931,7 @@ finalizar(): void {
       });
     });
 
-  if (this.formLibro.invalid || this.formEditorial.invalid || this.formDetalle.invalid) {
+  if (this.formLibro.invalid || this.formEditorial.invalid || this.detalles.length === 0) {
       this.messageService.add({severity:'warn', summary:'Campos obligatorios', detail:'Revisa los formularios'});
       return;
     }
@@ -966,7 +966,7 @@ finalizar(): void {
     async ListaOpcionesLibro() {
         try {
             const result: any = await this.materialBibliograficoService.lista_opciones_libro('').toPromise();
-            if (result.status === "0") {
+            if (result.status == 0) {
                 this.opcionesLista = result.data;
             }
         } catch (error) {
@@ -978,7 +978,7 @@ finalizar(): void {
     async ListaEspecialidad() {
         try {
             const result: any = await this.materialBibliograficoService.lista_especialidad('material-bibliografico/especialidad').toPromise();
-            if (result.status === "0") {
+            if (result.status == 0) {
                 console.log("dentro");
                 this.especialidadLista = result.data;
             }
@@ -1043,7 +1043,7 @@ finalizar(): void {
     async ListaDescripcionFisica() {
         try {
             const result: any = await this.materialBibliograficoService.lista_descripcion_fisica('material-bibliografico/ciudad').toPromise();
-            if (result.status === "0") {
+            if (result.status == 0) {
                 this.descripcionFisicaLista = result.data;
             }
         } catch (error) {
@@ -1055,7 +1055,7 @@ finalizar(): void {
     async ListaAnioPublicacion() {
         try {
             const result: any = await this.materialBibliograficoService.lista_anio_publicacion('material-bibliografico/ciudad').toPromise();
-            if (result.status === "0") {
+            if (result.status == 0) {
                 this.anioPublicacionLista = result.data;
             }
         } catch (error) {
@@ -1110,7 +1110,7 @@ finalizar(): void {
     async ListaEjemplares() {
         try {
             const result: any = await this.materialBibliograficoService.lista_ejemplares('material-bibliografico/ciudad').toPromise();
-            if (result.status === "0") {
+            if (result.status == 0) {
                 this.detalles = result.data;
             }
         } catch (error) {

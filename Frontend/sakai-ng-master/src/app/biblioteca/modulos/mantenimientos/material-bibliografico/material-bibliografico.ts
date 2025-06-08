@@ -396,7 +396,7 @@ onSaved(): void {
   async ListaTipo() {
     try {
       const result: any = await this.genericoService.tipo_get('conf/tipo-lista').toPromise();
-      if (result.status === "0") {
+      if (result.status == 0) {
         this.dataTipo = result.data;
         let tipos = [{ id: 0, descripcion: 'TODAS LOS TIPOS', activo: true, estado: 1 }, ...this.dataTipo];
 
@@ -416,7 +416,7 @@ onSaved(): void {
       .subscribe(
         (result: any) => {
           this.loading = false;
-          if (result.status == "0") {
+          if (result.status == 0) {
 //             let recursosFiltrados = result.data.filter((recurso: { tipo: { id: any; }; }) => recurso.tipo.id === 1);
 
             this.dataTipoRecurso = result.data;
@@ -433,7 +433,7 @@ onSaved(): void {
   async ListaSede() {
     try {
       const result: any = await this.genericoService.sedes_get('conf/tipo-lista').toPromise();
-      if (result.status === "0") {
+      if (result.status == 0) {
         this.dataSede = result.data;
         let sedes = [{ id: 0, descripcion: 'TODAS LAS SEDES', activo: true, estado: 1 }, ...this.dataSede];
 
@@ -472,7 +472,8 @@ async listar() {
     const tipoParam = this.tipoRecursoFiltro?.tipo?.id ? `tipoMaterial=${this.tipoRecursoFiltro.tipo.id}&` : "";
     const opcionParam = this.opcionFiltro?.descripcion ? `opcion=${this.opcionFiltro.descripcion}&` : "";
     const valorParam = `valor=${encodeURIComponent(this.palabraClave.trim())}`;
-    const endpoint = `api/biblioteca/search?${tipoParam}${opcionParam}${valorParam}`;
+    const extraParam = `soloEnProceso=false`;
+    const endpoint = `api/biblioteca/search?${tipoParam}${opcionParam}${valorParam}&${extraParam}`;
 
     console.log(tipoParam);
     console.log(opcionParam);
@@ -483,7 +484,8 @@ async listar() {
         (result: any) => {
           // Supongamos que el endpoint devuelve directamente un array
           console.log(result);
-          this.data = Array.isArray(result) ? result : result.data;
+          const lista = Array.isArray(result) ? result : result.data;
+          this.data = lista.filter((b: any) => Number(b.estadoId) === 2);
           this.loading = false;
         },
         (error: HttpErrorResponse) => {

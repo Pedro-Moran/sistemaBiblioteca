@@ -265,7 +265,7 @@ private agruparPorBiblioteca(
     const mapa = new Map<number, GrupoBiblioteca>();
 
     detalles.forEach((det) => {
-      const bibId = det.bibliotecaId;
+      const bibId = det.biblioteca?.id;
       if (bibId == null) {
         return; // Ignora aquellos sin bibliotecaId
       }
@@ -273,7 +273,7 @@ private agruparPorBiblioteca(
         // Crea el “resumen” de la cabecera (BibliotecaResumen) partiendo de det.biblioteca:
         const padre = det.biblioteca!;
         const resumen: BibliotecaResumen = {
-          id: padre.id,
+          id: bibId,
           codigoLocalizacion: padre.codigoLocalizacion ?? null,
           tipoBibliotecaId: padre.tipoBibliotecaId ?? null,
           autorPersonal: padre.autorPersonal ?? null,
@@ -487,7 +487,7 @@ private agruparPorBiblioteca(
       rejectLabel: 'NO',
       accept: () => {
         this.loading = true;
-        this.materialBibliograficoService.prestarDetalle(detalle.idDetalleBiblioteca).subscribe({
+        this.materialBibliograficoService.prestarDetalle(detalle.idDetalleBiblioteca!).subscribe({
           next: (resp: any) => {
             this.loading = false;
             if (resp.p_status === 0) {
@@ -527,7 +527,7 @@ private agruparPorBiblioteca(
       rejectLabel: 'NO',
       accept: () => {
         this.loading = true;
-        this.materialBibliograficoService.cancelarDetalle(detalle.idDetalleBiblioteca).subscribe({
+        this.materialBibliograficoService.cancelarDetalle(detalle.idDetalleBiblioteca!).subscribe({
           next: (resp: any) => {
             this.loading = false;
             if (resp.p_status === 0) {

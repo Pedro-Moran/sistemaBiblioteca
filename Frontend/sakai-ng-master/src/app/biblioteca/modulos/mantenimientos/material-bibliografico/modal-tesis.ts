@@ -8,8 +8,11 @@ import { InputValidation } from '../../../input-validation';
 import { AnioPublicacion } from '../../../interfaces/material-bibliografico/anio-publicacion';
 import { DescripcionFisica } from '../../../interfaces/material-bibliografico/descripcion-fisica';
 import { Detalle } from '../../../interfaces/material-bibliografico/detalle';
+import { DetalleDisplay } from '../../../interfaces/material-bibliografico/biblioteca.model';
 import { Editorial } from '../../../interfaces/material-bibliografico/editorial';
 import { Especialidad } from '../../../interfaces/material-bibliografico/especialidad';
+import { Pais } from '../../../interfaces/material-bibliografico/pais';
+import { Ciudad } from '../../../interfaces/material-bibliografico/ciudad';
 import { Periodicidad } from '../../../interfaces/material-bibliografico/periodicidad';
 import { TipoAdquisicion } from '../../../interfaces/material-bibliografico/tipo-adquisicion';
 import { TipoMaterial } from '../../../interfaces/material-bibliografico/tipo-material';
@@ -57,13 +60,13 @@ import { AuthService } from '../../../services/auth.service';
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4">
       <div class="flex flex-col gap-2">
         <label for="pais">País</label>
-        <p-select appendTo="body" formControlName="pais" [options]="paisLista" optionLabel="descripcion" placeholder="Seleccionar" (onChange)="ListaCiudad()" />
+        <p-select appendTo="body" formControlName="pais" [options]="paisLista" optionLabel="nombrePais" optionValue="paisId" placeholder="Seleccionar" (onChange)="ListaCiudad()" />
         <app-input-validation [form]="formOtro" modelo="pais" ver="pais"></app-input-validation>
       </div>
 
       <div class="flex flex-col gap-2">
         <label for="ciudad">Ciudad</label>
-        <p-select appendTo="body" formControlName="ciudad" [options]="ciudadLista" optionLabel="descripcion" placeholder="Seleccionar" />
+        <p-select appendTo="body" formControlName="ciudad" [options]="ciudadLista" optionLabel="nombreCiudad" optionValue="ciudadCodigo" placeholder="Seleccionar" />
         <app-input-validation [form]="formOtro" modelo="ciudad" ver="ciudad"></app-input-validation>
       </div>
       <div class="flex flex-col gap-2">
@@ -365,13 +368,13 @@ export class ModalTesisComponent implements OnInit {
     objetoOtro: Tesis = new Tesis();
     objetoEditorial: Editorial = new Editorial();
     objetoDetalle: Detalle = new Detalle();
-    detalles: Detalle[] = [];
+    detalles: DetalleDisplay[] = [];
     @ViewChild('filter') filter!: ElementRef;
     selectedItem: any;
     @ViewChild('menu') menu!: Menu;
     especialidadLista: Especialidad[] = [];
-    paisLista: Especialidad[] = [];
-    ciudadLista: Especialidad[] = [];
+    paisLista: Pais[] = [];
+    ciudadLista: Ciudad[] = [];
     periodicidadLista: Periodicidad[] = [];
     descripcionFisicaLista: DescripcionFisica[] = [];
     anioPublicacionLista: AnioPublicacion[] = [];
@@ -556,8 +559,8 @@ export class ModalTesisComponent implements OnInit {
         const detalles: DetalleBibliotecaDTO[] = this.detalles.map(d => ({
             idDetalleBiblioteca: d.idDetalleBiblioteca ?? undefined,
             codigoSede: d.codigoSede ?? null,
-            tipoAdquisicionId: (d.tipoAdquisicion as any)?.id ?? d.tipoAdquisicion ?? null,
-            tipoMaterialId: d.tipoMaterialId!,
+            tipoAdquisicionId: (d.tipoAdquisicion as any)?.id ?? d.tipoAdquisicionId ?? null,
+            tipoMaterialId: (d.tipoMaterial as any)?.id ?? d.tipoMaterialId ?? null,
             costo: d.costo ?? null,
             numeroFactura: d.numeroFactura ?? null,
             fechaIngreso: d.fechaIngreso ?? null,
@@ -565,13 +568,13 @@ export class ModalTesisComponent implements OnInit {
         }));
 
         return {
-            id: t.id ?? null,
+            id: t.id > 0 ? t.id : null,
             codigoLocalizacion: t.codigo,
             titulo: t.titulo,
             autorPersonal: t.autorPrincipal,
-            paisId: t.pais,
-            ciudadCodigo: t.ciudad,
-            idEspecialidad: t.especialidad,
+            paisId: (t.pais as any)?.id ?? (t.pais as any)?.paisId ?? t.pais ?? null,
+            ciudadCodigo: (t.ciudad as any)?.ciudadCodigo ?? t.ciudad ?? null,
+            idEspecialidad: (t.especialidad as any)?.idEspecialidad ?? t.especialidad ?? null,
             anioPublicacion: t.anio,
             descriptor: t.descriptores,
             notaContenido: t.notasTesis,
@@ -587,7 +590,7 @@ export class ModalTesisComponent implements OnInit {
     }
 
     finalizar() {
-        if (this.formOtro.invalid || this.formDetalle.invalid) {
+        if (this.formOtro.invalid || this.detalles.length === 0) {
             this.messageService.add({severity:'warn', summary:'Campos obligatorios', detail:'Revisa los formularios'});
             return;
         }
@@ -613,9 +616,15 @@ export class ModalTesisComponent implements OnInit {
 
     async ListaEspecialidad() {
         try {
-            const result: any = await this.materialBibliograficoService.lista_especialidad('material-bibliografico/especialidad').toPromise();
-            if (result.status === "0") {
-                this.especialidadLista = result.data;
+            const result: any = await this.materialBibliograficoService
+                .lista_especialidad('material-bibliografico/especialidad')
+                .toPromise();
+            if (result.status == 0) {
+                this.especialidadLista = result.data.map((e: any) => new Especialidad({
+                    idEspecialidad: e.idEspecialidad ?? e.id,
+                    descripcion: e.descripcion,
+                    activo: e.activo ?? true
+                }));
             }
         } catch (error) {
             console.log(error);
@@ -626,7 +635,7 @@ export class ModalTesisComponent implements OnInit {
     async ListaPais() {
         try {
             const result: any = await this.materialBibliograficoService.lista_pais('material-bibliografico/pais').toPromise();
-            if (result.status === "0") {
+            if (result.status == 0) {
                 this.paisLista = result.data;
             }
         } catch (error) {
@@ -652,7 +661,7 @@ export class ModalTesisComponent implements OnInit {
     async ListaPeriodicidad() {
         try {
             const result: any = await this.materialBibliograficoService.lista_periodicidad('material-bibliografico/ciudad').toPromise();
-            if (result.status === "0") {
+            if (result.status == 0) {
                 this.periodicidadLista = result.data;
             }
         } catch (error) {
@@ -664,7 +673,7 @@ export class ModalTesisComponent implements OnInit {
     async ListaDescripcionFisica() {
         try {
             const result: any = await this.materialBibliograficoService.lista_descripcion_fisica('material-bibliografico/ciudad').toPromise();
-            if (result.status === "0") {
+            if (result.status == 0) {
                 this.descripcionFisicaLista = result.data;
             }
         } catch (error) {
@@ -676,7 +685,7 @@ export class ModalTesisComponent implements OnInit {
     async ListaAnioPublicacion() {
         try {
             const result: any = await this.materialBibliograficoService.lista_anio_publicacion('material-bibliografico/ciudad').toPromise();
-            if (result.status === "0") {
+            if (result.status == 0) {
                 this.anioPublicacionLista = result.data;
             }
         } catch (error) {
@@ -689,7 +698,7 @@ export class ModalTesisComponent implements OnInit {
     async ListaSede() {
         try {
             const result: any = await this.genericoService.sedes_get('api/equipos/sedes').toPromise();
-            if (result.status === "0") {
+            if (result.status == 0) {
                 this.sedesLista = result.data;
             }
         } catch (error) {
@@ -720,11 +729,36 @@ export class ModalTesisComponent implements OnInit {
         }
     }
     async ListaDetalle() {
+        const idBib = this.objetoOtro?.id;
+        if (!idBib) { return; }
         try {
-            const result: any = await this.materialBibliograficoService.lista_ejemplares('material-bibliografico/ciudad').toPromise();
-            if (result.status === "0") {
-                this.detalles = result.data;
-            }
+            const data = await this.materialBibliograficoService
+                .listarDetallesPorBiblioteca(idBib, false)
+                .toPromise();
+
+            this.detalles = (data ?? []).map(d => {
+                const sedeId  = d.codigoSede ?? d.biblioteca?.sedeId ?? null;
+                const tipoMat = d.tipoMaterialId ?? d.biblioteca?.tipoMaterialId ?? null;
+                const tipoAdq = d.tipoAdquisicionId ?? d.biblioteca?.tipoAdquisicionId ?? null;
+
+                const sedeObj      = this.sedesLista.find(s => s.id === sedeId) ?? null;
+                const tipoMatObj   = this.tipoMaterialLista.find(t => t.id === tipoMat) ?? null;
+                const tipoAdqObj   = this.tipoAdquisicionLista.find(t => t.id === tipoAdq) ?? null;
+
+                return {
+                    idDetalleBiblioteca: d.idDetalleBiblioteca,
+                    codigoSede: sedeId,
+                    tipoMaterialId: tipoMat,
+                    tipoAdquisicionId: tipoAdq,
+                    costo: d.costo ?? null,
+                    numeroFactura: d.numeroFactura ?? null,
+                    fechaIngreso: d.fechaIngreso ?? null,
+                    sede: sedeObj,
+                    tipoMaterial: tipoMatObj,
+                    tipoAdquisicion: tipoAdqObj,
+                    idEstado: d.idEstado
+                } as DetalleDisplay;
+            });
         } catch (error) {
             console.log(error);
             this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Ocurrió un error. No se pudo cargar especialidad' });
@@ -810,23 +844,56 @@ export class ModalTesisComponent implements OnInit {
                 this.formValidarDetalle();
                 this.displayEjemplar = true;
             }
-            guardarEjemplar(){
-
-            this.confirmationService.confirm({
+            guardarEjemplar() {
+              this.confirmationService.confirm({
                 message: '¿Estás seguro(a) de que quieres registrar?',
                 header: 'Confirmar',
                 icon: 'pi pi-exclamation-triangle',
                 acceptLabel: 'SI',
                 rejectLabel: 'NO',
                 accept: () => {
-                    this.loading = true;
-                    this.displayEjemplar = false;
-                    //registrar nueva especiadad
-                    this.messageService.add({ severity: 'success', summary: 'Satisfactorio', detail: 'Registro satisfactorio.' });
-                    this.loading = false;
-                }
-            });
+                  const sedeVal  = this.formDetalle.value.sede;
+                  const tipoMatVal = this.formDetalle.value.tipoMaterial;
+                  const tipoAdqVal = this.formDetalle.value.tipoAdquisicion;
 
+                  const sedeId  = typeof sedeVal === 'object' ? sedeVal?.id : sedeVal;
+                  const tipoMat = typeof tipoMatVal === 'object' ? tipoMatVal?.id : tipoMatVal;
+                  const tipoAdq = typeof tipoAdqVal === 'object' ? tipoAdqVal?.id : tipoAdqVal;
+
+                  const detalle: DetalleDisplay = {
+                    codigoSede:        sedeId,
+                    tipoMaterialId:    tipoMat,
+                    tipoAdquisicionId: tipoAdq,
+                    costo:             null,
+                    numeroFactura:     null,
+                    fechaIngreso:      this.formatDateTime(this.formDetalle.value.fechaIngreso),
+
+                    sede: this.sedesLista.find(s => s.id === sedeId) ?? null,
+                    tipoMaterial: this.tipoMaterialLista.find(t => t.id === tipoMat) ?? null,
+                    tipoAdquisicion: this.tipoAdquisicionLista.find(t => t.id === tipoAdq) ?? null,
+                    idEstado: 1
+                  };
+
+                  this.detalles = [...this.detalles, detalle];
+                  this.formDetalle.reset();
+                  this.displayEjemplar = false;
+                }
+              });
+            }
+
+            private formatDateTime(d: Date | string | null): string | null {
+              if (!d) { return null; }
+              if (typeof d === 'string' && d.length > 10) { return d; }
+              const dt = typeof d === 'string' ? new Date(d) : d;
+              return dt.toISOString().split('.')[0];
+            }
+
+            idToSede(id: number | null) {
+              return this.sedesLista.find(s => s.id === id);
+            }
+
+            idToTipo(id: number | null) {
+              return this.tipoAdquisicionLista.find(t => t.id === id);
             }
             onFileSelect(event: any) {
                 const file = event.files[0]; // Obtiene el primer archivo seleccionado

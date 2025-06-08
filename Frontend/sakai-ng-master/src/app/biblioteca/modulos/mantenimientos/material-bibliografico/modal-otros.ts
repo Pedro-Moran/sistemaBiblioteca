@@ -8,6 +8,7 @@ import { InputValidation } from '../../../input-validation';
 import { AnioPublicacion } from '../../../interfaces/material-bibliografico/anio-publicacion';
 import { DescripcionFisica } from '../../../interfaces/material-bibliografico/descripcion-fisica';
 import { Detalle } from '../../../interfaces/material-bibliografico/detalle';
+import { DetalleDisplay } from '../../../interfaces/material-bibliografico/biblioteca.model';
 import { Editorial } from '../../../interfaces/material-bibliografico/editorial';
 import { Especialidad } from '../../../interfaces/material-bibliografico/especialidad';
 import { Otro } from '../../../interfaces/material-bibliografico/otro';
@@ -224,7 +225,7 @@ import { AuthService } from '../../../services/auth.service';
                     <ng-template pTemplate="body" let-objeto>
                         <tr>
                             <td>
-                                {{objeto.sede.descripcion}}
+                                {{objeto.sede?.descripcion}}
                             </td>
                             <td>
                                 {{objeto.fechaIngreso}}
@@ -269,8 +270,17 @@ import { AuthService } from '../../../services/auth.service';
         <app-input-validation [form]="formDetalle" modelo="sede" ver="Sede"></app-input-validation>
       </div>
 
+      <div class="flex flex-col gap-2">
+        <label for="tipoMaterial">Tipo Material</label>
+        <p-select appendTo="body" formControlName="tipoMaterial" [options]="tipoMaterialLista" optionLabel="descripcion" placeholder="Seleccionar" />
+        <app-input-validation [form]="formDetalle" modelo="tipoMaterial" ver="Tipo Material"></app-input-validation>
+      </div>
 
-
+      <div class="flex flex-col gap-2">
+        <label for="tipoAdquisicion">Tipo Adquisicion</label>
+        <p-select appendTo="body" formControlName="tipoAdquisicion" [options]="tipoAdquisicionLista" optionLabel="descripcion" placeholder="Seleccionar" />
+        <app-input-validation [form]="formDetalle" modelo="tipoAdquisicion" ver="Tipo Adquisicion"></app-input-validation>
+      </div>
 
       <div class="flex flex-col gap-2 w-full">
   <label for="fechaIngreso">Fecha Ingreso</label>
@@ -312,7 +322,7 @@ export class ModalOtrosComponent implements OnInit {
     objetoOtro: Otro = new Otro();
     objetoEditorial: Editorial = new Editorial();
     objetoDetalle: Detalle = new Detalle();
-    detalles: Detalle[] = [];
+    detalles: DetalleDisplay[] = [];
     @ViewChild('filter') filter!: ElementRef;
     selectedItem: any;
     @ViewChild('menu') menu!: Menu;
@@ -425,21 +435,13 @@ export class ModalOtrosComponent implements OnInit {
                 Validators.required
             ]
             ],
-            tipoMaterial: [this.objetoDetalle?.tipoMaterial,
-            [
-                Validators.required
-            ]
-            ],
+            tipoMaterial: [this.objetoDetalle?.tipoMaterial],
             fechaIngreso: [this.objetoDetalle?.fechaIngreso,
             [
                 Validators.required
             ]
             ],
-            tipoAdquisicion: [this.objetoDetalle?.tipoAdquisicion,
-            [
-                Validators.required
-            ]
-            ]
+            tipoAdquisicion: [this.objetoDetalle?.tipoAdquisicion]
         });
     }
 
@@ -484,8 +486,8 @@ export class ModalOtrosComponent implements OnInit {
         const detalles: DetalleBibliotecaDTO[] = this.detalles.map(d => ({
             idDetalleBiblioteca: d.idDetalleBiblioteca ?? undefined,
             codigoSede: d.codigoSede ?? null,
-            tipoAdquisicionId: (d.tipoAdquisicion as any)?.id ?? d.tipoAdquisicion ?? null,
-            tipoMaterialId: d.tipoMaterialId!,
+            tipoAdquisicionId: (d.tipoAdquisicion as any)?.id ?? d.tipoAdquisicionId ?? null,
+            tipoMaterialId: (d.tipoMaterial as any)?.id ?? d.tipoMaterialId ?? null,
             costo: d.costo ?? null,
             numeroFactura: d.numeroFactura ?? null,
             fechaIngreso: d.fechaIngreso ?? null,
@@ -493,7 +495,7 @@ export class ModalOtrosComponent implements OnInit {
         }));
 
         return {
-            id: otro.id ?? null,
+            id: otro.id > 0 ? otro.id : null,
             codigoLocalizacion: '',
             titulo: otro.tituloArticulo,
             autorPersonal: otro.autorPrincipal,
@@ -511,7 +513,7 @@ export class ModalOtrosComponent implements OnInit {
     }
 
     finalizar() {
-        if (this.formOtro.invalid || this.formDetalle.invalid) {
+        if (this.formOtro.invalid || this.detalles.length === 0) {
             this.messageService.add({severity:'warn', summary:'Campos obligatorios', detail:'Revisa los formularios'});
             return;
         }
@@ -538,7 +540,7 @@ export class ModalOtrosComponent implements OnInit {
     async ListaEspecialidad() {
         try {
             const result: any = await this.materialBibliograficoService.lista_especialidad('material-bibliografico/especialidad').toPromise();
-            if (result.status === "0") {
+            if (result.status == 0) {
                 this.especialidadLista = result.data;
             }
         } catch (error) {
@@ -550,7 +552,7 @@ export class ModalOtrosComponent implements OnInit {
     async ListaPais() {
         try {
             const result: any = await this.materialBibliograficoService.lista_pais('material-bibliografico/pais').toPromise();
-            if (result.status === "0") {
+            if (result.status == 0) {
                 this.paisLista = result.data;
             }
         } catch (error) {
@@ -576,7 +578,7 @@ export class ModalOtrosComponent implements OnInit {
     async ListaPeriodicidad() {
         try {
             const result: any = await this.materialBibliograficoService.lista_periodicidad('material-bibliografico/ciudad').toPromise();
-            if (result.status === "0") {
+            if (result.status == 0) {
                 this.periodicidadLista = result.data;
             }
         } catch (error) {
@@ -588,7 +590,7 @@ export class ModalOtrosComponent implements OnInit {
     async ListaDescripcionFisica() {
         try {
             const result: any = await this.materialBibliograficoService.lista_descripcion_fisica('material-bibliografico/ciudad').toPromise();
-            if (result.status === "0") {
+            if (result.status == 0) {
                 this.descripcionFisicaLista = result.data;
             }
         } catch (error) {
@@ -600,7 +602,7 @@ export class ModalOtrosComponent implements OnInit {
     async ListaAnioPublicacion() {
         try {
             const result: any = await this.materialBibliograficoService.lista_anio_publicacion('material-bibliografico/ciudad').toPromise();
-            if (result.status === "0") {
+            if (result.status == 0) {
                 this.anioPublicacionLista = result.data;
             }
         } catch (error) {
@@ -613,7 +615,7 @@ export class ModalOtrosComponent implements OnInit {
     async ListaSede() {
         try {
             const result: any = await this.genericoService.sedes_get('api/equipos/sedes').toPromise();
-            if (result.status === "0") {
+            if (result.status == 0) {
                 this.sedesLista = result.data;
             }
         } catch (error) {
@@ -644,11 +646,36 @@ export class ModalOtrosComponent implements OnInit {
         }
     }
     async ListaDetalle() {
+        const idBib = this.objetoOtro?.id;
+        if (!idBib) { return; }
         try {
-            const result: any = await this.materialBibliograficoService.lista_ejemplares('material-bibliografico/ciudad').toPromise();
-            if (result.status === "0") {
-                this.detalles = result.data;
-            }
+            const data = await this.materialBibliograficoService
+                .listarDetallesPorBiblioteca(idBib, false)
+                .toPromise();
+
+            this.detalles = (data ?? []).map(d => {
+                const sedeId  = d.codigoSede ?? d.biblioteca?.sedeId ?? null;
+                const tipoMat = d.tipoMaterialId ?? d.biblioteca?.tipoMaterialId ?? null;
+                const tipoAdq = d.tipoAdquisicionId ?? d.biblioteca?.tipoAdquisicionId ?? null;
+
+                const sedeObj      = this.sedesLista.find(s => s.id === sedeId) ?? null;
+                const tipoMatObj   = this.tipoMaterialLista.find(t => t.id === tipoMat) ?? null;
+                const tipoAdqObj   = this.tipoAdquisicionLista.find(t => t.id === tipoAdq) ?? null;
+
+                return {
+                    idDetalleBiblioteca: d.idDetalleBiblioteca,
+                    codigoSede: sedeId,
+                    tipoMaterialId: tipoMat,
+                    tipoAdquisicionId: tipoAdq,
+                    costo: d.costo ?? null,
+                    numeroFactura: d.numeroFactura ?? null,
+                    fechaIngreso: d.fechaIngreso ?? null,
+                    sede: sedeObj,
+                    tipoMaterial: tipoMatObj,
+                    tipoAdquisicion: tipoAdqObj,
+                    idEstado: d.idEstado
+                } as DetalleDisplay;
+            });
         } catch (error) {
             console.log(error);
             this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Ocurrió un error. No se pudo cargar especialidad' });
@@ -734,23 +761,59 @@ export class ModalOtrosComponent implements OnInit {
                 this.formValidarDetalle();
                 this.displayEjemplar = true;
             }
-            guardarEjemplar(){
-
-            this.confirmationService.confirm({
+            guardarEjemplar() {
+              this.confirmationService.confirm({
                 message: '¿Estás seguro(a) de que quieres registrar?',
                 header: 'Confirmar',
                 icon: 'pi pi-exclamation-triangle',
                 acceptLabel: 'SI',
                 rejectLabel: 'NO',
                 accept: () => {
-                    this.loading = true;
-                    this.displayEjemplar = false;
-                    //registrar nueva especiadad
-                    this.messageService.add({ severity: 'success', summary: 'Satisfactorio', detail: 'Registro satisfactorio.' });
-                    this.loading = false;
-                }
-            });
+                  const sedeVal  = this.formDetalle.value.sede;
+                  const tipoMatVal = this.formDetalle.value.tipoMaterial;
+                  const tipoAdqVal = this.formDetalle.value.tipoAdquisicion;
 
+                  const sedeId  = typeof sedeVal === 'object' ? sedeVal?.id : sedeVal;
+                  const tipoMat =
+                    typeof tipoMatVal === 'object' ? tipoMatVal?.id : (tipoMatVal ?? null);
+                  const tipoAdq =
+                    typeof tipoAdqVal === 'object' ? tipoAdqVal?.id : (tipoAdqVal ?? null);
+
+                  const detalle: DetalleDisplay = {
+                    codigoSede:        sedeId,
+                    tipoMaterialId:    tipoMat ?? null,
+                    tipoAdquisicionId: tipoAdq ?? null,
+                    costo:             null,
+                    numeroFactura:     null,
+                    fechaIngreso:      this.formatDateTime(this.formDetalle.value.fechaIngreso),
+
+                    sede: this.sedesLista.find(s => s.id === sedeId) ?? null,
+                    tipoMaterial: tipoMat ? this.tipoMaterialLista.find(t => t.id === tipoMat) ?? null : null,
+                    tipoAdquisicion: tipoAdq ? this.tipoAdquisicionLista.find(t => t.id === tipoAdq) ?? null : null,
+                    idEstado: 1
+                  };
+
+                  this.detalles = [...this.detalles, detalle];
+
+                  this.formDetalle.reset();
+                  this.displayEjemplar = false;
+                }
+              });
+            }
+
+            private formatDateTime(d: Date | string | null): string | null {
+              if (!d) { return null; }
+              if (typeof d === 'string' && d.length > 10) { return d; }
+              const dt = typeof d === 'string' ? new Date(d) : d;
+              return dt.toISOString().split('.')[0];
+            }
+
+            idToSede(id: number | null) {
+              return this.sedesLista.find(s => s.id === id);
+            }
+
+            idToTipo(id: number | null) {
+              return this.tipoAdquisicionLista.find(t => t.id === id);
             }
             onFileSelect(event: any) {
                 const file = event.files[0]; // Obtiene el primer archivo seleccionado
