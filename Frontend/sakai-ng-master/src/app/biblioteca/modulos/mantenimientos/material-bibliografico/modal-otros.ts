@@ -8,6 +8,7 @@ import { InputValidation } from '../../../input-validation';
 import { AnioPublicacion } from '../../../interfaces/material-bibliografico/anio-publicacion';
 import { DescripcionFisica } from '../../../interfaces/material-bibliografico/descripcion-fisica';
 import { Detalle } from '../../../interfaces/material-bibliografico/detalle';
+import { DetalleDisplay } from '../../../interfaces/material-bibliografico/biblioteca.model';
 import { Editorial } from '../../../interfaces/material-bibliografico/editorial';
 import { Especialidad } from '../../../interfaces/material-bibliografico/especialidad';
 import { Otro } from '../../../interfaces/material-bibliografico/otro';
@@ -312,7 +313,7 @@ export class ModalOtrosComponent implements OnInit {
     objetoOtro: Otro = new Otro();
     objetoEditorial: Editorial = new Editorial();
     objetoDetalle: Detalle = new Detalle();
-    detalles: Detalle[] = [];
+    detalles: DetalleDisplay[] = [];
     @ViewChild('filter') filter!: ElementRef;
     selectedItem: any;
     @ViewChild('menu') menu!: Menu;
@@ -425,17 +426,7 @@ export class ModalOtrosComponent implements OnInit {
                 Validators.required
             ]
             ],
-            tipoMaterial: [this.objetoDetalle?.tipoMaterial,
-            [
-                Validators.required
-            ]
-            ],
             fechaIngreso: [this.objetoDetalle?.fechaIngreso,
-            [
-                Validators.required
-            ]
-            ],
-            tipoAdquisicion: [this.objetoDetalle?.tipoAdquisicion,
             [
                 Validators.required
             ]
@@ -484,8 +475,8 @@ export class ModalOtrosComponent implements OnInit {
         const detalles: DetalleBibliotecaDTO[] = this.detalles.map(d => ({
             idDetalleBiblioteca: d.idDetalleBiblioteca ?? undefined,
             codigoSede: d.codigoSede ?? null,
-            tipoAdquisicionId: (d.tipoAdquisicion as any)?.id ?? d.tipoAdquisicion ?? null,
-            tipoMaterialId: d.tipoMaterialId!,
+            tipoAdquisicionId: (d.tipoAdquisicion as any)?.id ?? d.tipoAdquisicionId ?? null,
+            tipoMaterialId: (d.tipoMaterial as any)?.id ?? d.tipoMaterialId ?? null,
             costo: d.costo ?? null,
             numeroFactura: d.numeroFactura ?? null,
             fechaIngreso: d.fechaIngreso ?? null,
@@ -493,7 +484,7 @@ export class ModalOtrosComponent implements OnInit {
         }));
 
         return {
-            id: otro.id ?? null,
+            id: otro.id > 0 ? otro.id : null,
             codigoLocalizacion: '',
             titulo: otro.tituloArticulo,
             autorPersonal: otro.autorPrincipal,
@@ -613,7 +604,7 @@ export class ModalOtrosComponent implements OnInit {
     async ListaSede() {
         try {
             const result: any = await this.genericoService.sedes_get('api/equipos/sedes').toPromise();
-            if (result.status === "0") {
+            if (result.status === 0) {
                 this.sedesLista = result.data;
             }
         } catch (error) {
@@ -735,7 +726,6 @@ export class ModalOtrosComponent implements OnInit {
                 this.displayEjemplar = true;
             }
             guardarEjemplar(){
-
             this.confirmationService.confirm({
                 message: '¿Estás seguro(a) de que quieres registrar?',
                 header: 'Confirmar',
@@ -743,14 +733,45 @@ export class ModalOtrosComponent implements OnInit {
                 acceptLabel: 'SI',
                 rejectLabel: 'NO',
                 accept: () => {
-                    this.loading = true;
-                    this.displayEjemplar = false;
-                    //registrar nueva especiadad
-                    this.messageService.add({ severity: 'success', summary: 'Satisfactorio', detail: 'Registro satisfactorio.' });
-                    this.loading = false;
+                  const sedeId  = this.formDetalle.value.sede as number;
+                  const tipoMat = this.formDetalle.value.tipoMaterial as number;
+                  const tipoAdq = this.formDetalle.value.tipoAdquisicion as number;
+
+                  const detalle: DetalleDisplay = {
+                    codigoSede:        sedeId,
+                    tipoMaterialId:    tipoMat,
+                    tipoAdquisicionId: tipoAdq,
+                    costo:             null,
+                    numeroFactura:     null,
+                    fechaIngreso:      this.formatDateTime(this.formDetalle.value.fechaIngreso),
+
+                    sede: this.sedesLista.find(s => s.id === sedeId) ?? null,
+                    tipoMaterial: this.tipoMaterialLista.find(t => t.id === tipoMat) ?? null,
+                    tipoAdquisicion: this.tipoAdquisicionLista.find(t => t.id === tipoAdq) ?? null,
+                    idEstado: 1
+                  };
+
+                  this.detalles = [...this.detalles, detalle];
+
+                  this.formDetalle.reset();
+                  this.displayEjemplar = false;
                 }
             });
 
+            }
+            private formatDateTime(d: Date | string | null): string | null {
+              if (!d) { return null; }
+              if (typeof d === 'string' && d.length > 10) { return d; }
+              const dt = typeof d === 'string' ? new Date(d) : d;
+              return dt.toISOString().split('.')[0];
+            }
+
+            idToSede(id: number | null) {
+              return this.sedesLista.find(s => s.id === id);
+            }
+
+            idToTipo(id: number | null) {
+              return this.tipoAdquisicionLista.find(t => t.id === id);
             }
             onFileSelect(event: any) {
                 const file = event.files[0]; // Obtiene el primer archivo seleccionado
