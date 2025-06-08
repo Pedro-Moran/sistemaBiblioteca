@@ -270,17 +270,7 @@ import { AuthService } from '../../../services/auth.service';
         <app-input-validation [form]="formDetalle" modelo="sede" ver="Sede"></app-input-validation>
       </div>
 
-      <div class="flex flex-col gap-2">
-        <label for="tipoMaterial">Tipo Material</label>
-        <p-select appendTo="body" formControlName="tipoMaterial" [options]="tipoMaterialLista" optionLabel="descripcion" placeholder="Seleccionar" />
-        <app-input-validation [form]="formDetalle" modelo="tipoMaterial" ver="Tipo Material"></app-input-validation>
-      </div>
-
-      <div class="flex flex-col gap-2">
-        <label for="tipoAdquisicion">Tipo Adquisicion</label>
-        <p-select appendTo="body" formControlName="tipoAdquisicion" [options]="tipoAdquisicionLista" optionLabel="descripcion" placeholder="Seleccionar" />
-        <app-input-validation [form]="formDetalle" modelo="tipoAdquisicion" ver="Tipo Adquisicion"></app-input-validation>
-      </div>
+        <!-- Tipo Material y Tipo Adquisicion se heredan del modulo padre -->
 
       <div class="flex flex-col gap-2 w-full">
   <label for="fechaIngreso">Fecha Ingreso</label>
@@ -785,7 +775,7 @@ export class ModalOtrosComponent implements OnInit {
                 rejectLabel: 'NO',
                 accept: () => {
                   const sedeVal  = this.formDetalle.value.sede;
-                  const tipoMatVal = this.formDetalle.value.tipoMaterial;
+                  const tipoMatVal = this.tipoMaterialId ?? this.formDetalle.value.tipoMaterial;
                   const tipoAdqVal = this.formDetalle.value.tipoAdquisicion;
 
                   const sedeId  = typeof sedeVal === 'object' ? sedeVal?.id : sedeVal;

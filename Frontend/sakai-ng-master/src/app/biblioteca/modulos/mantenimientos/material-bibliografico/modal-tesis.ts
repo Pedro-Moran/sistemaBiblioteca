@@ -317,17 +317,7 @@ import { AuthService } from '../../../services/auth.service';
         <app-input-validation [form]="formDetalle" modelo="sede" ver="Sede"></app-input-validation>
       </div>
 
-      <div class="flex flex-col gap-2">
-        <label for="tipoMaterial">Tipo Material</label>
-        <p-select appendTo="body" formControlName="tipoMaterial" [options]="tipoMaterialLista" optionLabel="descripcion" placeholder="Seleccionar" />
-        <app-input-validation [form]="formDetalle" modelo="tipoMaterial" ver="Tipo Material"></app-input-validation>
-      </div>
-
-      <div class="flex flex-col gap-2">
-        <label for="tipoAdquisicion">Tipo Adquisicion</label>
-        <p-select appendTo="body" formControlName="tipoAdquisicion" [options]="tipoAdquisicionLista" optionLabel="descripcion" placeholder="Seleccionar" />
-        <app-input-validation [form]="formDetalle" modelo="tipoAdquisicion" ver="Tipo Adquisicion"></app-input-validation>
-      </div>
+        <!-- Tipo Material y Tipo Adquisicion se heredan del modulo padre -->
       <div class="flex flex-col gap-2 w-full">
   <label for="fechaIngreso">Fecha Ingreso</label>
   <p-datepicker
@@ -502,21 +492,13 @@ export class ModalTesisComponent implements OnInit {
                 Validators.required
             ]
             ],
-            tipoMaterial: [this.objetoDetalle?.tipoMaterial,
-            [
-                Validators.required
-            ]
-            ],
+            tipoMaterial: [this.objetoDetalle?.tipoMaterial],
             fechaIngreso: [this.objetoDetalle?.fechaIngreso,
             [
                 Validators.required
             ]
             ],
-            tipoAdquisicion: [this.objetoDetalle?.tipoAdquisicion,
-            [
-                Validators.required
-            ]
-            ]
+            tipoAdquisicion: [this.objetoDetalle?.tipoAdquisicion]
         });
     }
 
@@ -868,7 +850,7 @@ export class ModalTesisComponent implements OnInit {
                 rejectLabel: 'NO',
                 accept: () => {
                   const sedeVal  = this.formDetalle.value.sede;
-                  const tipoMatVal = this.formDetalle.value.tipoMaterial;
+                  const tipoMatVal = this.tipoMaterialId ?? this.formDetalle.value.tipoMaterial;
                   const tipoAdqVal = this.formDetalle.value.tipoAdquisicion;
 
                   const sedeId  = typeof sedeVal === 'object' ? sedeVal?.id : sedeVal;
