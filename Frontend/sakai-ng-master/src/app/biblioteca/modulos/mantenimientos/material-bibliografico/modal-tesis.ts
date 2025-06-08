@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnInit, ViewChild, Output, EventEmitter } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild, Output, EventEmitter, Input } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ConfirmationService, MenuItem, MessageService } from 'primeng/api';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -385,6 +385,7 @@ export class ModalTesisComponent implements OnInit {
     nuevaEspecialidad: string = '';
     items!: MenuItem[];
     uploadedFiles: any[] = [];
+    @Input() tipoMaterialId!: number | null;
     @Output() saved = new EventEmitter<void>();
     constructor(private fb: FormBuilder,
                 private genericoService: GenericoService,
@@ -403,6 +404,7 @@ export class ModalTesisComponent implements OnInit {
         this.formOtro = this.fb.group({
 
             id: [this.objetoOtro.id],
+            tipoMaterialId: [null],
             codigo: [this.objetoOtro.codigo, [
                 Validators.required,
                 Validators.maxLength(20),
@@ -531,10 +533,18 @@ export class ModalTesisComponent implements OnInit {
         await this.ListaTipoAdquisicion();
         await this.ListaDetalle();
     }
-    openModal() {
-        this.objetoOtro=new Tesis();
-        this.detalles=[];
-        this.objetoDetalle=new Detalle();
+    openModal(tipoId?: number | null) {
+        this.objetoOtro = new Tesis();
+        this.objetoDetalle = new Detalle();
+        this.detalles = [];
+
+        this.formOtro.reset();
+        this.formDetalle.reset();
+
+        const id = tipoId ?? this.tipoMaterialId ?? null;
+        this.formOtro.patchValue({ tipoMaterialId: id });
+        this.tipoMaterialId = id;
+
         this.display = true;
     }
 
@@ -572,6 +582,7 @@ export class ModalTesisComponent implements OnInit {
             codigoLocalizacion: t.codigo,
             titulo: t.titulo,
             autorPersonal: t.autorPrincipal,
+            tipoMaterialId: t.tipoMaterialId ?? this.tipoMaterialId ?? null,
             paisId: (t.pais as any)?.id ?? (t.pais as any)?.paisId ?? t.pais ?? null,
             ciudadCodigo: (t.ciudad as any)?.ciudadCodigo ?? t.ciudad ?? null,
             idEspecialidad: (t.especialidad as any)?.idEspecialidad ?? t.especialidad ?? null,

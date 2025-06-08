@@ -324,15 +324,15 @@ onSaved(): void {
 //   }
 
   nuevoRegistro() {
-    if(this.tipoRecursoFiltro.tipo.id==1){//Libro
-      const idTipo = this.tipoRecursoFiltro?.id ?? null;   // el combo del padre
-        this.modalLibro.openModal(idTipo);                   // <-- lo pasa
-    }else if(this.tipoRecursoFiltro.tipo.id==2){
-      this.modalRevista.openModal();
-    }else if(this.tipoRecursoFiltro.tipo.id==3){
-      this.modalTesis.openModal();
-    }else{
-      this.modalOtros.openModal();
+    const idTipo = this.tipoRecursoFiltro?.id ?? null;   // valor del combo padre
+    if (this.tipoRecursoFiltro.tipo.id == 1) {
+      this.modalLibro.openModal(idTipo);
+    } else if (this.tipoRecursoFiltro.tipo.id == 2) {
+      this.modalRevista.openModal(idTipo);
+    } else if (this.tipoRecursoFiltro.tipo.id == 3) {
+      this.modalTesis.openModal(idTipo);
+    } else {
+      this.modalOtros.openModal(idTipo);
     }
     this.formValidar();
     //this.objetoDialog = true;

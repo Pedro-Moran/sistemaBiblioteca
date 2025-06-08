@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnInit, ViewChild, Output, EventEmitter } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild, Output, EventEmitter, Input } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ConfirmationService, MenuItem, MessageService } from 'primeng/api';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -339,6 +339,7 @@ export class ModalOtrosComponent implements OnInit {
     nuevaEspecialidad: string = '';
     items!: MenuItem[];
     uploadedFiles: any[] = [];
+    @Input() tipoMaterialId!: number | null;
     @Output() saved = new EventEmitter<void>();
     constructor(private fb: FormBuilder,
                 private genericoService: GenericoService,
@@ -357,6 +358,7 @@ export class ModalOtrosComponent implements OnInit {
         this.formOtro = this.fb.group({
 
             id: [this.objetoOtro.id],
+            tipoMaterialId: [null],
 
             tituloArticulo: [this.objetoOtro.tituloArticulo,
                 [
@@ -458,10 +460,18 @@ export class ModalOtrosComponent implements OnInit {
         await this.ListaTipoAdquisicion();
         await this.ListaDetalle();
     }
-    openModal() {
-        this.objetoOtro=new Otro();
-        this.detalles=[];
-        this.objetoDetalle=new Detalle();
+    openModal(tipoId?: number | null) {
+        this.objetoOtro = new Otro();
+        this.objetoDetalle = new Detalle();
+        this.detalles = [];
+
+        this.formOtro.reset();
+        this.formDetalle.reset();
+
+        const id = tipoId ?? this.tipoMaterialId ?? null;
+        this.formOtro.patchValue({ tipoMaterialId: id });
+        this.tipoMaterialId = id;
+
         this.display = true;
     }
 
@@ -499,6 +509,7 @@ export class ModalOtrosComponent implements OnInit {
             codigoLocalizacion: '',
             titulo: otro.tituloArticulo,
             autorPersonal: otro.autorPrincipal,
+            tipoMaterialId: otro.tipoMaterialId ?? this.tipoMaterialId ?? null,
             editorialPublicacion: otro.tituloRevista,
             descriptor: otro.descriptores,
             notaGeneral: otro.notasGeneral,
