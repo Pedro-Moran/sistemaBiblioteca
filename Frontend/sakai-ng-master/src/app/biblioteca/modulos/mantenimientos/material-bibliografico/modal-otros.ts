@@ -475,6 +475,8 @@ export class ModalOtrosComponent implements OnInit {
         const detalles: DetalleBibliotecaDTO[] = this.detalles.map(d => ({
             idDetalleBiblioteca: d.idDetalleBiblioteca ?? undefined,
             codigoSede: d.codigoSede ?? null,
+            tipoAdquisicionId: (d.tipoAdquisicion as any)?.id ?? d.tipoAdquisicionId ?? null,
+            tipoMaterialId: (d.tipoMaterial as any)?.id ?? d.tipoMaterialId ?? null,
             costo: d.costo ?? null,
             numeroFactura: d.numeroFactura ?? null,
             fechaIngreso: d.fechaIngreso ?? null,
@@ -500,7 +502,7 @@ export class ModalOtrosComponent implements OnInit {
     }
 
     finalizar() {
-        if (this.formOtro.invalid || this.formDetalle.invalid) {
+        if (this.formOtro.invalid || this.detalles.length === 0) {
             this.messageService.add({severity:'warn', summary:'Campos obligatorios', detail:'Revisa los formularios'});
             return;
         }
