@@ -23,6 +23,11 @@ import { TemplateModule } from '../../../template.module';
 import { ModalTesisComponent } from './modal-tesis';
 import { BibliotecaDTO  } from '../../../interfaces/material-bibliografico/biblioteca.model';
 
+interface Column {
+  field: string;
+  header: string;
+}
+
 @Component({
   selector: 'app-material-bibliografico',
   standalone: true,
@@ -99,41 +104,17 @@ import { BibliotecaDTO  } from '../../../interfaces/material-bibliografico/bibli
                        </ng-template>
                             <ng-template pTemplate="header">
                                 <tr>
-                                <th  >Imagen</th>
-                                <th pSortableColumn="codigo" style="width: 4rem">Codigo<p-sortIcon field="codigo"></p-sortIcon></th>
-                                <th pSortableColumn="titulo" style="min-width:200px">Titulo<p-sortIcon field="titulo"></p-sortIcon></th>
-                                    <th pSortableColumn="autor" style="min-width:200px">Autor<p-sortIcon field="autor"></p-sortIcon></th>
-                                    <th pSortableColumn="coleccion"  style="min-width:200px">Ciudad<p-sortIcon field="coleccion"></p-sortIcon></th>
-                                    <th pSortableColumn="editorial"  style="min-width:200px">Editorial<p-sortIcon field="editorial"></p-sortIcon></th>
-                                    <th pSortableColumn="anio" style="width: 8rem">Año<p-sortIcon field="anio"></p-sortIcon></th>
-                                    <th style="width: 4rem" >Opciones</th>
-
+                                    <th>Imagen</th>
+                                    <th *ngFor="let col of columns" [pSortableColumn]="col.field">
+                                        {{ col.header }}<p-sortIcon [field]="col.field"></p-sortIcon>
+                                    </th>
+                                    <th style="width: 4rem">Opciones</th>
                                 </tr>
                             </ng-template>
                             <ng-template pTemplate="body" let-objeto>
                                 <tr>
-                                <td>
-
-                                    </td>
-                                <td>{{objeto.codigoLocalizacion}}
-                                    </td>
-                                    <td>
-                                        {{objeto.titulo}}
-
-                                    </td>
-                                    <td>
-                                        {{objeto.autorPersonal}}<br/>
-
-                                    </td>
-                                    <td>
-                                        {{objeto.ciudadCodigo}}
-                                    </td>
-                                    <td>
-                                        {{objeto.editorialPublicacion}}
-                                    </td>
-                                    <td>
-                                        {{objeto.anioPublicacion}}
-                                    </td>
+                                    <td></td>
+                                    <td *ngFor="let col of columns">{{ objeto[col.field] }}</td>
                                     <td class="text-center">
                                         <div style="position: relative;">
                                             <button pButton type="button" icon="pi pi-ellipsis-v"
@@ -141,7 +122,6 @@ import { BibliotecaDTO  } from '../../../interfaces/material-bibliografico/bibli
                                                 (click)="showMenu($event, objeto)"></button>
                                             <p-menu #menu [popup]="true" [model]="items" appendTo="body"></p-menu>
                                         </div>
-
                                     </td>
                                 </tr>
                             </ng-template>
@@ -222,6 +202,7 @@ export class MaterialBibliografico {
   palabra: any;
   itemsMaterial: any[] = [];
   palabraClave:string="";
+  columns: Column[] = [];
 
   @ViewChild('modalLibro') modalLibro!: ModalLibroComponent;
   @ViewChild('modalRevista') modalRevista!: ModalRevistaComponent;
@@ -230,6 +211,52 @@ export class MaterialBibliografico {
 
   constructor(private materialBibliograficoService: MaterialBibliograficoService, private genericoService: GenericoService, private fb: FormBuilder,
     private router: Router, private authService: AuthService, private confirmationService: ConfirmationService, private messageService: MessageService) { }
+
+  private setColumns(): void {
+    const tipo = this.tipoRecursoFiltro?.tipo?.id;
+    switch (tipo) {
+      case 1: // Libro
+        this.columns = [
+          { field: 'codigoLocalizacion', header: 'Codigo' },
+          { field: 'titulo', header: 'Titulo' },
+          { field: 'autorPersonal', header: 'Autor' },
+          { field: 'ciudadCodigo', header: 'Ciudad' },
+          { field: 'editorialPublicacion', header: 'Editorial' },
+          { field: 'anioPublicacion', header: 'Año' }
+        ];
+        break;
+      case 2: // Revista
+        this.columns = [
+          { field: 'codigoLocalizacion', header: 'Codigo' },
+          { field: 'titulo', header: 'Titulo' },
+          { field: 'autorInstitucional', header: 'Institución' },
+          { field: 'director', header: 'Director' },
+          { field: 'editorialPublicacion', header: 'Editorial' },
+          { field: 'anioPublicacion', header: 'Año' }
+        ];
+        break;
+      case 3: // Tesis
+        this.columns = [
+          { field: 'codigoLocalizacion', header: 'Codigo' },
+          { field: 'titulo', header: 'Titulo' },
+          { field: 'autorPersonal', header: 'Autor' },
+          { field: 'director', header: 'Director' },
+          { field: 'paisId', header: 'País' },
+          { field: 'anioPublicacion', header: 'Año' }
+        ];
+        break;
+      default: // Otros
+        this.columns = [
+          { field: 'codigoLocalizacion', header: 'Codigo' },
+          { field: 'titulo', header: 'Título' },
+          { field: 'autorPersonal', header: 'Autor' },
+          { field: 'editorialPublicacion', header: 'Revista' },
+          { field: 'numeroPaginas', header: 'Páginas' },
+          { field: 'anioPublicacion', header: 'Año' }
+        ];
+        break;
+    }
+  }
   async ngOnInit() {
     this.items = [
       {
@@ -257,6 +284,7 @@ export class MaterialBibliografico {
     await this.ListaTipo();
 //     await this.ListaSede();
     await this.listar();
+    this.setColumns();
     this.formValidar();
   }
   limpiar() {
@@ -484,6 +512,7 @@ onSaved(): void {
 async listar() {
   this.loading = true;
   this.data = [];
+  this.setColumns();
 
   // Si se ingresa palabra clave o se ha seleccionado una opción de búsqueda distinta a "TODOS"
   if (this.palabraClave && this.palabraClave.trim() !== ""||
