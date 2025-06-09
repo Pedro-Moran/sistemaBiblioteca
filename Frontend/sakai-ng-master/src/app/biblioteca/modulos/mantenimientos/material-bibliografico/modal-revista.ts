@@ -600,6 +600,35 @@ export class ModalRevistaComponent implements OnInit {
         this.display = true;
     }
 
+    editarBiblioteca(mat: BibliotecaDTO, tipoId?: number | null) {
+        const id = tipoId ?? this.tipoMaterialId ?? null;
+        this.formRevista.reset();
+        this.formRevista.patchValue({
+            id: mat.id ?? null,
+            tipoMaterialId: id,
+            codigo: mat.codigoLocalizacion,
+            titulo: mat.titulo,
+            institucion: mat.autorInstitucional,
+            director: mat.director,
+            editorialPublicacion: mat.editorialPublicacion,
+            periodicidad: mat.periodicidadId,
+            pais: mat.paisId,
+            ciudad: mat.ciudadCodigo,
+            especialidad: mat.idEspecialidad,
+            cantidad: mat.numeroPaginas,
+            anioPublicacion: mat.anioPublicacion,
+            issn: mat.issn,
+            descriptores: mat.descriptor,
+            notaGeneral: mat.notaGeneral,
+            formatoDigital: mat.fladigitalizado,
+            urlPublicacion: mat.linkPublicacion
+        });
+        this.tipoMaterialId = id;
+        this.objetoRevista.id = mat.id ?? null;
+        this.display = true;
+        this.ListaDetalle();
+    }
+
     closeModal() {
         this.display = false;
     }

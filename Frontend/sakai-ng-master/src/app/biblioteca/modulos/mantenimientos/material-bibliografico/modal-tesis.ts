@@ -530,6 +530,32 @@ export class ModalTesisComponent implements OnInit {
         this.display = true;
     }
 
+    editarBiblioteca(mat: BibliotecaDTO, tipoId?: number | null) {
+        const id = tipoId ?? this.tipoMaterialId ?? null;
+        this.formOtro.reset();
+        this.formOtro.patchValue({
+            id: mat.id ?? null,
+            tipoMaterialId: id,
+            codigo: mat.codigoLocalizacion,
+            titulo: mat.titulo,
+            autorPrincipal: mat.autorPersonal,
+            pais: mat.paisId,
+            ciudad: mat.ciudadCodigo,
+            especialidad: mat.idEspecialidad,
+            cantidad: mat.numeroPaginas,
+            anio: mat.anioPublicacion,
+            descriptores: mat.descriptor,
+            notasTesis: mat.notaContenido,
+            notasGeneral: mat.notaGeneral,
+            formatoDigital: mat.fladigitalizado,
+            urlPublicacion: mat.linkPublicacion
+        });
+        this.tipoMaterialId = id;
+        this.objetoOtro.id = mat.id ?? null;
+        this.display = true;
+        this.ListaDetalle();
+    }
+
     closeModal() {
         this.display = false;
     }

@@ -316,13 +316,26 @@ onSaved(): void {
     table.clear();
     this.filter.nativeElement.value = '';
   }
-    async editarRegistro(objeto: BibliotecaDTO) {
-        const idTipo = objeto.tipoMaterialId ?? this.tipoRecursoFiltro?.id ?? null;
-       await this.modalLibro.ListaEspecialidad();
+  async editarRegistro(objeto: BibliotecaDTO) {
+    const idTipo = objeto.tipoMaterialId ?? this.tipoRecursoFiltro?.id ?? null;
+
+    switch (objeto.tipoMaterialId ?? this.tipoRecursoFiltro?.tipo?.id) {
+      case 1: // Libro
+        await this.modalLibro.ListaEspecialidad();
         await this.modalLibro.ListaPais();
-//         await this.modalLibro.ListaCiudad(objeto.paisId!);
         this.modalLibro.editarRegistro(objeto, idTipo);
+        break;
+      case 2: // Revista
+        this.modalRevista.editarBiblioteca(objeto, idTipo);
+        break;
+      case 3: // Tesis
+        this.modalTesis.editarBiblioteca(objeto, idTipo);
+        break;
+      default: // Otros
+        this.modalOtros.editarBiblioteca(objeto, idTipo);
+        break;
     }
+  }
 
 
 
