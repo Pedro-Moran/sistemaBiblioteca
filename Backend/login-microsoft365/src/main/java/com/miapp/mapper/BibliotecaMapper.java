@@ -38,6 +38,7 @@ public class BibliotecaMapper {
         b.setEdicion(dto.getEdicion());
         b.setReimpresion(dto.getReimpresion());
         b.setDescriptor(dto.getDescriptor());
+        b.setDescripcionRevista(dto.getDescripcionRevista());
         b.setNotaContenido(dto.getNotaContenido());
         b.setNotaGeneral(dto.getNotaGeneral());
         b.setNotaResumen(dto.getNotaResumen());
@@ -131,6 +132,7 @@ public class BibliotecaMapper {
         dto.setEdicion(b.getEdicion());
         dto.setReimpresion(b.getReimpresion());
         dto.setDescriptor(b.getDescriptor());
+        dto.setDescripcionRevista(b.getDescripcionRevista());
         dto.setNotaContenido(b.getNotaContenido());
         dto.setNotaGeneral(b.getNotaGeneral());
         dto.setNotaResumen(b.getNotaResumen());
@@ -219,6 +221,7 @@ public class BibliotecaMapper {
             resumen.setEdicion(padre.getEdicion());
             resumen.setReimpresion(padre.getReimpresion());
             resumen.setDescriptor(padre.getDescriptor());
+            resumen.setDescripcionRevista(padre.getDescripcionRevista());
             resumen.setNotaContenido(padre.getNotaContenido());
             resumen.setNotaGeneral(padre.getNotaGeneral());
             resumen.setNotaResumen(padre.getNotaResumen());

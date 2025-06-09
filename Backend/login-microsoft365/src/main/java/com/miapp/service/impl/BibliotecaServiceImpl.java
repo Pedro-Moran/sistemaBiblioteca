@@ -105,6 +105,7 @@ public class BibliotecaServiceImpl implements BibliotecaService {
         b.setTipoAnioPublicacion(dto.getTipoAnioPublicacion());
         b.setAnioPublicacion(dto.getAnioPublicacion());
         b.setDescriptor(dto.getDescriptor());
+        b.setDescripcionRevista(dto.getDescripcionRevista());
         b.setNotaContenido(dto.getNotaContenido());
         b.setNotaGeneral(dto.getNotaGeneral());
         b.setSerie(dto.getSerie());
@@ -265,6 +266,7 @@ public class BibliotecaServiceImpl implements BibliotecaService {
         dto.setEdicion(b.getEdicion());
         dto.setReimpresion(b.getReimpresion());
         dto.setDescriptor(b.getDescriptor());
+        dto.setDescripcionRevista(b.getDescripcionRevista());
         dto.setNotaContenido(b.getNotaContenido());
         dto.setNotaGeneral(b.getNotaGeneral());
         dto.setNotaResumen(b.getNotaResumen());
@@ -357,6 +359,7 @@ public class BibliotecaServiceImpl implements BibliotecaService {
                         resumen.setEdicion(padre.getEdicion());
                         resumen.setReimpresion(padre.getReimpresion());
                         resumen.setDescriptor(padre.getDescriptor());
+                        resumen.setDescripcionRevista(padre.getDescripcionRevista());
                         resumen.setNotaContenido(padre.getNotaContenido());
                         resumen.setNotaGeneral(padre.getNotaGeneral());
                         resumen.setNotaResumen(padre.getNotaResumen());
