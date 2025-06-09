@@ -171,8 +171,16 @@ import { BibliotecaDTO  } from '../../../interfaces/material-bibliografico/bibli
     [tipoMaterialId]="tipoRecursoFiltro.tipo.id"
     (saved)="onSaved()">
 </app-modal-revista>
-<app-modal-tesis #modalTesis></app-modal-tesis>
-<app-modal-otros #modalOtros></app-modal-otros>
+<app-modal-tesis
+    #modalTesis
+    [tipoMaterialId]="tipoRecursoFiltro.tipo.id"
+    (saved)="onSaved()">
+</app-modal-tesis>
+<app-modal-otros
+    #modalOtros
+    [tipoMaterialId]="tipoRecursoFiltro.tipo.id"
+    (saved)="onSaved()">
+</app-modal-otros>
 
 
             <p-confirmDialog [style]="{width: '450px'}"></p-confirmDialog>
