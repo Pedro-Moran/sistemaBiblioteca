@@ -624,7 +624,6 @@ export class ModalRevistaComponent implements OnInit {
             urlPublicacion: mat.linkPublicacion
         });
         this.tipoMaterialId = id;
-        this.objetoRevista.id = mat.id ?? null;
         this.display = true;
         this.ListaDetalle();
     }

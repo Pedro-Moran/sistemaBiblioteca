@@ -551,7 +551,6 @@ export class ModalTesisComponent implements OnInit {
             urlPublicacion: mat.linkPublicacion
         });
         this.tipoMaterialId = id;
-        this.objetoOtro.id = mat.id ?? null;
         this.display = true;
         this.ListaDetalle();
     }

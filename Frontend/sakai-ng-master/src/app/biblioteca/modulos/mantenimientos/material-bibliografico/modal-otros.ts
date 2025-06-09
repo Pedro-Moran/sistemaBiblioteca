@@ -475,7 +475,7 @@ export class ModalOtrosComponent implements OnInit {
             tituloRevista: mat.editorialPublicacion,
             autorPrincipal: mat.autorPersonal,
             descripcionRevista: mat.descriptor,
-            descripcionFisica: mat.descripcionFisica,
+            descripcionFisica: (mat as any).descripcionFisica,
             cantidad: mat.numeroPaginas,
             formatoDigital: mat.fladigitalizado,
             urlPublicacion: mat.linkPublicacion,
@@ -483,7 +483,6 @@ export class ModalOtrosComponent implements OnInit {
             notasGeneral: mat.notaGeneral
         });
         this.tipoMaterialId = id;
-        this.objetoOtro.id = mat.id ?? null;
         this.display = true;
         this.ListaDetalle();
     }
