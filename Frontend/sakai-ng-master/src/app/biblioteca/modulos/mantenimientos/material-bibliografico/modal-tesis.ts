@@ -548,11 +548,14 @@ export class ModalTesisComponent implements OnInit {
         const t = this.formOtro.value;
         const decoded = this.authService.getUser();
 
+        const parentTipo = t.tipoMaterialId ?? this.tipoMaterialId ?? null;
+
         const detalles: DetalleBibliotecaDTO[] = this.detalles.map(d => ({
             idDetalleBiblioteca: d.idDetalleBiblioteca ?? undefined,
             codigoSede: d.codigoSede ?? null,
             tipoAdquisicionId: (d.tipoAdquisicion as any)?.id ?? d.tipoAdquisicionId ?? null,
-            tipoMaterialId: (d.tipoMaterial as any)?.id ?? d.tipoMaterialId ?? null,
+            tipoMaterialId:
+              (d.tipoMaterial as any)?.id ?? d.tipoMaterialId ?? parentTipo,
             costo: d.costo ?? null,
             numeroFactura: d.numeroFactura ?? null,
             fechaIngreso: d.fechaIngreso ?? null,
