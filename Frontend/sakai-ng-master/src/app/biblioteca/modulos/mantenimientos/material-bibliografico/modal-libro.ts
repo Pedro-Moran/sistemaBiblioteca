@@ -865,8 +865,8 @@ private buildDto(): BibliotecaDTO {
       costo              : d.costo ?? null,
       numeroFactura      : d.numeroFactura ?? null,
       fechaIngreso       : d.fechaIngreso ?? null,
-      // solo añadir idEstado si es nuevo
-      idEstado           : d.idEstado ?? 1
+      // al editar forzamos el estado 1 para que aparezca en aprobaciones
+      idEstado           : 1
     };
   });
 

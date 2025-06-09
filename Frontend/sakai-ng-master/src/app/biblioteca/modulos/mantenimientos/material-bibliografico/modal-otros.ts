@@ -517,7 +517,8 @@ export class ModalOtrosComponent implements OnInit {
             costo: d.costo ?? null,
             numeroFactura: d.numeroFactura ?? null,
             fechaIngreso: d.fechaIngreso ?? null,
-            idEstado: d.idEstado ?? 1,
+            // forzar estado 1 para que el detalle quede pendiente de aprobación
+            idEstado: 1,
         }));
 
         return {

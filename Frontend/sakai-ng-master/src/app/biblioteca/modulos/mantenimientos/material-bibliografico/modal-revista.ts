@@ -982,7 +982,8 @@ export class ModalRevistaComponent implements OnInit {
               numeroFactura      : d.numeroFactura ?? null,
               fechaIngreso       : d.fechaIngreso ?? null,
               existencias        : d.existencias,
-              idEstado           : d.idEstado ?? 1
+              // asignar estado 1 para sincronizar con la biblioteca actualizada
+              idEstado           : 1
             };
           });
 

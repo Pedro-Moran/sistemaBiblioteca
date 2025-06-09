@@ -585,7 +585,8 @@ export class ModalTesisComponent implements OnInit {
             costo: d.costo ?? null,
             numeroFactura: d.numeroFactura ?? null,
             fechaIngreso: d.fechaIngreso ?? null,
-            idEstado: d.idEstado ?? 1,
+            // detalle debe tener estado 1 al guardar o actualizar
+            idEstado: 1,
         }));
 
         return {
