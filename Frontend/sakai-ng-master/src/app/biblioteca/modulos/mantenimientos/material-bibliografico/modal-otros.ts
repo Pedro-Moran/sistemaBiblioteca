@@ -475,7 +475,7 @@ export class ModalOtrosComponent implements OnInit {
             tituloArticulo: mat.titulo,
             tituloRevista: mat.editorialPublicacion,
             autorPrincipal: mat.autorPersonal,
-            descripcionRevista: (mat as any).descripcionRevista ?? '',
+            descripcionRevista: (mat as any).descripcionRevista ?? mat.descriptor ?? '',
             cantidad: mat.numeroPaginas,
             formatoDigital: mat.fladigitalizado,
             urlPublicacion: mat.linkPublicacion,
