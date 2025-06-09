@@ -528,7 +528,7 @@ export class ModalOtrosComponent implements OnInit {
             autorPersonal: otro.autorPrincipal,
             tipoMaterialId: otro.tipoMaterialId ?? this.tipoMaterialId ?? null,
             editorialPublicacion: otro.tituloRevista,
-            descriptor: otro.descriptores,
+            descriptor: otro.descripcionRevista || otro.descriptores,
             notaGeneral: otro.notasGeneral,
             fladigitalizado: !!otro.formatoDigital,
             linkPublicacion: otro.urlPublicacion,
