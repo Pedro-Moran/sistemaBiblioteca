@@ -533,6 +533,7 @@ export class ModalTesisComponent implements OnInit {
     editarBiblioteca(mat: BibliotecaDTO, tipoId?: number | null) {
         const id = tipoId ?? this.tipoMaterialId ?? null;
         this.formOtro.reset();
+        this.objetoOtro.id = mat.id ?? 0;
         this.formOtro.patchValue({
             id: mat.id ?? null,
             tipoMaterialId: id,
