@@ -31,6 +31,7 @@ export interface BibliotecaDTO {
   edicion?: string;
   reimpresion?: number;
   descriptor?: string;
+  descripcionRevista?: string;
   notaContenido?: string;
   notaGeneral?: string;
   notaResumen?: string;
