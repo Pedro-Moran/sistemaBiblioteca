@@ -1350,7 +1350,7 @@ public setData(material: BibliotecaDTO, omitPaisCiudad = false): void {
   -------------------------------------------------------*/
   this.formLibro.patchValue({
     id:            clone.id,
-    codigo:        clone.id,
+    codigo:        clone.codigoLocalizacion,
     titulo:        clone.titulo,
     descripcion:   clone.descriptor,
     notasContenido:clone.notaContenido,
