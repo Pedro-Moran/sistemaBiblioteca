@@ -552,9 +552,15 @@ export class ModalRevistaComponent implements OnInit {
                 Validators.required
             ]
             ],
-            horaInicio: [null, [Validators.required]],
-            horaFin: [null, [Validators.required]],
-            maxHoras: [null, [Validators.required, Validators.min(1)]],
+            horaInicio: [
+              this.objetoDetalle?.horaInicio ? this.stringToDate(this.objetoDetalle.horaInicio) : null,
+              [Validators.required]
+            ],
+            horaFin: [
+              this.objetoDetalle?.horaFin ? this.stringToDate(this.objetoDetalle.horaFin) : null,
+              [Validators.required]
+            ],
+            maxHoras: [this.objetoDetalle?.maxHoras ?? null, [Validators.required, Validators.min(1)]],
             costo: [this.objetoDetalle?.costo,
             [
                 Validators.required,
@@ -1075,6 +1081,14 @@ export class ModalRevistaComponent implements OnInit {
     if (!t) { return null; }
     if (typeof t === 'string') { return t.length > 5 ? t.slice(11,16) : t; }
     return t.toISOString().slice(11,16);
+  }
+
+  /** Convierte "HH:mm" o "yyyy-MM-ddTHH:mm" a objeto Date para p-calendar */
+  private stringToDate(hhmm: string): Date {
+    const parts = hhmm.includes('T') ? hhmm.split('T')[1].split(':') : hhmm.split(':');
+    const d = new Date();
+    d.setHours(+parts[0], +parts[1], 0, 0);
+    return d;
   }
 
     idToSede(id: number|null) {
