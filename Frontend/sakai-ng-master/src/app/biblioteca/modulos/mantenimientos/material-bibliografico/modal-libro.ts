@@ -876,8 +876,8 @@ private buildDto(): BibliotecaDTO {
                   ? d.tipoAdquisicionId?.id ?? null  // ‹– sólo number | null
                   : d.tipoAdquisicionId ?? null,
       tipoMaterialId     : d.tipoMaterialId!,
-      horaInicio         : this.timeToString(d.horaInicio),
-      horaFin            : this.timeToString(d.horaFin),
+      horaInicio         : this.timeToString(d.horaInicio ?? null),
+      horaFin            : this.timeToString(d.horaFin ?? null),
       maxHoras           : d.maxHoras ?? null,
       costo              : d.costo ?? null,
       numeroFactura      : d.numeroFactura ?? null,
@@ -1325,8 +1325,8 @@ guardarEjemplar() {
       codigoSede        : sedeId,
       tipoAdquisicionId : tipoAdqId,
       tipoMaterialId    : tipoMaterialId,    // ← añade esta línea
-      horaInicio        : this.timeToString(this.formDetalle.value.horaInicio),
-      horaFin           : this.timeToString(this.formDetalle.value.horaFin),
+      horaInicio        : this.timeToString(this.formDetalle.value.horaInicio ?? null),
+      horaFin           : this.timeToString(this.formDetalle.value.horaFin ?? null),
       maxHoras          : this.formDetalle.value.maxHoras,
       costo             : this.formDetalle.value.costo,
       numeroFactura     : this.formDetalle.value.nroFactura,
