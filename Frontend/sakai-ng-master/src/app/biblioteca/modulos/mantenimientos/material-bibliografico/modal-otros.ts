@@ -870,7 +870,9 @@ export class ModalOtrosComponent implements OnInit {
             private timeToString(t: Date | string | null): string | null {
               if (!t) { return null; }
               if (typeof t === 'string') { return t.length > 5 ? t.slice(11,16) : t; }
-              return t.toISOString().slice(11,16);
+              const h = t.getHours().toString().padStart(2,'0');
+              const m = t.getMinutes().toString().padStart(2,'0');
+              return `${h}:${m}`;
             }
 
             /** Convierte "HH:mm" o "yyyy-MM-ddTHH:mm" a Date */

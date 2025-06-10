@@ -941,8 +941,12 @@ private formatDateTime(d: Date | string | null): string | null {
 
 private timeToString(t: Date | string | null): string | null {
   if (!t) { return null; }
-  if (typeof t === 'string') { return t.length > 5 ? t.slice(11,16) : t; }
-  return t.toISOString().slice(11,16); // "HH:mm"
+  if (typeof t === 'string') {
+    return t.length > 5 ? t.slice(11,16) : t;
+  }
+  const h = t.getHours().toString().padStart(2, '0');
+  const m = t.getMinutes().toString().padStart(2, '0');
+  return `${h}:${m}`; // "HH:mm" usando hora local
 }
 
 /** Convierte "HH:mm" (o "yyyy-MM-ddTHH:mm") a objeto Date para p-calendar */
