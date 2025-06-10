@@ -288,6 +288,9 @@ public class BibliotecaMapper {
         tmp.setNumeroFactura(d.getNumeroFactura());
         tmp.setCodigoUsuario(d.getCodigoUsuario());
         tmp.setTipoPrestamo(d.getTipoPrestamo());
+        tmp.setHoraInicio(d.getHoraInicio());
+        tmp.setHoraFin(d.getHoraFin());
+        tmp.setMaxHoras(d.getMaxHoras());
         tmp.setFechaIngreso(d.getFechaIngreso());
         tmp.setCodigoBarra(d.getCodigoBarra());
         tmp.setNumeroIngreso(d.getNumeroIngreso());

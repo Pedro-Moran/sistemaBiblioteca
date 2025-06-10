@@ -27,6 +27,15 @@ public class DetalleBibliotecaDTO {
 
     private String tipoPrestamo;
 
+    /** Hora de inicio permitida para préstamo */
+    private String horaInicio;
+
+    /** Hora fin permitida para préstamo */
+    private String horaFin;
+
+    /** Máximo de horas de préstamo */
+    private Integer maxHoras;
+
     /** 5) ID de tipo de material (FK a TipoMaterial) */
     private Long tipoMaterialId;
 

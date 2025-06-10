@@ -219,6 +219,9 @@ public class BibliotecaServiceImpl implements BibliotecaService {
             e.setCosto(det.getCosto());
             e.setNumeroFactura(det.getNumeroFactura());
             e.setFechaIngreso(det.getFechaIngreso());
+            e.setHoraInicio(det.getHoraInicio());
+            e.setHoraFin(det.getHoraFin());
+            e.setMaxHoras(det.getMaxHoras());
             e.setIdEstado(det.getIdEstado());
 
             // 6) Vínculo bidireccional
@@ -444,6 +447,9 @@ public class BibliotecaServiceImpl implements BibliotecaService {
 
                     // 6) Fecha de Ingreso
                     tmp.setFechaIngreso(d.getFechaIngreso());
+                    tmp.setHoraInicio(d.getHoraInicio());
+                    tmp.setHoraFin(d.getHoraFin());
+                    tmp.setMaxHoras(d.getMaxHoras());
 
                     // 7) Código de Barra (insertable=false en BD)
                     tmp.setCodigoBarra(d.getCodigoBarra());

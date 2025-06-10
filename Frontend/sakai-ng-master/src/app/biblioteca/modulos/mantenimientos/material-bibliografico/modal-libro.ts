@@ -413,13 +413,24 @@ import { Output, EventEmitter } from '@angular/core';
                             ver="Tipo de Material"></app-input-validation>
                         </div>
                         <div class="flex flex-col gap-2 w-full">
-                          <label for="fechaIngreso">Fecha Ingreso</label>
-                          <p-datepicker appendTo="body" formControlName="fechaIngreso" [ngClass]="'w-full'" [style]="{ width: '100%' }"
-                            [readonlyInput]="true" dateFormat="dd/mm/yy">
-                          </p-datepicker>
+                        <label for="fechaIngreso">Fecha Ingreso</label>
+                        <p-datepicker appendTo="body" formControlName="fechaIngreso" [ngClass]="'w-full'" [style]="{ width: '100%' }"
+                          [readonlyInput]="true" dateFormat="dd/mm/yy">
+                        </p-datepicker>
 
-                          <app-input-validation [form]="formDetalle" modelo="fechaIngreso" ver="Fecha Ingreso"></app-input-validation>
-                        </div>
+                        <app-input-validation [form]="formDetalle" modelo="fechaIngreso" ver="Fecha Ingreso"></app-input-validation>
+                        <label for="horaInicio">Hora Inicio</label>
+                        <p-calendar id="horaInicio" formControlName="horaInicio" timeOnly="true" hourFormat="24" appendTo="body" class="w-full"></p-calendar>
+                        <app-input-validation [form]="formDetalle" modelo="horaInicio" ver="Hora Inicio"></app-input-validation>
+
+                        <label for="horaFin">Hora Fin</label>
+                        <p-calendar id="horaFin" formControlName="horaFin" timeOnly="true" hourFormat="24" appendTo="body" class="w-full"></p-calendar>
+                        <app-input-validation [form]="formDetalle" modelo="horaFin" ver="Hora Fin"></app-input-validation>
+
+                        <label for="maxHoras">Máx Horas</label>
+                        <input pInputText id="maxHoras" type="number" formControlName="maxHoras" />
+                        <app-input-validation [form]="formDetalle" modelo="maxHoras" ver="Máx Horas"></app-input-validation>
+                      </div>
 
                         <div class="flex flex-col gap-2 md:w-1/4">
                           <label for="Costo">Costo</label>
@@ -746,6 +757,9 @@ export class ModalLibroComponent implements OnInit {
                 Validators.required
             ]
             ],
+            horaInicio: [null, [Validators.required]],
+            horaFin: [null, [Validators.required]],
+            maxHoras: [null, [Validators.required, Validators.min(1)]],
             costo: [this.objetoDetalle?.costo,
             [
                 Validators.required,
@@ -862,6 +876,9 @@ private buildDto(): BibliotecaDTO {
                   ? d.tipoAdquisicionId?.id ?? null  // ‹– sólo number | null
                   : d.tipoAdquisicionId ?? null,
       tipoMaterialId     : d.tipoMaterialId!,
+      horaInicio         : this.timeToString(d.horaInicio),
+      horaFin            : this.timeToString(d.horaFin),
+      maxHoras           : d.maxHoras ?? null,
       costo              : d.costo ?? null,
       numeroFactura      : d.numeroFactura ?? null,
       fechaIngreso       : d.fechaIngreso ?? null,
@@ -920,6 +937,12 @@ private formatDateTime(d: Date | string | null): string | null {
   /* Convertimos Date → ‘yyyy-MM-ddTHH:mm:ss’  (sin milisegundos / sin Z) */
   const dt = typeof d === 'string' ? new Date(d) : d;
   return dt.toISOString().split('.')[0];          // ej. “2025-05-07T00:00:00”
+}
+
+private timeToString(t: Date | string | null): string | null {
+  if (!t) { return null; }
+  if (typeof t === 'string') { return t.length > 5 ? t.slice(11,16) : t; }
+  return t.toISOString().slice(11,16); // "HH:mm"
 }
 
 finalizar(): void {
@@ -1216,6 +1239,9 @@ finalizar(): void {
         sede           : det.codigoSede,
         tipoAdquisicion: det.tipoAdquisicionId,
         fechaIngreso   : det.fechaIngreso,
+        horaInicio     : det.horaInicio ?? null,
+        horaFin        : det.horaFin ?? null,
+        maxHoras       : det.maxHoras ?? null,
         costo          : det.costo,
         tipoMaterial: det.tipoMaterialId,
         nroFactura     : det.numeroFactura
@@ -1299,6 +1325,9 @@ guardarEjemplar() {
       codigoSede        : sedeId,
       tipoAdquisicionId : tipoAdqId,
       tipoMaterialId    : tipoMaterialId,    // ← añade esta línea
+      horaInicio        : this.timeToString(this.formDetalle.value.horaInicio),
+      horaFin           : this.timeToString(this.formDetalle.value.horaFin),
+      maxHoras          : this.formDetalle.value.maxHoras,
       costo             : this.formDetalle.value.costo,
       numeroFactura     : this.formDetalle.value.nroFactura,
       fechaIngreso      : this.formatDateTime(this.formDetalle.value.fechaIngreso),

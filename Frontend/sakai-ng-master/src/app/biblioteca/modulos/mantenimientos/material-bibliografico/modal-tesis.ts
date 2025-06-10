@@ -330,6 +330,15 @@ import { AuthService } from '../../../services/auth.service';
 </p-datepicker>
 
   <app-input-validation [form]="formDetalle" modelo="fechaIngreso" ver="Fecha Ingreso"></app-input-validation>
+  <label for="horaInicio">Hora Inicio</label>
+  <p-calendar id="horaInicio" formControlName="horaInicio" timeOnly="true" hourFormat="24" appendTo="body" class="w-full"></p-calendar>
+  <app-input-validation [form]="formDetalle" modelo="horaInicio" ver="Hora Inicio"></app-input-validation>
+  <label for="horaFin">Hora Fin</label>
+  <p-calendar id="horaFin" formControlName="horaFin" timeOnly="true" hourFormat="24" appendTo="body" class="w-full"></p-calendar>
+  <app-input-validation [form]="formDetalle" modelo="horaFin" ver="Hora Fin"></app-input-validation>
+  <label for="maxHoras">Máx Horas</label>
+  <input pInputText id="maxHoras" type="number" formControlName="maxHoras" />
+  <app-input-validation [form]="formDetalle" modelo="maxHoras" ver="Máx Horas"></app-input-validation>
 </div>
 
     </div>
@@ -498,6 +507,9 @@ export class ModalTesisComponent implements OnInit {
                 Validators.required
             ]
             ],
+            horaInicio: [null, [Validators.required]],
+            horaFin: [null, [Validators.required]],
+            maxHoras: [null, [Validators.required, Validators.min(1)]],
             tipoAdquisicion: [this.objetoDetalle?.tipoAdquisicion]
         });
     }
@@ -582,6 +594,9 @@ export class ModalTesisComponent implements OnInit {
             tipoAdquisicionId: (d.tipoAdquisicion as any)?.id ?? d.tipoAdquisicionId ?? null,
             tipoMaterialId:
               (d.tipoMaterial as any)?.id ?? d.tipoMaterialId ?? parentTipo,
+            horaInicio: this.timeToString(d.horaInicio),
+            horaFin:    this.timeToString(d.horaFin),
+            maxHoras:   d.maxHoras ?? null,
             costo: d.costo ?? null,
             numeroFactura: d.numeroFactura ?? null,
             fechaIngreso: d.fechaIngreso ?? null,
@@ -891,6 +906,9 @@ export class ModalTesisComponent implements OnInit {
                     codigoSede:        sedeId,
                     tipoMaterialId:    tipoMat,
                     tipoAdquisicionId: tipoAdq,
+                    horaInicio:        this.timeToString(this.formDetalle.value.horaInicio),
+                    horaFin:           this.timeToString(this.formDetalle.value.horaFin),
+                    maxHoras:          this.formDetalle.value.maxHoras,
                     costo:             null,
                     numeroFactura:     null,
                     fechaIngreso:      this.formatDateTime(this.formDetalle.value.fechaIngreso),
@@ -913,6 +931,12 @@ export class ModalTesisComponent implements OnInit {
               if (typeof d === 'string' && d.length > 10) { return d; }
               const dt = typeof d === 'string' ? new Date(d) : d;
               return dt.toISOString().split('.')[0];
+            }
+
+            private timeToString(t: Date | string | null): string | null {
+              if (!t) { return null; }
+              if (typeof t === 'string') { return t.length > 5 ? t.slice(11,16) : t; }
+              return t.toISOString().slice(11,16);
             }
 
             idToSede(id: number | null) {

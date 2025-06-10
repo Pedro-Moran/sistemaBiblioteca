@@ -80,6 +80,9 @@ export interface DetalleBibliotecaDTO {
   costo?: number | null;
   numeroFactura?: string | null;
   nroExistencia?: number;
+  horaInicio?: string | null;
+  horaFin?: string | null;
+  maxHoras?: number | null;
   usuarioIngreso?: string;
   fechaIngreso?: string | null;
   usuarioAceptacion?: string;
@@ -99,6 +102,9 @@ export interface DetalleInput {
   costo:             number | null;
   numeroFactura:     string | null;
   fechaIngreso:      string | null;      // → en ISO ‘yyyy-MM-ddTHH:mm:ss’
+  horaInicio?:       string | null;
+  horaFin?:          string | null;
+  maxHoras?:         number | null;
 }
 export interface DetalleDisplay extends DetalleInput {
 
