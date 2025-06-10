@@ -291,7 +291,7 @@ import { AuthService } from '../../../services/auth.service';
                                 <div style="position: relative;">
                                     <button pButton type="button" icon="pi pi-ellipsis-v"
                                         class="p-button-rounded p-button-text p-button-plain"
-                                        (click)="showMenu($event, detalle)"></button>
+                                        (click)="showMenu($event, detalle, rowIndex)"></button>
                                     <p-menu #menu [popup]="true" [model]="items" appendTo="body"></p-menu>
                                 </div>
 
@@ -417,6 +417,7 @@ export class ModalRevistaComponent implements OnInit {
     items!: MenuItem[];
     uploadedFiles: any[] = [];
     editingIndex: number | null = null;
+    selectedIndex!: number;
     private id?: number;
     @Input() tipoMaterialId!: number | null;
     @Output() saved = new EventEmitter<void>();
@@ -518,7 +519,7 @@ export class ModalRevistaComponent implements OnInit {
         {
           label: 'Actualizar',
           icon: 'pi pi-pencil',
-          command: (event) => this.editarRegistro(this.selectedItem)
+          command: () => this.editarDetalle(this.selectedItem, this.selectedIndex)
         },
         {
           label: 'Eliminar',
@@ -621,6 +622,7 @@ export class ModalRevistaComponent implements OnInit {
     editarBiblioteca(mat: BibliotecaDTO, tipoId?: number | null) {
         const id = tipoId ?? this.tipoMaterialId ?? null;
         this.formRevista.reset();
+        this.objetoRevista.id = mat.id ?? 0;
         this.formRevista.patchValue({
             id: mat.id ?? null,
             tipoMaterialId: id,
@@ -918,15 +920,19 @@ export class ModalRevistaComponent implements OnInit {
           onGlobalFilter(table: Table, event: Event) {
             table.filterGlobal((event.target as HTMLInputElement).value, 'contains');
         }
-        showMenu(event: MouseEvent, selectedItem: any) {
+        showMenu(event: MouseEvent, selectedItem: any, idx: number) {
           this.selectedItem = selectedItem;
+          this.selectedIndex = idx;
           this.menu.toggle(event);
         }
 
-          editarRegistro(objeto:Detalle){
-            this.objetoDetalle = JSON.parse(JSON.stringify(objeto));
+          editarDetalle(det: DetalleDisplay, idx: number){
+            this.editingIndex = idx;
+            this.objetoDetalle = JSON.parse(JSON.stringify(det));
+            this.formDetalle.reset();
+            this.formDetalle.enable();
             this.formValidarDetalle();
-            this.displayDetalle = true;
+            this.displayEjemplar = true;
           }
 
 
@@ -957,10 +963,11 @@ export class ModalRevistaComponent implements OnInit {
                     }
                 });
             }
-            nuevoEjemplar(){
-                this.formValidarDetalle();
-                this.displayEjemplar = true;
-            }
+    nuevoEjemplar(){
+        this.editingIndex = null;
+        this.formValidarDetalle();
+        this.displayEjemplar = true;
+    }
         guardarEjemplar() {
             this.confirmationService.confirm({
             message : '¿Estás seguro(a) de que quieres registrar?',

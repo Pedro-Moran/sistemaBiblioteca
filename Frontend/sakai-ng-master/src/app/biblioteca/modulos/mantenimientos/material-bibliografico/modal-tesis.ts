@@ -281,7 +281,7 @@ import { AuthService } from '../../../services/auth.service';
                                 <div style="position: relative;">
                                     <button pButton type="button" icon="pi pi-ellipsis-v"
                                         class="p-button-rounded p-button-text p-button-plain"
-                                        (click)="showMenu($event, objeto)"></button>
+                                        (click)="showMenu($event, objeto, rowIndex)"></button>
                                     <p-menu #menu [popup]="true" [model]="items" appendTo="body"></p-menu>
                                 </div>
 
@@ -384,6 +384,8 @@ export class ModalTesisComponent implements OnInit {
     nuevaEspecialidad: string = '';
     items!: MenuItem[];
     uploadedFiles: any[] = [];
+    editingIndex: number | null = null;
+    selectedIndex!: number;
     @Input() tipoMaterialId!: number | null;
     @Output() saved = new EventEmitter<void>();
     constructor(private fb: FormBuilder,
@@ -483,7 +485,7 @@ export class ModalTesisComponent implements OnInit {
         {
           label: 'Actualizar',
           icon: 'pi pi-pencil',
-          command: (event) => this.editarRegistro(this.selectedItem)
+          command: () => this.editarDetalle(this.selectedItem, this.selectedIndex)
         },
         {
           label: 'Eliminar',
@@ -848,15 +850,19 @@ export class ModalTesisComponent implements OnInit {
           onGlobalFilter(table: Table, event: Event) {
             table.filterGlobal((event.target as HTMLInputElement).value, 'contains');
         }
-        showMenu(event: MouseEvent, selectedItem: any) {
+        showMenu(event: MouseEvent, selectedItem: any, idx: number) {
           this.selectedItem = selectedItem;
+          this.selectedIndex = idx;
           this.menu.toggle(event);
         }
 
-          editarRegistro(objeto:Detalle){
-            this.objetoDetalle = JSON.parse(JSON.stringify(objeto));
+          editarDetalle(det: DetalleDisplay, idx: number){
+            this.editingIndex = idx;
+            this.objetoDetalle = JSON.parse(JSON.stringify(det));
+            this.formDetalle.reset();
+            this.formDetalle.enable();
             this.formValidarDetalle();
-            this.displayDetalle = true;
+            this.displayEjemplar = true;
           }
 
 
@@ -888,6 +894,7 @@ export class ModalTesisComponent implements OnInit {
                 });
             }
             nuevoEjemplar(){
+                this.editingIndex = null;
                 this.formValidarDetalle();
                 if (this.tipoMaterialId) {
                     const tipoObj = this.tipoMaterialLista.find(t => t.id === this.tipoMaterialId) ?? null;
@@ -928,7 +935,12 @@ export class ModalTesisComponent implements OnInit {
                     idEstado: 1
                   };
 
-                  this.detalles = [...this.detalles, detalle];
+                  if (this.editingIndex == null) {
+                    this.detalles = [...this.detalles, detalle];
+                  } else {
+                    this.detalles[this.editingIndex] = detalle;
+                    this.detalles = [...this.detalles];
+                  }
                   this.formDetalle.reset();
                   this.displayEjemplar = false;
                 }
