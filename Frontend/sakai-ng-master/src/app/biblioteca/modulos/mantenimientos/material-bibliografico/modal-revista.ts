@@ -837,11 +837,39 @@ export class ModalRevistaComponent implements OnInit {
           }
         }
     async ListaDetalle() {
-        try {console.log("detalle");
-            const result: any = await this.materialBibliograficoService.lista_ejemplares('material-bibliografico/ciudad').toPromise();
-            if (result.status == 0) {
-                this.detalles = result.data;
-            }
+        const idBib = this.objetoRevista?.id;
+        if (!idBib) { return; }
+        try {
+            const data = await this.materialBibliograficoService
+                .listarDetallesPorBiblioteca(idBib, false)
+                .toPromise();
+
+            this.detalles = (data ?? []).map(d => {
+                const sedeId  = d.codigoSede ?? d.biblioteca?.sedeId ?? null;
+                const tipoMat = d.tipoMaterialId ?? d.biblioteca?.tipoMaterialId ?? null;
+                const tipoAdq = d.tipoAdquisicionId ?? d.biblioteca?.tipoAdquisicionId ?? null;
+
+                const sedeObj      = this.sedesLista.find(s => s.id === sedeId) ?? null;
+                const tipoMatObj   = this.tipoMaterialLista.find(t => t.id === tipoMat) ?? null;
+                const tipoAdqObj   = this.tipoAdquisicionLista.find(t => t.id === tipoAdq) ?? null;
+
+                return {
+                    idDetalleBiblioteca: d.idDetalleBiblioteca,
+                    codigoSede:        sedeId,
+                    tipoMaterialId:    tipoMat,
+                    tipoAdquisicionId: tipoAdq,
+                    horaInicio: d.horaInicio ?? null,
+                    horaFin:    d.horaFin ?? null,
+                    maxHoras:   d.maxHoras ?? null,
+                    costo: d.costo ?? null,
+                    numeroFactura: d.numeroFactura ?? null,
+                    fechaIngreso: d.fechaIngreso ?? null,
+                    sede: sedeObj,
+                    tipoMaterial: tipoMatObj,
+                    tipoAdquisicion: tipoAdqObj,
+                    idEstado: d.idEstado
+                } as DetalleDisplay;
+            });
         } catch (error) {
             console.log(error);
             this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Ocurrió un error. No se pudo cargar especialidad' });

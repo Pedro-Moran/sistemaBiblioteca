@@ -1139,11 +1139,35 @@ finalizar(): void {
         }
 
     async ListaEjemplares() {
+        const idBib = this.objetoLibro?.id;
+        if (!idBib) { return; }
         try {
-            const result: any = await this.materialBibliograficoService.lista_ejemplares('material-bibliografico/ciudad').toPromise();
-            if (result.status == 0) {
-                this.detalles = result.data;
-            }
+            const data = await this.materialBibliograficoService
+                .listarDetallesPorBiblioteca(idBib, false)
+                .toPromise();
+
+            this.detalles = (data ?? []).map(d => {
+                const sedeObj  = this.sedesLista.find(s => s.id === d.codigoSede) ?? null;
+                const tipoMatObj = this.tipoMaterialLista.find(t => t.id === d.tipoMaterialId) ?? null;
+                const tipoAdqObj = this.tipoAdquisicionLista.find(t => t.id === d.tipoAdquisicionId) ?? null;
+
+                return {
+                    idDetalleBiblioteca: d.idDetalleBiblioteca,
+                    codigoSede:        d.codigoSede,
+                    tipoMaterialId:    d.tipoMaterialId,
+                    tipoAdquisicionId: d.tipoAdquisicionId,
+                    horaInicio: d.horaInicio ?? null,
+                    horaFin:    d.horaFin ?? null,
+                    maxHoras:   d.maxHoras ?? null,
+                    costo: d.costo ?? null,
+                    numeroFactura: d.numeroFactura ?? null,
+                    fechaIngreso: d.fechaIngreso ?? null,
+                    sede: sedeObj,
+                    tipoMaterial: tipoMatObj,
+                    tipoAdquisicion: tipoAdqObj,
+                    idEstado: d.idEstado
+                } as DetalleDisplay;
+            });
         } catch (error) {
             console.log(error);
             this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Ocurrió un error. No se pudo cargar especialidad' });
@@ -1234,6 +1258,7 @@ finalizar(): void {
         // 3) resto de datos
         this.setData(mat, true);
         this.formLibro.patchValue({ tipoMaterialId: tipoId ?? this.tipoMaterialId });
+        await this.ListaEjemplares();
         this.display = true;
     }
 
