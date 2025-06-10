@@ -945,6 +945,14 @@ private timeToString(t: Date | string | null): string | null {
   return t.toISOString().slice(11,16); // "HH:mm"
 }
 
+/** Convierte "HH:mm" (o "yyyy-MM-ddTHH:mm") a objeto Date para p-calendar */
+private stringToDate(hhmm: string): Date {
+  const parts = hhmm.includes('T') ? hhmm.split('T')[1].split(':') : hhmm.split(':');
+  const d = new Date();
+  d.setHours(+parts[0], +parts[1], 0, 0);
+  return d;
+}
+
 finalizar(): void {
     [this.formLibro, this.formEditorial, this.formDetalle].forEach(fg => {
       Object.entries(fg.controls).forEach(([name, ctrl]) => {
@@ -1238,12 +1246,12 @@ finalizar(): void {
       this.formDetalle.patchValue({
         sede           : det.codigoSede,
         tipoAdquisicion: det.tipoAdquisicionId,
-        fechaIngreso   : det.fechaIngreso,
-        horaInicio     : det.horaInicio ?? null,
-        horaFin        : det.horaFin ?? null,
+        fechaIngreso   : det.fechaIngreso ? new Date(det.fechaIngreso) : null,
+        horaInicio     : det.horaInicio ? this.stringToDate(det.horaInicio) : null,
+        horaFin        : det.horaFin    ? this.stringToDate(det.horaFin)    : null,
         maxHoras       : det.maxHoras ?? null,
         costo          : det.costo,
-        tipoMaterial: det.tipoMaterialId,
+        tipoMaterial   : det.tipoMaterialId,
         nroFactura     : det.numeroFactura
       });
 
@@ -1430,11 +1438,15 @@ public setData(material: BibliotecaDTO, omitPaisCiudad = false): void {
   if (d0) {
     /* pre-cargamos el primer registro en el form (opcional) */
     this.formDetalle.patchValue({
-      codigoSede           : d0.codigoSede,          // ojo ⇦ ahora es “codigoSede”
-      tipoAdquisicion: d0.tipoAdquisicionId,   // idem
-      fechaIngreso   : d0.fechaIngreso,
-      costo          : d0.costo,
-      nroFactura     : d0.numeroFactura
+      codigoSede      : d0.codigoSede,
+      tipoAdquisicion : d0.tipoAdquisicionId,
+      fechaIngreso    : d0.fechaIngreso ? new Date(d0.fechaIngreso) : null,
+      horaInicio      : d0.horaInicio ? this.stringToDate(d0.horaInicio) : null,
+      horaFin         : d0.horaFin    ? this.stringToDate(d0.horaFin)    : null,
+      maxHoras        : d0.maxHoras ?? null,
+      costo           : d0.costo,
+      tipoMaterial    : d0.tipoMaterialId,
+      nroFactura      : d0.numeroFactura
     });
 
     /* ⇓ convertimos TODO el array a DetalleInput[] */
