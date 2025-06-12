@@ -7,7 +7,10 @@ import { Sedes } from '../../interfaces/sedes';
 import { Table, TableRowCollapseEvent, TableRowExpandEvent } from 'primeng/table';
 import { HttpErrorResponse } from '@angular/common/http';
 import { MaterialBibliograficoService } from '../../services/material-bibliografico.service';
+import { GenericoService } from '../../services/generico.service';
+import { AuthService } from '../../services/auth.service';
 import { ModalDetalleMaterial } from './detalle-material';
+import { forkJoin } from 'rxjs';
 
 @Component({
     selector: 'app-catalogo-enlinea',
@@ -391,6 +394,8 @@ export class CatalogoEnLineaComponent {
         fechaFinTime: null,
     };
 
+    user: any;
+
     private parseTime(t: string) {
         const [h, m] = t.split(':').map(n => parseInt(n, 10));
         return { h, m };
@@ -432,10 +437,16 @@ export class CatalogoEnLineaComponent {
         return now >= start && now <= end;
     }
 
-    constructor(private materialBibliograficoService: MaterialBibliograficoService, private confirmationService: ConfirmationService, private messageService: MessageService) { }
+    constructor(
+        private materialBibliograficoService: MaterialBibliograficoService,
+        private genericoService: GenericoService,
+        private confirmationService: ConfirmationService,
+        private messageService: MessageService,
+        private authService: AuthService
+    ) { }
 
     async ngOnInit() {
-
+        this.user = { "idusuario": 0 };
         this.listar();
         this.detalle = [
             {
@@ -615,10 +626,28 @@ export class CatalogoEnLineaComponent {
             }
         }
 
-        // Aquí se enviaría la solicitud al backend para cada item. Este ejemplo sólo muestra un mensaje.
-        this.messageService.add({ severity: 'success', detail: 'Solicitud enviada.' });
-        this.reservas = [];
-        this.closeDialog();
+        const requests = this.reservas.map(it => {
+            const payload = {
+                idDetalleBiblioteca: it.idDetalleBiblioteca ?? it.id,
+                idEstado: 3,
+                idUsuario: this.user?.idusuario ?? 0
+            };
+            return this.genericoService.conf_event_put(payload, 'api/biblioteca/detalles/estado');
+        });
+
+        if (requests.length > 0) {
+            forkJoin(requests).subscribe({
+                next: () => {
+                    this.messageService.add({ severity: 'success', detail: 'Solicitud enviada.' });
+                    this.reservas = [];
+                    this.listar();
+                    this.closeDialog();
+                },
+                error: () => {
+                    this.messageService.add({ severity: 'error', detail: 'Error al actualizar estado.' });
+                }
+            });
+        }
     }
 
     /** Devuelve la descripción textual del estado según su id */
