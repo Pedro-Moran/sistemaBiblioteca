@@ -55,18 +55,18 @@ import { ModalDetalleMaterial } from './detalle-material';
         <ng-template #body let-objeto>
             <tr>
                 <td>
-                <img [src]="objeto.material.url" [alt]="objeto.material.titulo" width="50" class="shadow-lg" />
+                <img [src]="getImageUrl(objeto)" [alt]="objeto.material?.titulo || objeto.titulo" width="50" class="shadow-lg" />
                 </td>
-                <td>{{objeto.codigo}}</td>
+                <td>{{ objeto.codigo }}</td>
                 <td>{{ objeto.numeroIngreso }}</td>
-                <td> {{objeto.material.titulo}}</td>
+                <td> {{ objeto.material?.titulo || objeto.titulo }}</td>
                 <td>
-                    {{objeto.material.autorPrincipal}}<br/>
-                    <span>{{objeto.material.autorSecundario}}</span>
+                    {{ objeto.material?.autorPrincipal || objeto.autorPersonal }}<br/>
+                    <span>{{ objeto.material?.autorSecundario || objeto.autorSecundario }}</span>
 
                 </td>
                 <td>
-                    {{objeto.material?.anioPublicacion}}
+                    {{ objeto.material?.anioPublicacion || objeto.anioPublicacion }}
                 </td>
 
 
@@ -147,7 +147,7 @@ import { ModalDetalleMaterial } from './detalle-material';
                         [expandedRowKeys]="expandedRows" (onRowExpand)="onRowExpand($event)" (onRowCollapse)="onRowCollapse($event)"
                         currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} registros"
                         [rowsPerPageOptions]="[10, 25, 50]" [loading]="loading" [rowHover]="true" styleClass="p-datatable-gridlines" [paginator]="true"
-                        [globalFilterFields]="['id','codigo','material.titulo','material.autorPrincipal','material.autorSecundario','material.anioPublicacion','coleccion.descripcion']" responsiveLayout="scroll">
+                        [globalFilterFields]="['id','codigo','titulo','autorPersonal','autorSecundario','anioPublicacion','coleccion.descripcion']" responsiveLayout="scroll">
                         <ng-template pTemplate="caption">
 
                        <div class="flex items-center justify-between">
@@ -163,9 +163,9 @@ import { ModalDetalleMaterial } from './detalle-material';
                                 <th style="width: 5rem"></th>
                                 <th  >Imagen</th>
                                 <th pSortableColumn="codigo" style="width: 4rem">Codigo<p-sortIcon field="codigo"></p-sortIcon></th>
-                                <th pSortableColumn="material.titulo" style="min-width:200px">Titulo<p-sortIcon field="material.titulo"></p-sortIcon></th>
-                                    <th pSortableColumn="material.autorPrincipal" style="min-width:200px">Autor<p-sortIcon field="material.autorPrincipal"></p-sortIcon></th>
-                                    <th pSortableColumn="material.anioPublicacion" style="width: 8rem">Año<p-sortIcon field="material.anioPublicacion"></p-sortIcon></th>
+                                <th pSortableColumn="titulo" style="min-width:200px">Titulo<p-sortIcon field="titulo"></p-sortIcon></th>
+                                    <th pSortableColumn="autorPersonal" style="min-width:200px">Autor<p-sortIcon field="autorPersonal"></p-sortIcon></th>
+                                    <th pSortableColumn="anioPublicacion" style="width: 8rem">Año<p-sortIcon field="anioPublicacion"></p-sortIcon></th>
                                     <th pSortableColumn="coleccion.descripcion" style="width: 8rem">Coleccion<p-sortIcon field="coleccion.descripcion"></p-sortIcon></th>
                                     <th style="width: 4rem" ></th>
 
@@ -177,21 +177,21 @@ import { ModalDetalleMaterial } from './detalle-material';
                 <p-button type="button" pRipple [pRowToggler]="objeto" [text]="true" [rounded]="true" [plain]="true" [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'" />
             </td>
                                 <td>
-                                <img [src]="objeto.material.url" [alt]="objeto.material.titulo" width="50" class="shadow-lg" />
+                                <img [src]="getImageUrl(objeto)" [alt]="objeto.material?.titulo || objeto.titulo" width="50" class="shadow-lg" />
                                     </td>
-                                <td>{{objeto.codigo}}
+                                <td>{{ objeto.codigo }}
                                     </td>
                                     <td>
-                                        {{objeto.material.titulo}}
+                                        {{ objeto.material?.titulo || objeto.titulo }}
 
                                     </td>
                                     <td>
-                                        {{objeto.material.autorPrincipal}}<br/>
-                                        <span>{{objeto.material.autorSecundario}}</span>
+                                        {{ objeto.material?.autorPrincipal || objeto.autorPersonal }}<br/>
+                                        <span>{{ objeto.material?.autorSecundario || objeto.autorSecundario }}</span>
 
                                     </td>
                                     <td>
-                                        {{objeto.material?.anioPublicacion}}
+                                        {{ objeto.material?.anioPublicacion || objeto.anioPublicacion }}
                                     </td>
                                     <td>
                                         {{objeto.coleccion.descripcion}}
@@ -400,6 +400,22 @@ export class CatalogoEnLineaComponent {
         const d = new Date(base);
         d.setHours(h, m, 0, 0);
         return d;
+    }
+
+    /** Devuelve la URL de la imagen si existe en distintas formas */
+    getImageUrl(obj: any): string | undefined {
+        if (obj.material?.url) {
+            return obj.material.url;
+        }
+        if (obj.rutaImagen) {
+            // rutaImagen ya puede contener la URL completa
+            if (obj.nombreImagen) {
+                const sep = obj.rutaImagen.endsWith('/') ? '' : '/';
+                return obj.rutaImagen + sep + obj.nombreImagen;
+            }
+            return obj.rutaImagen;
+        }
+        return undefined;
     }
 
     private isDisponibleAhora(det: any): boolean {
