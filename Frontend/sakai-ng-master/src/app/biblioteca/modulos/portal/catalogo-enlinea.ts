@@ -259,9 +259,83 @@ import { ModalDetalleMaterial } from './detalle-material';
         </p-tabs>
     </div>
 
+<p-dialog header="Tipo de préstamo" [(visible)]="displayDialog" modal="true" appendTo="body" [closable]="false"
+  [style]="{ width: '800px'}">
+
+  <ng-template pTemplate="content">
+    <div class="flex flex-col gap-4">
+
+      <div *ngFor="let op of tiposPrestamo" class="p-field-radiobutton">
+        <p-radioButton name="tipoPr" [value]="op.value" [(ngModel)]="selectedTipo" inputId="tipo-{{op.value}}">
+        </p-radioButton>
+        <label for="tipo-{{op.value}}">{{op.label}}</label>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div class="flex flex-col">
+          <label>Fecha de inicio</label>
+          <p-calendar name="fechaInicioDate" [minDate]="minDate" [(ngModel)]="prestamo.fechaInicioDate" dateFormat="yy-mm-dd"
+            [showTime]="false" appendTo="body" (ngModelChange)="onDateRangeChange()">
+          </p-calendar>
+        </div>
+
+        <div class="flex flex-col">
+          <label>Hora de inicio</label>
+          <p-calendar name="fechaInicioTime" [(ngModel)]="prestamo.fechaInicioTime" timeOnly="true" hourFormat="24"
+            appendTo="body" [minDate]="minHora" [maxDate]="maxHora" (ngModelChange)="onDateRangeChange()">
+          </p-calendar>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-4 mt-4">
+        <div class="flex flex-col">
+          <label>Fecha de devolución</label>
+          <p-calendar name="fechaFinDate" [minDate]="minDate" [(ngModel)]="prestamo.fechaFinDate" dateFormat="yy-mm-dd" [showTime]="false"
+            appendTo="body" (ngModelChange)="onDateRangeChange()">
+          </p-calendar>
+        </div>
+
+        <div class="flex flex-col">
+          <label>Hora de devolución</label>
+          <p-calendar name="fechaFinTime" [(ngModel)]="prestamo.fechaFinTime" timeOnly="true" hourFormat="24"
+            appendTo="body" [minDate]="minHora" [maxDate]="maxHora" (ngModelChange)="onDateRangeChange()">
+          </p-calendar>
+        </div>
+      </div>
+    </div>
+  </ng-template>
+
+  <ng-template pTemplate="footer">
+      <button
+        pButton
+        label="Confirmar"
+        (click)="confirmarReserva()"
+        [disabled]="!selectedTipo"
+        class="p-button-success mr-2"></button>
+    <button pButton label="Cancelar" (click)="closeDialog()" class="p-button-secondary"></button>
+  </ng-template>
+</p-dialog>
+
+<p-dialog header="Términos y Condiciones" [(visible)]="showTerms" modal="true" appendTo="body" [closable]="false"
+  [style]="{ width: '600px'}">
+  <ng-template pTemplate="content">
+    <div style="max-height:300px; overflow:auto">
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+    </div>
+  </ng-template>
+
+  <ng-template pTemplate="footer">
+    <p-checkbox binary="true" name="acceptedTerms" [(ngModel)]="acceptedTerms" inputId="tcCheck">
+    </p-checkbox>
+    <label for="tcCheck" class="ml-2">Acepto los términos</label>
+    <button pButton label="Continuar" (click)="showTerms=false" [disabled]="!acceptedTerms"
+      class="p-button-success ml-4"></button>
+      <button pButton label="Cancelar" class="p-button-secondary ml-4" (click)="showTerms=false; acceptedTerms=false;"></button>
+  </ng-template>
+</p-dialog>
+
 <app-modal-detalle-material #modalDetalle></app-modal-detalle-material>
 <p-confirmDialog [style]="{width: '450px'}"></p-confirmDialog>
-            <p-toast></p-toast>
+<p-toast></p-toast>
     `,
     imports: [TemplateModule, ModalDetalleMaterial],
     providers: [MessageService, ConfirmationService]
@@ -287,6 +361,60 @@ export class CatalogoEnLineaComponent {
     ];
     @ViewChild('modalDetalle') modalDetalle!: ModalDetalleMaterial;
 
+    layout: 'list' | 'grid' = 'grid';
+    options = ['list', 'grid'];
+
+    tiposPrestamo = [
+        { label: 'En sala',          value: 'EN_SALA' },
+        { label: 'A domicilio',      value: 'PRESTAMO_A_DOMICILIO' },
+        { label: 'Sala y domicilio', value: 'SALA_Y_DOMICILIO' },
+    ];
+
+    showTerms: boolean = false;
+    acceptedTerms: boolean = false;
+    displayDialog = false;
+    selectedItem: any;
+    selectedTipo: string | undefined;
+    minDate: Date = new Date();
+    minHora: Date | null = null;
+    maxHora: Date | null = null;
+    prestamo: {
+        fechaInicioDate?: Date | null;
+        fechaInicioTime?: Date | null;
+        fechaFinDate?: Date | null;
+        fechaFinTime?: Date | null;
+    } = {
+        fechaInicioDate: null,
+        fechaInicioTime: null,
+        fechaFinDate: null,
+        fechaFinTime: null,
+    };
+
+    private parseTime(t: string) {
+        const [h, m] = t.split(':').map(n => parseInt(n, 10));
+        return { h, m };
+    }
+
+    private parseTimeAtDate(time: string, base: Date) {
+        const { h, m } = this.parseTime(time);
+        const d = new Date(base);
+        d.setHours(h, m, 0, 0);
+        return d;
+    }
+
+    private isDisponibleAhora(det: any): boolean {
+        if (!det.horaInicio || !det.horaFin) {
+            return true;
+        }
+        const now = new Date();
+        const start = this.parseTimeAtDate(det.horaInicio, now);
+        const end = this.parseTimeAtDate(det.horaFin, now);
+        if (end <= start) {
+            return now >= start || now <= end;
+        }
+        return now >= start && now <= end;
+    }
+
     constructor(private materialBibliograficoService: MaterialBibliograficoService, private confirmationService: ConfirmationService, private messageService: MessageService) { }
 
     async ngOnInit() {
@@ -307,10 +435,12 @@ export class CatalogoEnLineaComponent {
                 (result: any) => {
                     this.loading = false;
                     if (result.status == "0") {
-                        this.data = result.data;
+                        this.data = result.data.filter(
+                            (d: any) => d.estado?.descripcion === 'DISPONIBLE' && this.isDisponibleAhora(d)
+                        );
                     }
-                }
-                , (error: HttpErrorResponse) => {
+                },
+                (error: HttpErrorResponse) => {
                     this.loading = false;
                 }
             );
@@ -333,22 +463,124 @@ export class CatalogoEnLineaComponent {
     onRowCollapse(event: TableRowCollapseEvent) {
     }
     reservar(objetoDetalle: any) {
-        this.confirmationService.confirm({
-            message: '¿Estás seguro(a) de que quieres reservar?',
-            header: 'Confirmar',
-            icon: 'pi pi-exclamation-triangle',
-            acceptLabel: 'SI',
-            rejectLabel: 'NO',
-            accept: () => {
-                this.loading = true;
-                //registrar nueva especiadad
-                this.messageService.add({ severity: 'success', summary: 'Satisfactorio', detail: 'Material agregado.' });
-                this.loading = false;
+        this.selectedItem = objetoDetalle;
+        this.selectedTipo = undefined;
+        const now = new Date();
+        if (objetoDetalle.horaInicio && objetoDetalle.horaFin) {
+            this.minHora = this.parseTimeAtDate(objetoDetalle.horaInicio, now);
+            this.maxHora = this.parseTimeAtDate(objetoDetalle.horaFin, now);
+            if (this.maxHora <= this.minHora) {
+                this.maxHora.setDate(this.maxHora.getDate() + 1);
             }
-        });
+        } else {
+            this.minHora = null;
+            this.maxHora = null;
+        }
+        const startBase = this.minHora && now > this.minHora ? now : (this.minHora ?? now);
+        this.prestamo = {
+            fechaInicioDate: new Date(startBase),
+            fechaInicioTime: new Date(startBase),
+            fechaFinDate: new Date(startBase),
+            fechaFinTime: new Date(startBase),
+        };
+        this.displayDialog = true;
     }
-    cancelar(objetoDetalle: any){
 
+    onDateRangeChange() {
+        if (
+            this.prestamo.fechaInicioDate &&
+            this.prestamo.fechaFinDate &&
+            this.prestamo.fechaInicioTime &&
+            this.prestamo.fechaFinTime
+        ) {
+            this.acceptedTerms = false;
+        }
     }
-    confirmarReserva(){}
+
+    closeDialog() {
+        this.displayDialog = false;
+        this.minHora = null;
+        this.maxHora = null;
+    }
+
+    private formatLocalDateTime(d: Date): string {
+        const pad = (n: number) => String(n).padStart(2, '0');
+        const Y = d.getFullYear();
+        const M = pad(d.getMonth() + 1);
+        const D = pad(d.getDate());
+        const h = pad(d.getHours());
+        const m = pad(d.getMinutes());
+        const s = pad(d.getSeconds());
+        return `${Y}-${M}-${D}T${h}:${m}:${s}`;
+    }
+
+    confirmarReserva() {
+        if (!this.selectedTipo) {
+            this.messageService.add({ severity: 'warn', detail: 'Por favor selecciona un tipo de préstamo.' });
+            return;
+        }
+
+        if (
+            !this.prestamo.fechaInicioDate ||
+            !this.prestamo.fechaInicioTime ||
+            !this.prestamo.fechaFinDate ||
+            !this.prestamo.fechaFinTime
+        ) {
+            this.messageService.add({ severity: 'warn', detail: 'Por favor selecciona fecha y hora de inicio y de devolución' });
+            return;
+        }
+
+        if (!this.acceptedTerms) {
+            this.showTerms = true;
+            return;
+        }
+
+        const inicioDate = this.prestamo.fechaInicioDate;
+        const inicioTime = this.prestamo.fechaInicioTime;
+        const dtInicio = new Date(
+            inicioDate.getFullYear(),
+            inicioDate.getMonth(),
+            inicioDate.getDate(),
+            inicioTime.getHours(),
+            inicioTime.getMinutes()
+        );
+
+        const finDate = this.prestamo.fechaFinDate;
+        const finTime = this.prestamo.fechaFinTime;
+        const dtFin = new Date(
+            finDate.getFullYear(),
+            finDate.getMonth(),
+            finDate.getDate(),
+            finTime.getHours(),
+            finTime.getMinutes()
+        );
+
+        if (this.selectedItem.horaInicio && this.selectedItem.horaFin) {
+            const inicioPermitido = this.parseTimeAtDate(this.selectedItem.horaInicio, dtInicio);
+            const finPermitido = this.parseTimeAtDate(this.selectedItem.horaFin, dtInicio);
+            if (finPermitido <= inicioPermitido) {
+                if (dtFin < inicioPermitido) {
+                    finPermitido.setDate(finPermitido.getDate() + 1);
+                } else {
+                    inicioPermitido.setDate(inicioPermitido.getDate() - 1);
+                }
+            }
+            if (dtInicio < inicioPermitido || dtFin > finPermitido) {
+                this.messageService.add({ severity: 'warn', detail: 'El horario seleccionado está fuera del rango permitido.' });
+                return;
+            }
+        }
+
+        if (this.selectedItem.maxHoras) {
+            const diff = (dtFin.getTime() - dtInicio.getTime()) / 3600000;
+            if (diff > this.selectedItem.maxHoras) {
+                this.messageService.add({ severity: 'warn', detail: `Máximo ${this.selectedItem.maxHoras} horas de préstamo.` });
+                return;
+            }
+        }
+
+        // Aquí se enviaría la solicitud al backend. Este ejemplo sólo muestra un mensaje.
+        this.messageService.add({ severity: 'success', detail: 'Solicitud enviada.' });
+        this.closeDialog();
+    }
 }
