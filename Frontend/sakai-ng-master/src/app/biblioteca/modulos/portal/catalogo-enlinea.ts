@@ -462,6 +462,9 @@ export class CatalogoEnLineaComponent {
 
     onRowCollapse(event: TableRowCollapseEvent) {
     }
+    cancelar(_objeto: any) {
+        this.messageService.add({ severity: 'info', detail: 'Reserva cancelada.' });
+    }
     reservar(objetoDetalle: any) {
         this.selectedItem = objetoDetalle;
         this.selectedTipo = undefined;
