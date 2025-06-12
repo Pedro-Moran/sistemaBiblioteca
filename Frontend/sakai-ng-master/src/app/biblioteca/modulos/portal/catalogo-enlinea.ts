@@ -17,7 +17,7 @@ import { ModalDetalleMaterial } from './detalle-material';
         <ng-template #start>
         </ng-template>
         <ng-template #end>
-        <p-overlaybadge [value]="5">
+        <p-overlaybadge [value]="reservas.length">
     <button
         pButton
         type="button"
@@ -38,7 +38,7 @@ import { ModalDetalleMaterial } from './detalle-material';
         <div>
             <span class="font-medium text-surface-900 dark:text-surface-0 block mb-2">Mis reservas</span>
             <p-table
-    [value]="data"
+    [value]="reservas"
     showGridlines
     [tableStyle]="{ 'min-width': '50rem' }">
         <ng-template #header>
@@ -86,7 +86,7 @@ import { ModalDetalleMaterial } from './detalle-material';
         icon="pi pi-check"
         class="p-button-info"
         [disabled]="loading"
-        (click)="confirmarReserva()"
+        (click)="openConfirmDialog()"
         pTooltip="Confirmar"
         tooltipPosition="bottom">
     </button>
@@ -354,6 +354,7 @@ export class CatalogoEnLineaComponent {
     data: any[] = [];
     expandedRows = {};
     detalle: any[] = [];
+    reservas: any[] = [];
     members = [
         { name: 'Amy Elsner', image: 'amyelsner.png', email: 'amy@email.com', role: 'Owner' },
         { name: 'Bernardo Dominic', image: 'bernardodominic.png', email: 'bernardo@email.com', role: 'Editor' },
@@ -479,31 +480,16 @@ export class CatalogoEnLineaComponent {
 
     onRowCollapse(event: TableRowCollapseEvent) {
     }
-    cancelar(_objeto: any) {
+    cancelar(objeto: any) {
+        this.reservas = this.reservas.filter(r => r !== objeto);
         this.messageService.add({ severity: 'info', detail: 'Reserva cancelada.' });
     }
+
     reservar(objetoDetalle: any) {
-        this.selectedItem = objetoDetalle;
-        this.selectedTipo = undefined;
-        const now = new Date();
-        if (objetoDetalle.horaInicio && objetoDetalle.horaFin) {
-            this.minHora = this.parseTimeAtDate(objetoDetalle.horaInicio, now);
-            this.maxHora = this.parseTimeAtDate(objetoDetalle.horaFin, now);
-            if (this.maxHora <= this.minHora) {
-                this.maxHora.setDate(this.maxHora.getDate() + 1);
-            }
-        } else {
-            this.minHora = null;
-            this.maxHora = null;
+        if (!this.reservas.includes(objetoDetalle)) {
+            this.reservas.push(objetoDetalle);
+            this.messageService.add({ severity: 'success', detail: 'Añadido a reservas.' });
         }
-        const startBase = this.minHora && now > this.minHora ? now : (this.minHora ?? now);
-        this.prestamo = {
-            fechaInicioDate: new Date(startBase),
-            fechaInicioTime: new Date(startBase),
-            fechaFinDate: new Date(startBase),
-            fechaFinTime: new Date(startBase),
-        };
-        this.displayDialog = true;
     }
 
     onDateRangeChange() {
@@ -521,6 +507,34 @@ export class CatalogoEnLineaComponent {
         this.displayDialog = false;
         this.minHora = null;
         this.maxHora = null;
+    }
+
+    openConfirmDialog() {
+        if (this.reservas.length === 0) {
+            this.messageService.add({ severity: 'info', detail: 'No hay reservas seleccionadas.' });
+            return;
+        }
+        this.selectedItem = this.reservas[0];
+        this.selectedTipo = undefined;
+        const now = new Date();
+        if (this.selectedItem.horaInicio && this.selectedItem.horaFin) {
+            this.minHora = this.parseTimeAtDate(this.selectedItem.horaInicio, now);
+            this.maxHora = this.parseTimeAtDate(this.selectedItem.horaFin, now);
+            if (this.maxHora <= this.minHora) {
+                this.maxHora.setDate(this.maxHora.getDate() + 1);
+            }
+        } else {
+            this.minHora = null;
+            this.maxHora = null;
+        }
+        const startBase = this.minHora && now > this.minHora ? now : (this.minHora ?? now);
+        this.prestamo = {
+            fechaInicioDate: new Date(startBase),
+            fechaInicioTime: new Date(startBase),
+            fechaFinDate: new Date(startBase),
+            fechaFinTime: new Date(startBase),
+        };
+        this.displayDialog = true;
     }
 
     private formatLocalDateTime(d: Date): string {
@@ -575,32 +589,35 @@ export class CatalogoEnLineaComponent {
             finTime.getMinutes()
         );
 
-        if (this.selectedItem.horaInicio && this.selectedItem.horaFin) {
-            const inicioPermitido = this.parseTimeAtDate(this.selectedItem.horaInicio, dtInicio);
-            const finPermitido = this.parseTimeAtDate(this.selectedItem.horaFin, dtInicio);
-            if (finPermitido <= inicioPermitido) {
-                if (dtFin < inicioPermitido) {
-                    finPermitido.setDate(finPermitido.getDate() + 1);
-                } else {
-                    inicioPermitido.setDate(inicioPermitido.getDate() - 1);
+        for (const item of this.reservas) {
+            if (item.horaInicio && item.horaFin) {
+                const inicioPermitido = this.parseTimeAtDate(item.horaInicio, dtInicio);
+                const finPermitido = this.parseTimeAtDate(item.horaFin, dtInicio);
+                if (finPermitido <= inicioPermitido) {
+                    if (dtFin < inicioPermitido) {
+                        finPermitido.setDate(finPermitido.getDate() + 1);
+                    } else {
+                        inicioPermitido.setDate(inicioPermitido.getDate() - 1);
+                    }
+                }
+                if (dtInicio < inicioPermitido || dtFin > finPermitido) {
+                    this.messageService.add({ severity: 'warn', detail: 'El horario seleccionado está fuera del rango permitido.' });
+                    return;
                 }
             }
-            if (dtInicio < inicioPermitido || dtFin > finPermitido) {
-                this.messageService.add({ severity: 'warn', detail: 'El horario seleccionado está fuera del rango permitido.' });
-                return;
+
+            if (item.maxHoras) {
+                const diff = (dtFin.getTime() - dtInicio.getTime()) / 3600000;
+                if (diff > item.maxHoras) {
+                    this.messageService.add({ severity: 'warn', detail: `Máximo ${item.maxHoras} horas de préstamo.` });
+                    return;
+                }
             }
         }
 
-        if (this.selectedItem.maxHoras) {
-            const diff = (dtFin.getTime() - dtInicio.getTime()) / 3600000;
-            if (diff > this.selectedItem.maxHoras) {
-                this.messageService.add({ severity: 'warn', detail: `Máximo ${this.selectedItem.maxHoras} horas de préstamo.` });
-                return;
-            }
-        }
-
-        // Aquí se enviaría la solicitud al backend. Este ejemplo sólo muestra un mensaje.
+        // Aquí se enviaría la solicitud al backend para cada item. Este ejemplo sólo muestra un mensaje.
         this.messageService.add({ severity: 'success', detail: 'Solicitud enviada.' });
+        this.reservas = [];
         this.closeDialog();
     }
 
