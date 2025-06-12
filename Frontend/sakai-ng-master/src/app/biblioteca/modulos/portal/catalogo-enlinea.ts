@@ -194,7 +194,7 @@ import { ModalDetalleMaterial } from './detalle-material';
                                         {{ objeto.material?.anioPublicacion || objeto.anioPublicacion }}
                                     </td>
                                     <td>
-                                        {{objeto.coleccion.descripcion}}
+                                        {{ objeto.coleccion?.descripcion }}
                                     </td>
                                     <td class="text-center">
                                     <p-button icon="pi pi-search" rounded outlined (click)="verDetalle(objeto)"pTooltip="Ver detalle" tooltipPosition="bottom"/>
@@ -220,8 +220,8 @@ import { ModalDetalleMaterial } from './detalle-material';
         </ng-template>
         <ng-template #body let-objetoDetalle>
             <tr>
-                <td>{{ objetoDetalle.sede.descripcion }}</td>
-                <td>{{ objetoDetalle.tipoMaterial.descripcion }}</td>
+                <td>{{ objetoDetalle.sede?.descripcion }}</td>
+                <td>{{ objetoDetalle.tipoMaterial?.descripcion }}</td>
                 <td>{{ objetoDetalle.numeroIngreso }}</td>
                 <td [ngClass]="(objetoDetalle.estado?.id ?? objetoDetalle.idEstado) === 2 ? 'text-green-500' : 'text-primary'">
                 {{ estadoDescripcion(objetoDetalle.idEstado, objetoDetalle.estado) }}
