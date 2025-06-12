@@ -239,7 +239,7 @@ import { ToastModule } from 'primeng/toast';
         pButton
         label="Confirmar"
         (click)="confirmarPrestamo()"
-        [disabled]="!selectedTipo || !acceptedTerms"
+        [disabled]="!selectedTipo"
         class="p-button-success mr-2"></button>
     <button pButton label="Cancelar" (click)="displayDialog=false" class="p-button-secondary"></button>
   </ng-template>
@@ -402,9 +402,14 @@ export class BibliotecaVirtualComponent {
 
       }
     onDateRangeChange() {
-      if (this.prestamo.fechaInicioDate && this.prestamo.fechaFinDate && this.prestamo.fechaInicioTime && this.prestamo.fechaFinTime) {
-        this.showTerms = true;
-        this.acceptedTerms = false;   // resetear checkbox
+      if (
+        this.prestamo.fechaInicioDate &&
+        this.prestamo.fechaFinDate &&
+        this.prestamo.fechaInicioTime &&
+        this.prestamo.fechaFinTime
+      ) {
+        // si se modifican las fechas u horas después de aceptar, se debe volver a aceptar
+        this.acceptedTerms = false;
       }
     }
 
@@ -449,34 +454,27 @@ export class BibliotecaVirtualComponent {
 
 confirmarPrestamo() {
   if (!this.selectedTipo) {
-    this.messageService.add({
-      severity: 'warn',
-      detail: 'Por favor selecciona un tipo de préstamo.'
-    });
+    this.messageService.add({ severity: 'warn', detail: 'Por favor selecciona un tipo de préstamo.' });
     return;
   }
 
-  // 2) validamos que acepte términos
-  if (!this.acceptedTerms) {
-    this.messageService.add({
-      severity: 'warn',
-      detail: 'Debes aceptar los Términos y Condiciones.'
-    });
+  if (
+    !this.prestamo.fechaInicioDate ||
+    !this.prestamo.fechaInicioTime ||
+    !this.prestamo.fechaFinDate ||
+    !this.prestamo.fechaFinTime
+  ) {
+    this.messageService.add({ severity: 'warn', detail: 'Por favor selecciona fecha y hora de inicio y de devolución' });
     return;
   }
-    const email = this.authService.getEmail();
-      if (
-        !this.prestamo.fechaInicioDate ||
-        !this.prestamo.fechaInicioTime ||
-        !this.prestamo.fechaFinDate ||
-        !this.prestamo.fechaFinTime
-      ) {
-        this.messageService.add({
-          severity: 'warn',
-          detail: 'Por favor selecciona fecha y hora de inicio y de devolución'
-        });
-        return;
-      }
+
+  // Mostrar los términos solo cuando se intente confirmar
+  if (!this.acceptedTerms) {
+    this.showTerms = true;
+    return;
+  }
+
+  const email = this.authService.getEmail();
 
       // 2) Ahora TS sabe que no son null/undefined
       const inicioDate = this.prestamo.fechaInicioDate;
