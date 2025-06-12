@@ -448,14 +448,7 @@ export class CatalogoEnLineaComponent {
     async ngOnInit() {
         this.user = { "idusuario": 0 };
         this.listar();
-        this.detalle = [
-            {
-                "sede": { "id": 1, "descripcion": "Sede A", "activo": true },
-                "tipoMaterial": { "id": 1, "descripcion": "Original", "activo": true },
-                "numeroIngreso": "39819",
-                "estado": { "id": 1, "descripcion": "Disponible", "activo": true }
-            }
-        ]
+        this.detalle = [];
     }
     listar() {
         // Recupera solo los registros en estado disponible (idEstado = 2)
@@ -487,9 +480,27 @@ export class CatalogoEnLineaComponent {
         this.modalDetalle.openModal();
     }
     onRowExpand(event: TableRowExpandEvent) {
+        const row = event.data;
+        if (!row || !row.id) {
+            return;
+        }
+        this.materialBibliograficoService
+            .listarDetallesPorBiblioteca(row.id, false)
+            .subscribe({
+                next: (lista: any[]) => {
+                    this.detalle = lista.filter(d =>
+                        (d.idEstado === 2 || d.estado?.descripcion === 'DISPONIBLE')
+                    );
+                },
+                error: () => {
+                    this.detalle = [];
+                    this.messageService.add({ severity: 'error', detail: 'Error al cargar detalles' });
+                }
+            });
     }
 
     onRowCollapse(event: TableRowCollapseEvent) {
+        this.detalle = [];
     }
     cancelar(objeto: any) {
         this.reservas = this.reservas.filter(r => r !== objeto);
