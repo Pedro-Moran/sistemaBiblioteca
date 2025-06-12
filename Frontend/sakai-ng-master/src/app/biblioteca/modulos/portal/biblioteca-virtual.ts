@@ -25,6 +25,7 @@ import { TooltipModule }       from 'primeng/tooltip';
 import { SelectModule } from 'primeng/select';
 import { CalendarModule } from 'primeng/calendar';
 import { CheckboxModule } from 'primeng/checkbox';
+import { ToastModule } from 'primeng/toast';
 
 @Component({
     selector: 'app-biblioteca-virtual',
@@ -42,7 +43,8 @@ import { CheckboxModule } from 'primeng/checkbox';
             CalendarModule,
             ButtonModule,
             TagModule,
-            TooltipModule
+            TooltipModule,
+            ToastModule
       ],
     providers: [MessageService, ConfirmationService],
     template: ` <div class="card flex flex-col gap-4 w-full">
