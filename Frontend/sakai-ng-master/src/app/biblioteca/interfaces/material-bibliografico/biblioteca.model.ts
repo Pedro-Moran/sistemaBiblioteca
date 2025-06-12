@@ -73,7 +73,9 @@ export interface BibliotecaDTO {
 export interface DetalleBibliotecaDTO {
   idDetalleBiblioteca?: number;
   codigoSede?: number | null;
+  sede?: Sedes | null;
   tipoMaterialId?: number | null;
+  tipoMaterial?: TipoMaterial | null;
   tipoAdquisicionId?: number | null;
   numeroIngreso?: number;
   codigoBarra?: string;

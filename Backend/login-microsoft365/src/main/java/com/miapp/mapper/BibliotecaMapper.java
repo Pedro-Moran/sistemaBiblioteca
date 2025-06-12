@@ -278,12 +278,30 @@ public class BibliotecaMapper {
 
         // 3) Código de sede, tipoMaterial, tipoAdquisición, etc.
         tmp.setCodigoSede(d.getSede() != null ? d.getSede().getId() : null);
+        if (d.getSede() != null) {
+            tmp.setSede(new com.miapp.model.SedeDTO(
+                    d.getSede().getId(),
+                    d.getSede().getDescripcion(),
+                    d.getSede().getActivo()
+            ));
+        } else {
+            tmp.setSede(null);
+        }
         tmp.setTipoAdquisicionId(
                 d.getTipoAdquisicion() != null ? d.getTipoAdquisicion().getId() : null
         );
         tmp.setTipoMaterialId(
                 d.getTipoMaterial() != null ? d.getTipoMaterial().getIdTipoMaterial() : null
         );
+        if (d.getTipoMaterial() != null) {
+            tmp.setTipoMaterial(new com.miapp.model.TipoMaterialDTO(
+                    d.getTipoMaterial().getIdTipoMaterial(),
+                    d.getTipoMaterial().getDescripcion(),
+                    d.getTipoMaterial().getActivo()
+            ));
+        } else {
+            tmp.setTipoMaterial(null);
+        }
         tmp.setCosto(d.getCosto());
         tmp.setNumeroFactura(d.getNumeroFactura());
         tmp.setCodigoUsuario(d.getCodigoUsuario());
