@@ -87,8 +87,7 @@ import { Sede } from '../../../interfaces/biblioteca-virtual/sede';
                         <!-- Máximo de Horas -->
                         <div class="flex flex-col gap-2">
                           <label for="maxHoras">Máximo de Horas</label>
-                          <input pInputText id="maxHoras" type="number" formControlName="maxHoras" class="p-inputtext w-full" min="1"
-                            max="8" />
+                          <input pInputText id="maxHoras" type="number" formControlName="maxHoras" class="p-inputtext w-full" min="1" />
                           <app-input-validation [form]="form" modelo="maxHoras" ver="Máximo de Horas">
                           </app-input-validation>
                         </div>
@@ -143,7 +142,7 @@ export class FormEquipo implements OnInit, OnChanges {
               ]],
           horaInicio: [null, [Validators.required]],
                 horaFin: [null, [Validators.required]],
-                maxHoras: [null, [Validators.required, Validators.min(1), Validators.max(24)]],
+                maxHoras: [null, [Validators.required, Validators.min(1)]],
           equipoDiscapacidad: [false],
                 sede: [null, [Validators.required, this.sedeSeleccionadaValidator]]
 

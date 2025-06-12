@@ -212,7 +212,7 @@ import { ToastModule } from 'primeng/toast';
         <div class="flex flex-col">
           <label>Hora de inicio</label>
           <p-calendar name="fechaInicioTime" [(ngModel)]="prestamo.fechaInicioTime" timeOnly="true" hourFormat="24"
-            appendTo="body" (ngModelChange)="onDateRangeChange()">
+            appendTo="body" [minDate]="minHora" [maxDate]="maxHora" (ngModelChange)="onDateRangeChange()">
           </p-calendar>
         </div>
       </div>
@@ -227,7 +227,7 @@ import { ToastModule } from 'primeng/toast';
         <div class="flex flex-col">
           <label>Hora de devolución</label>
           <p-calendar name="fechaFinTime" [(ngModel)]="prestamo.fechaFinTime" timeOnly="true" hourFormat="24"
-            appendTo="body" (ngModelChange)="onDateRangeChange()">
+            appendTo="body" [minDate]="minHora" [maxDate]="maxHora" (ngModelChange)="onDateRangeChange()">
           </p-calendar>
         </div>
       </div>
@@ -241,7 +241,7 @@ import { ToastModule } from 'primeng/toast';
         (click)="confirmarPrestamo()"
         [disabled]="!selectedTipo"
         class="p-button-success mr-2"></button>
-    <button pButton label="Cancelar" (click)="displayDialog=false" class="p-button-secondary"></button>
+    <button pButton label="Cancelar" (click)="closeDialog()" class="p-button-secondary"></button>
   </ng-template>
 </p-dialog>
 
@@ -323,6 +323,8 @@ export class BibliotecaVirtualComponent {
     selectedItem: any;
     selectedTipo: string|undefined;
     minDate: Date = new Date();
+    minHora: Date | null = null;
+    maxHora: Date | null = null;
     prestamo: {
         equipoId?: number;
         tipoUsuario?: number;
@@ -438,7 +440,31 @@ export class BibliotecaVirtualComponent {
     reservar(item: any) {
         this.selectedItem = item;
         this.selectedTipo = undefined;
+        const now = new Date();
+        if (item.horaInicio && item.horaFin) {
+            this.minHora = this.parseTimeAtDate(item.horaInicio, now);
+            this.maxHora = this.parseTimeAtDate(item.horaFin, now);
+            if (this.maxHora <= this.minHora) {
+                this.maxHora.setDate(this.maxHora.getDate() + 1);
+            }
+        } else {
+            this.minHora = null;
+            this.maxHora = null;
+        }
+        const startBase = this.minHora && now > this.minHora ? now : (this.minHora ?? now);
+        this.prestamo = {
+            fechaInicioDate: new Date(startBase),
+            fechaInicioTime: new Date(startBase),
+            fechaFinDate: new Date(startBase),
+            fechaFinTime: new Date(startBase),
+        };
         this.displayDialog = true;
+    }
+
+    closeDialog() {
+        this.displayDialog = false;
+        this.minHora = null;
+        this.maxHora = null;
     }
 
   private formatLocalDateTime(d: Date): string {
@@ -545,7 +571,7 @@ confirmarPrestamo() {
            this.messageService.add({ severity:'error', detail:'Error al solicitar.' });
          }
        });
-    this.displayDialog = false;
+    this.closeDialog();
     }
 
 
