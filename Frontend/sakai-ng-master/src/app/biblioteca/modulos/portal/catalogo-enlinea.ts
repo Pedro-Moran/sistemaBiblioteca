@@ -223,8 +223,8 @@ import { ModalDetalleMaterial } from './detalle-material';
                 <td>{{ objetoDetalle.sede.descripcion }}</td>
                 <td>{{ objetoDetalle.tipoMaterial.descripcion }}</td>
                 <td>{{ objetoDetalle.numeroIngreso }}</td>
-                <td [ngClass]="objetoDetalle.estado.id === 1 ? 'text-green-500' : 'text-primary'">
-                {{ objetoDetalle.estado.descripcion }}
+                <td [ngClass]="(objetoDetalle.estado?.id ?? objetoDetalle.idEstado) === 2 ? 'text-green-500' : 'text-primary'">
+                {{ estadoDescripcion(objetoDetalle.idEstado, objetoDetalle.estado) }}
                 </td>
 
                 <td>
@@ -430,13 +430,14 @@ export class CatalogoEnLineaComponent {
         ]
     }
     listar() {
-        this.materialBibliograficoService.api_libros_lista('lista')
+        // Recupera solo los registros en estado disponible (idEstado = 2)
+        this.materialBibliograficoService.api_libros_lista('api/biblioteca/disponibles')
             .subscribe(
                 (result: any) => {
                     this.loading = false;
                     if (result.status == "0") {
                         this.data = result.data.filter(
-                            (d: any) => d.estado?.descripcion === 'DISPONIBLE' && this.isDisponibleAhora(d)
+                            (d: any) => (d.estadoId === 2 || d.estado?.descripcion === 'DISPONIBLE') && this.isDisponibleAhora(d)
                         );
                     }
                 },
@@ -585,5 +586,18 @@ export class CatalogoEnLineaComponent {
         // Aquí se enviaría la solicitud al backend. Este ejemplo sólo muestra un mensaje.
         this.messageService.add({ severity: 'success', detail: 'Solicitud enviada.' });
         this.closeDialog();
+    }
+
+    /** Devuelve la descripción textual del estado según su id */
+    estadoDescripcion(id?: number, estado?: any): string {
+        if (estado && estado.descripcion) {
+            return estado.descripcion;
+        }
+        switch (id) {
+            case 2: return 'DISPONIBLE';
+            case 3: return 'RESERVADO';
+            case 1: return 'CREADO';
+            default: return '';
+        }
     }
 }
