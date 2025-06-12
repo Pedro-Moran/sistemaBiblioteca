@@ -181,6 +181,13 @@ public class BibliotecaController {
         return ResponseEntity.ok(Map.of("status", 0, "data", dtos));
     }
 
+    /** Devuelve los materiales bibliográficos disponibles (idEstado = 2) */
+    @GetMapping("/disponibles")
+    public ResponseEntity<?> listDisponibles() {
+        List<BibliotecaDTO> dtos = bibliotecaService.findDisponibles();
+        return ResponseEntity.ok(Map.of("status", 0, "data", dtos));
+    }
+
     /** Endpoint para obtener todos los detalles reservados (con su “biblioteca” anidada) */
     @GetMapping("/detalles-reservados")
     public ResponseEntity<Map<String, Object>> getDetallesReservados() {

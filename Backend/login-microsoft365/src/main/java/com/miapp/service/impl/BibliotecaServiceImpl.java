@@ -638,6 +638,16 @@ public class BibliotecaServiceImpl implements BibliotecaService {
                 .collect(Collectors.toList());
     }
 
+    /** Devuelve todas las bibliotecas en estado disponible (2) */
+    @Override
+    public List<BibliotecaDTO> findDisponibles() {
+        return bibliotecaRepository
+                .findByIdEstado(2L)
+                .stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+    }
+
     @Override
     public List<DetalleBibliotecaDTO> listarTodosDetallesReservados() {
         List<DetalleBiblioteca> listaEntidades = detalleBibliotecaRepository.findAllConBibliotecaReservados();

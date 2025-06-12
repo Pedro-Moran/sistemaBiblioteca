@@ -21,6 +21,8 @@ public interface BibliotecaService {
     List<Ciudad> listCiudades();
     List<Biblioteca> search(Long tipoMaterialId, String opcion, String valor);
     List<BibliotecaDTO> findReservados();
+    /** Lista todos los materiales bibliográficos con estado disponible (2) */
+    List<BibliotecaDTO> findDisponibles();
 
     List<DetalleBibliotecaDTO> listarTodosDetallesReservados();
 }
