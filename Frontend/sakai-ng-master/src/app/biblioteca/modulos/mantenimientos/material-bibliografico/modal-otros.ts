@@ -284,6 +284,15 @@ import { AuthService } from '../../../services/auth.service';
 </p-datepicker>
 
   <app-input-validation [form]="formDetalle" modelo="fechaIngreso" ver="Fecha Ingreso"></app-input-validation>
+  <label for="horaInicio">Hora Inicio</label>
+  <p-calendar id="horaInicio" formControlName="horaInicio" timeOnly="true" hourFormat="24" appendTo="body" class="w-full"></p-calendar>
+  <app-input-validation [form]="formDetalle" modelo="horaInicio" ver="Hora Inicio"></app-input-validation>
+  <label for="horaFin">Hora Fin</label>
+  <p-calendar id="horaFin" formControlName="horaFin" timeOnly="true" hourFormat="24" appendTo="body" class="w-full"></p-calendar>
+  <app-input-validation [form]="formDetalle" modelo="horaFin" ver="Hora Fin"></app-input-validation>
+  <label for="maxHoras">Máx Horas</label>
+  <input pInputText id="maxHoras" type="number" formControlName="maxHoras" />
+  <app-input-validation [form]="formDetalle" modelo="maxHoras" ver="Máx Horas"></app-input-validation>
 </div>
 
     </div>
@@ -433,6 +442,15 @@ export class ModalOtrosComponent implements OnInit {
                 Validators.required
             ]
             ],
+            horaInicio: [
+              this.objetoDetalle?.horaInicio ? this.stringToDate(this.objetoDetalle.horaInicio) : null,
+              [Validators.required]
+            ],
+            horaFin: [
+              this.objetoDetalle?.horaFin ? this.stringToDate(this.objetoDetalle.horaFin) : null,
+              [Validators.required]
+            ],
+            maxHoras: [this.objetoDetalle?.maxHoras ?? null, [Validators.required, Validators.min(1)]],
             tipoAdquisicion: [this.objetoDetalle?.tipoAdquisicion]
         });
     }
@@ -465,6 +483,28 @@ export class ModalOtrosComponent implements OnInit {
         this.display = true;
     }
 
+    editarBiblioteca(mat: BibliotecaDTO, tipoId?: number | null) {
+        const id = tipoId ?? this.tipoMaterialId ?? null;
+        this.formOtro.reset();
+        this.objetoOtro.id = mat.id ?? 0;
+        this.formOtro.patchValue({
+            id: mat.id ?? null,
+            tipoMaterialId: id,
+            tituloArticulo: mat.titulo,
+            tituloRevista: mat.editorialPublicacion,
+            autorPrincipal: mat.autorPersonal,
+            descripcionRevista: (mat as any).descripcionRevista ?? mat.descriptor ?? '',
+            cantidad: mat.numeroPaginas,
+            formatoDigital: mat.fladigitalizado,
+            urlPublicacion: mat.linkPublicacion,
+            descriptores: mat.descriptor,
+            notasGeneral: mat.notaGeneral
+        });
+        this.tipoMaterialId = id;
+        this.display = true;
+        this.ListaDetalle();
+    }
+
     closeModal() {
         this.display = false;
     }
@@ -491,10 +531,14 @@ export class ModalOtrosComponent implements OnInit {
             tipoAdquisicionId: (d.tipoAdquisicion as any)?.id ?? d.tipoAdquisicionId ?? null,
             tipoMaterialId:
               (d.tipoMaterial as any)?.id ?? d.tipoMaterialId ?? parentTipo,
+            horaInicio: this.timeToString(d.horaInicio ?? null),
+            horaFin:    this.timeToString(d.horaFin ?? null),
+            maxHoras:   d.maxHoras ?? null,
             costo: d.costo ?? null,
             numeroFactura: d.numeroFactura ?? null,
             fechaIngreso: d.fechaIngreso ?? null,
-            idEstado: d.idEstado ?? 1,
+            // forzar estado 1 para que el detalle quede pendiente de aprobación
+            idEstado: 1,
         }));
 
         return {
@@ -504,6 +548,7 @@ export class ModalOtrosComponent implements OnInit {
             autorPersonal: otro.autorPrincipal,
             tipoMaterialId: otro.tipoMaterialId ?? this.tipoMaterialId ?? null,
             editorialPublicacion: otro.tituloRevista,
+            descripcionRevista: otro.descripcionRevista,
             descriptor: otro.descriptores,
             notaGeneral: otro.notasGeneral,
             fladigitalizado: !!otro.formatoDigital,
@@ -671,6 +716,9 @@ export class ModalOtrosComponent implements OnInit {
                     codigoSede: sedeId,
                     tipoMaterialId: tipoMat,
                     tipoAdquisicionId: tipoAdq,
+                    horaInicio: d.horaInicio ?? null,
+                    horaFin:    d.horaFin ?? null,
+                    maxHoras:   d.maxHoras ?? null,
                     costo: d.costo ?? null,
                     numeroFactura: d.numeroFactura ?? null,
                     fechaIngreso: d.fechaIngreso ?? null,
@@ -791,6 +839,9 @@ export class ModalOtrosComponent implements OnInit {
                     codigoSede:        sedeId,
                     tipoMaterialId:    tipoMat ?? null,
                     tipoAdquisicionId: tipoAdq ?? null,
+                    horaInicio:        this.timeToString(this.formDetalle.value.horaInicio ?? null),
+                    horaFin:           this.timeToString(this.formDetalle.value.horaFin ?? null),
+                    maxHoras:          this.formDetalle.value.maxHoras,
                     costo:             null,
                     numeroFactura:     null,
                     fechaIngreso:      this.formatDateTime(this.formDetalle.value.fechaIngreso),
@@ -814,6 +865,22 @@ export class ModalOtrosComponent implements OnInit {
               if (typeof d === 'string' && d.length > 10) { return d; }
               const dt = typeof d === 'string' ? new Date(d) : d;
               return dt.toISOString().split('.')[0];
+            }
+
+            private timeToString(t: Date | string | null): string | null {
+              if (!t) { return null; }
+              if (typeof t === 'string') { return t.length > 5 ? t.slice(11,16) : t; }
+              const h = t.getHours().toString().padStart(2,'0');
+              const m = t.getMinutes().toString().padStart(2,'0');
+              return `${h}:${m}`;
+            }
+
+            /** Convierte "HH:mm" o "yyyy-MM-ddTHH:mm" a Date */
+            private stringToDate(hhmm: string): Date {
+              const parts = hhmm.includes('T') ? hhmm.split('T')[1].split(':') : hhmm.split(':');
+              const d = new Date();
+              d.setHours(+parts[0], +parts[1], 0, 0);
+              return d;
             }
 
             idToSede(id: number | null) {

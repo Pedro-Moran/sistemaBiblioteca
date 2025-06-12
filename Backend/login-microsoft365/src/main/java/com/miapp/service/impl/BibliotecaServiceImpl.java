@@ -105,6 +105,7 @@ public class BibliotecaServiceImpl implements BibliotecaService {
         b.setTipoAnioPublicacion(dto.getTipoAnioPublicacion());
         b.setAnioPublicacion(dto.getAnioPublicacion());
         b.setDescriptor(dto.getDescriptor());
+        b.setDescripcionRevista(dto.getDescripcionRevista());
         b.setNotaContenido(dto.getNotaContenido());
         b.setNotaGeneral(dto.getNotaGeneral());
         b.setSerie(dto.getSerie());
@@ -218,6 +219,9 @@ public class BibliotecaServiceImpl implements BibliotecaService {
             e.setCosto(det.getCosto());
             e.setNumeroFactura(det.getNumeroFactura());
             e.setFechaIngreso(det.getFechaIngreso());
+            e.setHoraInicio(det.getHoraInicio());
+            e.setHoraFin(det.getHoraFin());
+            e.setMaxHoras(det.getMaxHoras());
             e.setIdEstado(det.getIdEstado());
 
             // 6) Vínculo bidireccional
@@ -265,6 +269,7 @@ public class BibliotecaServiceImpl implements BibliotecaService {
         dto.setEdicion(b.getEdicion());
         dto.setReimpresion(b.getReimpresion());
         dto.setDescriptor(b.getDescriptor());
+        dto.setDescripcionRevista(b.getDescripcionRevista());
         dto.setNotaContenido(b.getNotaContenido());
         dto.setNotaGeneral(b.getNotaGeneral());
         dto.setNotaResumen(b.getNotaResumen());
@@ -357,6 +362,7 @@ public class BibliotecaServiceImpl implements BibliotecaService {
                         resumen.setEdicion(padre.getEdicion());
                         resumen.setReimpresion(padre.getReimpresion());
                         resumen.setDescriptor(padre.getDescriptor());
+                        resumen.setDescripcionRevista(padre.getDescripcionRevista());
                         resumen.setNotaContenido(padre.getNotaContenido());
                         resumen.setNotaGeneral(padre.getNotaGeneral());
                         resumen.setNotaResumen(padre.getNotaResumen());
@@ -441,6 +447,9 @@ public class BibliotecaServiceImpl implements BibliotecaService {
 
                     // 6) Fecha de Ingreso
                     tmp.setFechaIngreso(d.getFechaIngreso());
+                    tmp.setHoraInicio(d.getHoraInicio());
+                    tmp.setHoraFin(d.getHoraFin());
+                    tmp.setMaxHoras(d.getMaxHoras());
 
                     // 7) Código de Barra (insertable=false en BD)
                     tmp.setCodigoBarra(d.getCodigoBarra());
@@ -626,6 +635,16 @@ public class BibliotecaServiceImpl implements BibliotecaService {
                 .findByIdEstado(3L)                 // busca todos los que tienen IDESTADO = 3
                 .stream()
                 .map(this::mapToDto)                // convierte cada entidad a su DTO
+                .collect(Collectors.toList());
+    }
+
+    /** Devuelve todas las bibliotecas en estado disponible (2) */
+    @Override
+    public List<BibliotecaDTO> findDisponibles() {
+        return bibliotecaRepository
+                .findByIdEstado(2L)
+                .stream()
+                .map(this::mapToDto)
                 .collect(Collectors.toList());
     }
 

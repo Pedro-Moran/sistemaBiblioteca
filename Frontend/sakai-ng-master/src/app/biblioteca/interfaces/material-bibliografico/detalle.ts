@@ -18,6 +18,12 @@ export class Detalle {
     nroFactura: string;
     numeroFactura?: string | null;
     tipoMaterialId?: number | null;
+    /** Hora de inicio permitida para préstamo */
+    horaInicio?: string | null;
+    /** Hora fin permitida para préstamo */
+    horaFin?: string | null;
+    /** Máximo de horas de préstamo */
+    maxHoras?: number | null;
     idEstado?: number;
     existencias?: string | null;
     constructor(init?: Partial<Detalle>) {
@@ -34,6 +40,9 @@ export class Detalle {
         this.nroFactura = '';
         this.numeroFactura = null;
         this.tipoMaterialId = null;
+        this.horaInicio = null;
+        this.horaFin = null;
+        this.maxHoras = null;
         this.idEstado = undefined;
         this.existencias = null;
         // Inicialización opcional si se pasa un objeto
