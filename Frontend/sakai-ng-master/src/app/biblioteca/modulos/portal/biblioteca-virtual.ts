@@ -276,6 +276,32 @@ export class BibliotecaVirtualComponent {
     layout: 'list' | 'grid' = 'grid';
     options = ['list', 'grid'];
 
+    private parseTime(t: string) {
+        const [h, m] = t.split(':').map((n) => parseInt(n, 10));
+        return { h, m };
+    }
+
+    private parseTimeAtDate(time: string, base: Date) {
+        const { h, m } = this.parseTime(time);
+        const d = new Date(base);
+        d.setHours(h, m, 0, 0);
+        return d;
+    }
+
+    private isDisponibleAhora(eq: any): boolean {
+        if (!eq.horaInicio || !eq.horaFin) {
+            return true;
+        }
+        const now = new Date();
+        const start = this.parseTimeAtDate(eq.horaInicio, now);
+        const end = this.parseTimeAtDate(eq.horaFin, now);
+        if (end <= start) {
+            // horario que cruza medianoche
+            return now >= start || now <= end;
+        }
+        return now >= start && now <= end;
+    }
+
     titulo: string = "Biblioteca virtual";
     dataSede: Sedes[] = [];
     sedeFiltro: Sedes = new Sedes();
@@ -332,10 +358,11 @@ export class BibliotecaVirtualComponent {
                 (result: any) => {
                     this.loading = false;
                     if (result.status == "0") {
-                        this.data = result.data;
+                        this.data = result.data
+                            .filter((e: any) => e.estado?.descripcion === 'DISPONIBLE' && this.isDisponibleAhora(e));
                     }
-                }
-                , (error: HttpErrorResponse) => {
+                },
+                (error: HttpErrorResponse) => {
                     this.loading = false;
                 }
             );
@@ -380,14 +407,19 @@ export class BibliotecaVirtualComponent {
 
     filtrarPorSede() {
       if (this.sedeFiltro && this.sedeFiltro.id) {
-    this.bibliotecaVirtualService.filtrarPorSede(this.sedeFiltro.id).subscribe(
+        this.bibliotecaVirtualService
+          .filtrarPorSede(this.sedeFiltro.id)
+          .subscribe(
             (result: any) => {
               this.loading = false;
               if (result.status == "0") {
-                this.data = result.data;
+                this.data = result.data.filter(
+                  (e: any) =>
+                    e.estado?.descripcion === 'DISPONIBLE' && this.isDisponibleAhora(e)
+                );
               }
-            }
-            , (error: HttpErrorResponse) => {
+            },
+            (error: HttpErrorResponse) => {
               this.loading = false;
             }
           );
@@ -463,6 +495,31 @@ confirmarPrestamo() {
         finTime.getHours(),
         finTime.getMinutes()
       );
+
+      if (this.selectedItem.horaInicio && this.selectedItem.horaFin) {
+        const inicioPermitido = this.parseTimeAtDate(this.selectedItem.horaInicio, dtInicio);
+        const finPermitido = this.parseTimeAtDate(this.selectedItem.horaFin, dtInicio);
+        if (finPermitido <= inicioPermitido) {
+          // rango cruza medianoche
+          if (dtFin < inicioPermitido) {
+            finPermitido.setDate(finPermitido.getDate() + 1);
+          } else {
+            inicioPermitido.setDate(inicioPermitido.getDate() - 1);
+          }
+        }
+        if (dtInicio < inicioPermitido || dtFin > finPermitido) {
+          this.messageService.add({ severity: 'warn', detail: 'El horario seleccionado est\u00e1 fuera del rango permitido.' });
+          return;
+        }
+      }
+
+      if (this.selectedItem.maxHoras) {
+        const diff = (dtFin.getTime() - dtInicio.getTime()) / 3600000;
+        if (diff > this.selectedItem.maxHoras) {
+          this.messageService.add({ severity: 'warn', detail: `M\u00e1ximo ${this.selectedItem.maxHoras} horas de pr\u00e9stamo.` });
+          return;
+        }
+      }
     const dto = {
         equipoId:      this.selectedItem.idEquipo,
         tipoPrestamo:  this.selectedTipo,
