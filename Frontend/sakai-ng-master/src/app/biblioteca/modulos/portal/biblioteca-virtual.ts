@@ -267,6 +267,7 @@ import { CheckboxModule } from 'primeng/checkbox';
           </button>
   </ng-template>
 </p-dialog>
+  <p-toast></p-toast>
 
 
 </div>
