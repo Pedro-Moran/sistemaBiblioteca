@@ -281,7 +281,7 @@ import { AuthService } from '../../../services/auth.service';
                                 <div style="position: relative;">
                                     <button pButton type="button" icon="pi pi-ellipsis-v"
                                         class="p-button-rounded p-button-text p-button-plain"
-                                        (click)="showMenu($event, objeto)"></button>
+                                        (click)="showMenu($event, objeto, rowIndex)"></button>
                                     <p-menu #menu [popup]="true" [model]="items" appendTo="body"></p-menu>
                                 </div>
 
@@ -330,6 +330,15 @@ import { AuthService } from '../../../services/auth.service';
 </p-datepicker>
 
   <app-input-validation [form]="formDetalle" modelo="fechaIngreso" ver="Fecha Ingreso"></app-input-validation>
+  <label for="horaInicio">Hora Inicio</label>
+  <p-calendar id="horaInicio" formControlName="horaInicio" timeOnly="true" hourFormat="24" appendTo="body" class="w-full"></p-calendar>
+  <app-input-validation [form]="formDetalle" modelo="horaInicio" ver="Hora Inicio"></app-input-validation>
+  <label for="horaFin">Hora Fin</label>
+  <p-calendar id="horaFin" formControlName="horaFin" timeOnly="true" hourFormat="24" appendTo="body" class="w-full"></p-calendar>
+  <app-input-validation [form]="formDetalle" modelo="horaFin" ver="Hora Fin"></app-input-validation>
+  <label for="maxHoras">Máx Horas</label>
+  <input pInputText id="maxHoras" type="number" formControlName="maxHoras" />
+  <app-input-validation [form]="formDetalle" modelo="maxHoras" ver="Máx Horas"></app-input-validation>
 </div>
 
     </div>
@@ -355,7 +364,8 @@ export class ModalTesisComponent implements OnInit {
     displayEditorial: boolean = false;
     displayDetalle: boolean = false;
     displayEjemplar: boolean = false;
-    objetoOtro: Tesis = new Tesis();
+    /** Datos de la tesis que se está editando */
+    objetoTesis: Tesis = new Tesis();
     objetoEditorial: Editorial = new Editorial();
     objetoDetalle: Detalle = new Detalle();
     detalles: DetalleDisplay[] = [];
@@ -375,6 +385,8 @@ export class ModalTesisComponent implements OnInit {
     nuevaEspecialidad: string = '';
     items!: MenuItem[];
     uploadedFiles: any[] = [];
+    editingIndex: number | null = null;
+    selectedIndex!: number;
     @Input() tipoMaterialId!: number | null;
     @Output() saved = new EventEmitter<void>();
     constructor(private fb: FormBuilder,
@@ -388,26 +400,26 @@ export class ModalTesisComponent implements OnInit {
             descripcion: ['', [Validators.required, Validators.maxLength(50), Validators.pattern('^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\\s\\-()]+$')]]
         });
         this.formPortada = this.fb.group({
-            portada: [this.objetoOtro.portada],
+            portada: [this.objetoTesis.portada],
             adjunto: ['']
         });
         this.formOtro = this.fb.group({
 
-            id: [this.objetoOtro.id],
+            id: [this.objetoTesis.id],
             tipoMaterialId: [null],
-            codigo: [this.objetoOtro.codigo, [
+            codigo: [this.objetoTesis.codigo, [
                 Validators.required,
                 Validators.maxLength(20),
                 Validators.pattern('^[a-zA-Z0-9./]+$') // Permite letras, números, puntos y slash
             ]],
-            titulo: [this.objetoOtro.titulo,
+            titulo: [this.objetoTesis.titulo,
             [
                 Validators.required,
                 Validators.maxLength(100),
                 Validators.pattern('^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\\s./()-]+$') // Permite letras, números, espacios, punto, guion, slash y paréntesis
             ]
             ],
-            autorPrincipal: [this.objetoOtro.autorPrincipal,
+            autorPrincipal: [this.objetoTesis.autorPrincipal,
             [
                 Validators.required,
                 Validators.maxLength(100),
@@ -415,55 +427,55 @@ export class ModalTesisComponent implements OnInit {
             ]
             ],
 
-            pais: [this.objetoOtro?.pais,
+            pais: [this.objetoTesis?.pais,
               [
                   Validators.required
               ]
               ],
-              ciudad: [this.objetoOtro?.ciudad,
+              ciudad: [this.objetoTesis?.ciudad,
               [
                   Validators.required
               ]
               ],
 
-          descripcionFisica: [this.objetoOtro?.descripcionFisica,
+          descripcionFisica: [this.objetoTesis?.descripcionFisica,
               [
                   Validators.required
               ]
               ],
-              cantidad: [this.objetoOtro?.cantidad,
+              cantidad: [this.objetoTesis?.cantidad,
               [
                   Validators.required,
                   Validators.maxLength(100),
                   Validators.pattern('^[0-9]+$')
               ]
               ],
-              anioPublicacion: [this.objetoOtro?.anioPublicacion,
+              anioPublicacion: [this.objetoTesis?.anioPublicacion,
               [
                   Validators.required
               ]
               ],
-              anio: [this.objetoOtro?.anio,
+              anio: [this.objetoTesis?.anio,
               [
                   Validators.required,
                   Validators.maxLength(4),
                   Validators.pattern('^[0-9]+$')
               ]
               ],
-              especialidad: [this.objetoOtro.especialidad, Validators.required],
-            formatoDigital: [this.objetoOtro.formatoDigital],
-            urlPublicacion: [this.objetoOtro.urlPublicacion],
-            descriptores: [this.objetoOtro.descriptores, [
+              especialidad: [this.objetoTesis.especialidad, Validators.required],
+            formatoDigital: [this.objetoTesis.formatoDigital],
+            urlPublicacion: [this.objetoTesis.urlPublicacion],
+            descriptores: [this.objetoTesis.descriptores, [
                 Validators.required,
                 Validators.maxLength(100),
                 Validators.pattern('^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\\s./()-]+$') // Permite letras, números, espacios, punto, guion, slash y paréntesis
             ]],
-            notasTesis: [this.objetoOtro.notasTesis, [
+            notasTesis: [this.objetoTesis.notasTesis, [
                 Validators.required,
                 Validators.maxLength(100),
                 Validators.pattern('^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\\s./()-]+$') // Permite letras, números, espacios, punto, guion, slash y paréntesis
             ]],
-            notasGeneral: [this.objetoOtro.notasGeneral, [
+            notasGeneral: [this.objetoTesis.notasGeneral, [
                 Validators.required,
                 Validators.maxLength(100),
                 Validators.pattern('^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\\s./()-]+$') // Permite letras, números, espacios, punto, guion, slash y paréntesis
@@ -474,7 +486,7 @@ export class ModalTesisComponent implements OnInit {
         {
           label: 'Actualizar',
           icon: 'pi pi-pencil',
-          command: (event) => this.editarRegistro(this.selectedItem)
+          command: () => this.editarDetalle(this.selectedItem, this.selectedIndex)
         },
         {
           label: 'Eliminar',
@@ -498,6 +510,15 @@ export class ModalTesisComponent implements OnInit {
                 Validators.required
             ]
             ],
+            horaInicio: [
+              this.objetoDetalle?.horaInicio ? this.stringToDate(this.objetoDetalle.horaInicio) : null,
+              [Validators.required]
+            ],
+            horaFin: [
+              this.objetoDetalle?.horaFin ? this.stringToDate(this.objetoDetalle.horaFin) : null,
+              [Validators.required]
+            ],
+            maxHoras: [this.objetoDetalle?.maxHoras ?? null, [Validators.required, Validators.min(1)]],
             tipoAdquisicion: [this.objetoDetalle?.tipoAdquisicion]
         });
     }
@@ -516,7 +537,7 @@ export class ModalTesisComponent implements OnInit {
         await this.ListaDetalle();
     }
     openModal(tipoId?: number | null) {
-        this.objetoOtro = new Tesis();
+        this.objetoTesis = new Tesis();
         this.objetoDetalle = new Detalle();
         this.detalles = [];
 
@@ -528,6 +549,32 @@ export class ModalTesisComponent implements OnInit {
         this.tipoMaterialId = id;
 
         this.display = true;
+    }
+
+    editarBiblioteca(mat: BibliotecaDTO, tipoId?: number | null) {
+        const id = tipoId ?? this.tipoMaterialId ?? null;
+        this.formOtro.reset();
+        this.objetoTesis.id = mat.id ?? 0;
+        this.formOtro.patchValue({
+            id: mat.id ?? null,
+            tipoMaterialId: id,
+            codigo: mat.codigoLocalizacion,
+            titulo: mat.titulo,
+            autorPrincipal: mat.autorPersonal,
+            pais: mat.paisId,
+            ciudad: mat.ciudadCodigo,
+            especialidad: mat.idEspecialidad,
+            cantidad: mat.numeroPaginas,
+            anio: mat.anioPublicacion,
+            descriptores: mat.descriptor,
+            notasTesis: mat.notaContenido,
+            notasGeneral: mat.notaGeneral,
+            formatoDigital: mat.fladigitalizado,
+            urlPublicacion: mat.linkPublicacion
+        });
+        this.tipoMaterialId = id;
+        this.display = true;
+        this.ListaDetalle();
     }
 
     closeModal() {
@@ -556,10 +603,14 @@ export class ModalTesisComponent implements OnInit {
             tipoAdquisicionId: (d.tipoAdquisicion as any)?.id ?? d.tipoAdquisicionId ?? null,
             tipoMaterialId:
               (d.tipoMaterial as any)?.id ?? d.tipoMaterialId ?? parentTipo,
+            horaInicio: this.timeToString(d.horaInicio ?? null),
+            horaFin:    this.timeToString(d.horaFin ?? null),
+            maxHoras:   d.maxHoras ?? null,
             costo: d.costo ?? null,
             numeroFactura: d.numeroFactura ?? null,
             fechaIngreso: d.fechaIngreso ?? null,
-            idEstado: d.idEstado ?? 1,
+            // detalle debe tener estado 1 al guardar o actualizar
+            idEstado: 1,
         }));
 
         return {
@@ -725,7 +776,7 @@ export class ModalTesisComponent implements OnInit {
         }
     }
     async ListaDetalle() {
-        const idBib = this.objetoOtro?.id;
+        const idBib = this.objetoTesis?.id;
         if (!idBib) { return; }
         try {
             const data = await this.materialBibliograficoService
@@ -746,6 +797,9 @@ export class ModalTesisComponent implements OnInit {
                     codigoSede: sedeId,
                     tipoMaterialId: tipoMat,
                     tipoAdquisicionId: tipoAdq,
+                    horaInicio: d.horaInicio ?? null,
+                    horaFin:    d.horaFin ?? null,
+                    maxHoras:   d.maxHoras ?? null,
                     costo: d.costo ?? null,
                     numeroFactura: d.numeroFactura ?? null,
                     fechaIngreso: d.fechaIngreso ?? null,
@@ -797,15 +851,19 @@ export class ModalTesisComponent implements OnInit {
           onGlobalFilter(table: Table, event: Event) {
             table.filterGlobal((event.target as HTMLInputElement).value, 'contains');
         }
-        showMenu(event: MouseEvent, selectedItem: any) {
+        showMenu(event: MouseEvent, selectedItem: any, idx: number) {
           this.selectedItem = selectedItem;
+          this.selectedIndex = idx;
           this.menu.toggle(event);
         }
 
-          editarRegistro(objeto:Detalle){
-            this.objetoDetalle = JSON.parse(JSON.stringify(objeto));
+          editarDetalle(det: DetalleDisplay, idx: number){
+            this.editingIndex = idx;
+            this.objetoDetalle = JSON.parse(JSON.stringify(det));
+            this.formDetalle.reset();
+            this.formDetalle.enable();
             this.formValidarDetalle();
-            this.displayDetalle = true;
+            this.displayEjemplar = true;
           }
 
 
@@ -837,6 +895,7 @@ export class ModalTesisComponent implements OnInit {
                 });
             }
             nuevoEjemplar(){
+                this.editingIndex = null;
                 this.formValidarDetalle();
                 if (this.tipoMaterialId) {
                     const tipoObj = this.tipoMaterialLista.find(t => t.id === this.tipoMaterialId) ?? null;
@@ -864,6 +923,9 @@ export class ModalTesisComponent implements OnInit {
                     codigoSede:        sedeId,
                     tipoMaterialId:    tipoMat,
                     tipoAdquisicionId: tipoAdq,
+                    horaInicio:        this.timeToString(this.formDetalle.value.horaInicio ?? null),
+                    horaFin:           this.timeToString(this.formDetalle.value.horaFin ?? null),
+                    maxHoras:          this.formDetalle.value.maxHoras,
                     costo:             null,
                     numeroFactura:     null,
                     fechaIngreso:      this.formatDateTime(this.formDetalle.value.fechaIngreso),
@@ -874,7 +936,12 @@ export class ModalTesisComponent implements OnInit {
                     idEstado: 1
                   };
 
-                  this.detalles = [...this.detalles, detalle];
+                  if (this.editingIndex == null) {
+                    this.detalles = [...this.detalles, detalle];
+                  } else {
+                    this.detalles[this.editingIndex] = detalle;
+                    this.detalles = [...this.detalles];
+                  }
                   this.formDetalle.reset();
                   this.displayEjemplar = false;
                 }
@@ -886,6 +953,22 @@ export class ModalTesisComponent implements OnInit {
               if (typeof d === 'string' && d.length > 10) { return d; }
               const dt = typeof d === 'string' ? new Date(d) : d;
               return dt.toISOString().split('.')[0];
+            }
+
+            private timeToString(t: Date | string | null): string | null {
+              if (!t) { return null; }
+              if (typeof t === 'string') { return t.length > 5 ? t.slice(11,16) : t; }
+              const h = t.getHours().toString().padStart(2,'0');
+              const m = t.getMinutes().toString().padStart(2,'0');
+              return `${h}:${m}`;
+            }
+
+            /** Convierte "HH:mm" o "yyyy-MM-ddTHH:mm" a Date */
+            private stringToDate(hhmm: string): Date {
+              const parts = hhmm.includes('T') ? hhmm.split('T')[1].split(':') : hhmm.split(':');
+              const d = new Date();
+              d.setHours(+parts[0], +parts[1], 0, 0);
+              return d;
             }
 
             idToSede(id: number | null) {

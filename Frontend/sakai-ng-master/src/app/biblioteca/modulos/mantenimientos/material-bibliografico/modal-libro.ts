@@ -413,13 +413,24 @@ import { Output, EventEmitter } from '@angular/core';
                             ver="Tipo de Material"></app-input-validation>
                         </div>
                         <div class="flex flex-col gap-2 w-full">
-                          <label for="fechaIngreso">Fecha Ingreso</label>
-                          <p-datepicker appendTo="body" formControlName="fechaIngreso" [ngClass]="'w-full'" [style]="{ width: '100%' }"
-                            [readonlyInput]="true" dateFormat="dd/mm/yy">
-                          </p-datepicker>
+                        <label for="fechaIngreso">Fecha Ingreso</label>
+                        <p-datepicker appendTo="body" formControlName="fechaIngreso" [ngClass]="'w-full'" [style]="{ width: '100%' }"
+                          [readonlyInput]="true" dateFormat="dd/mm/yy">
+                        </p-datepicker>
 
-                          <app-input-validation [form]="formDetalle" modelo="fechaIngreso" ver="Fecha Ingreso"></app-input-validation>
-                        </div>
+                        <app-input-validation [form]="formDetalle" modelo="fechaIngreso" ver="Fecha Ingreso"></app-input-validation>
+                        <label for="horaInicio">Hora Inicio</label>
+                        <p-calendar id="horaInicio" formControlName="horaInicio" timeOnly="true" hourFormat="24" appendTo="body" class="w-full"></p-calendar>
+                        <app-input-validation [form]="formDetalle" modelo="horaInicio" ver="Hora Inicio"></app-input-validation>
+
+                        <label for="horaFin">Hora Fin</label>
+                        <p-calendar id="horaFin" formControlName="horaFin" timeOnly="true" hourFormat="24" appendTo="body" class="w-full"></p-calendar>
+                        <app-input-validation [form]="formDetalle" modelo="horaFin" ver="Hora Fin"></app-input-validation>
+
+                        <label for="maxHoras">Máx Horas</label>
+                        <input pInputText id="maxHoras" type="number" formControlName="maxHoras" />
+                        <app-input-validation [form]="formDetalle" modelo="maxHoras" ver="Máx Horas"></app-input-validation>
+                      </div>
 
                         <div class="flex flex-col gap-2 md:w-1/4">
                           <label for="Costo">Costo</label>
@@ -746,6 +757,9 @@ export class ModalLibroComponent implements OnInit {
                 Validators.required
             ]
             ],
+            horaInicio: [null, [Validators.required]],
+            horaFin: [null, [Validators.required]],
+            maxHoras: [null, [Validators.required, Validators.min(1)]],
             costo: [this.objetoDetalle?.costo,
             [
                 Validators.required,
@@ -862,11 +876,14 @@ private buildDto(): BibliotecaDTO {
                   ? d.tipoAdquisicionId?.id ?? null  // ‹– sólo number | null
                   : d.tipoAdquisicionId ?? null,
       tipoMaterialId     : d.tipoMaterialId!,
+      horaInicio         : this.timeToString(d.horaInicio ?? null),
+      horaFin            : this.timeToString(d.horaFin ?? null),
+      maxHoras           : d.maxHoras ?? null,
       costo              : d.costo ?? null,
       numeroFactura      : d.numeroFactura ?? null,
       fechaIngreso       : d.fechaIngreso ?? null,
-      // solo añadir idEstado si es nuevo
-      idEstado           : d.idEstado ?? 1
+      // al editar forzamos el estado 1 para que aparezca en aprobaciones
+      idEstado           : 1
     };
   });
 
@@ -920,6 +937,24 @@ private formatDateTime(d: Date | string | null): string | null {
   /* Convertimos Date → ‘yyyy-MM-ddTHH:mm:ss’  (sin milisegundos / sin Z) */
   const dt = typeof d === 'string' ? new Date(d) : d;
   return dt.toISOString().split('.')[0];          // ej. “2025-05-07T00:00:00”
+}
+
+private timeToString(t: Date | string | null): string | null {
+  if (!t) { return null; }
+  if (typeof t === 'string') {
+    return t.length > 5 ? t.slice(11,16) : t;
+  }
+  const h = t.getHours().toString().padStart(2, '0');
+  const m = t.getMinutes().toString().padStart(2, '0');
+  return `${h}:${m}`; // "HH:mm" usando hora local
+}
+
+/** Convierte "HH:mm" (o "yyyy-MM-ddTHH:mm") a objeto Date para p-calendar */
+private stringToDate(hhmm: string): Date {
+  const parts = hhmm.includes('T') ? hhmm.split('T')[1].split(':') : hhmm.split(':');
+  const d = new Date();
+  d.setHours(+parts[0], +parts[1], 0, 0);
+  return d;
 }
 
 finalizar(): void {
@@ -1108,11 +1143,35 @@ finalizar(): void {
         }
 
     async ListaEjemplares() {
+        const idBib = this.objetoLibro?.id;
+        if (!idBib) { return; }
         try {
-            const result: any = await this.materialBibliograficoService.lista_ejemplares('material-bibliografico/ciudad').toPromise();
-            if (result.status == 0) {
-                this.detalles = result.data;
-            }
+            const data = await this.materialBibliograficoService
+                .listarDetallesPorBiblioteca(idBib, false)
+                .toPromise();
+
+            this.detalles = (data ?? []).map(d => {
+                const sedeObj  = this.sedesLista.find(s => s.id === d.codigoSede) ?? null;
+                const tipoMatObj = this.tipoMaterialLista.find(t => t.id === d.tipoMaterialId) ?? null;
+                const tipoAdqObj = this.tipoAdquisicionLista.find(t => t.id === d.tipoAdquisicionId) ?? null;
+
+                return {
+                    idDetalleBiblioteca: d.idDetalleBiblioteca,
+                    codigoSede:        d.codigoSede,
+                    tipoMaterialId:    d.tipoMaterialId,
+                    tipoAdquisicionId: d.tipoAdquisicionId,
+                    horaInicio: d.horaInicio ?? null,
+                    horaFin:    d.horaFin ?? null,
+                    maxHoras:   d.maxHoras ?? null,
+                    costo: d.costo ?? null,
+                    numeroFactura: d.numeroFactura ?? null,
+                    fechaIngreso: d.fechaIngreso ?? null,
+                    sede: sedeObj,
+                    tipoMaterial: tipoMatObj,
+                    tipoAdquisicion: tipoAdqObj,
+                    idEstado: d.idEstado
+                } as DetalleDisplay;
+            });
         } catch (error) {
             console.log(error);
             this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Ocurrió un error. No se pudo cargar especialidad' });
@@ -1203,6 +1262,7 @@ finalizar(): void {
         // 3) resto de datos
         this.setData(mat, true);
         this.formLibro.patchValue({ tipoMaterialId: tipoId ?? this.tipoMaterialId });
+        await this.ListaEjemplares();
         this.display = true;
     }
 
@@ -1215,9 +1275,12 @@ finalizar(): void {
       this.formDetalle.patchValue({
         sede           : det.codigoSede,
         tipoAdquisicion: det.tipoAdquisicionId,
-        fechaIngreso   : det.fechaIngreso,
+        fechaIngreso   : det.fechaIngreso ? new Date(det.fechaIngreso) : null,
+        horaInicio     : det.horaInicio ? this.stringToDate(det.horaInicio) : null,
+        horaFin        : det.horaFin    ? this.stringToDate(det.horaFin)    : null,
+        maxHoras       : det.maxHoras ?? null,
         costo          : det.costo,
-        tipoMaterial: det.tipoMaterialId,
+        tipoMaterial   : det.tipoMaterialId,
         nroFactura     : det.numeroFactura
       });
 
@@ -1299,6 +1362,9 @@ guardarEjemplar() {
       codigoSede        : sedeId,
       tipoAdquisicionId : tipoAdqId,
       tipoMaterialId    : tipoMaterialId,    // ← añade esta línea
+      horaInicio        : this.timeToString(this.formDetalle.value.horaInicio ?? null),
+      horaFin           : this.timeToString(this.formDetalle.value.horaFin ?? null),
+      maxHoras          : this.formDetalle.value.maxHoras,
       costo             : this.formDetalle.value.costo,
       numeroFactura     : this.formDetalle.value.nroFactura,
       fechaIngreso      : this.formatDateTime(this.formDetalle.value.fechaIngreso),
@@ -1350,7 +1416,7 @@ public setData(material: BibliotecaDTO, omitPaisCiudad = false): void {
   -------------------------------------------------------*/
   this.formLibro.patchValue({
     id:            clone.id,
-    codigo:        clone.id,
+    codigo:        clone.codigoLocalizacion,
     titulo:        clone.titulo,
     descripcion:   clone.descriptor,
     notasContenido:clone.notaContenido,
@@ -1401,11 +1467,15 @@ public setData(material: BibliotecaDTO, omitPaisCiudad = false): void {
   if (d0) {
     /* pre-cargamos el primer registro en el form (opcional) */
     this.formDetalle.patchValue({
-      codigoSede           : d0.codigoSede,          // ojo ⇦ ahora es “codigoSede”
-      tipoAdquisicion: d0.tipoAdquisicionId,   // idem
-      fechaIngreso   : d0.fechaIngreso,
-      costo          : d0.costo,
-      nroFactura     : d0.numeroFactura
+      codigoSede      : d0.codigoSede,
+      tipoAdquisicion : d0.tipoAdquisicionId,
+      fechaIngreso    : d0.fechaIngreso ? new Date(d0.fechaIngreso) : null,
+      horaInicio      : d0.horaInicio ? this.stringToDate(d0.horaInicio) : null,
+      horaFin         : d0.horaFin    ? this.stringToDate(d0.horaFin)    : null,
+      maxHoras        : d0.maxHoras ?? null,
+      costo           : d0.costo,
+      tipoMaterial    : d0.tipoMaterialId,
+      nroFactura      : d0.numeroFactura
     });
 
     /* ⇓ convertimos TODO el array a DetalleInput[] */
@@ -1419,6 +1489,9 @@ this.detalles = (clone.detalles ?? []).map((d: DetalleBibliotecaDTO) => {
     codigoSede          : d.codigoSede,
     tipoAdquisicionId   : d.tipoAdquisicionId,
     tipoMaterialId      : d.tipoMaterialId,
+    horaInicio          : d.horaInicio ?? null,
+    horaFin             : d.horaFin ?? null,
+    maxHoras            : d.maxHoras ?? null,
     costo               : d.costo,
     numeroFactura       : d.numeroFactura,
     fechaIngreso        : d.fechaIngreso,

@@ -57,6 +57,7 @@ public class Biblioteca {
     @Column(name = "REIMPRESION")                  private Integer reimpresion;
 
     @Lob @Column(name = "DESCRIPTOR")              private String descriptor;
+    @Column(name = "DESCRIPCIONREVISTA")           private String descripcionRevista;
     @Lob @Column(name = "NOTACONTENIDO")           private String notaContenido;
     @Lob @Column(name = "NOTAGENERAL")             private String notaGeneral;
     @Lob @Column(name = "NOTARESUMEN")             private String notaResumen;

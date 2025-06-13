@@ -187,7 +187,14 @@ export class ModalNuevoOcurencia implements OnInit {
         @ViewChild('modalMaterial') modalMaterial!: ModalMaterial;
         @ViewChild('modalInvolucrado') modalInvolucrado!: ModalInvolucrado;
           /** Aquí guardamos el ID normalizado (puede venir de idDetallePrestamo o idEquipo) */
-   idNormalizado: number = 0;
+  /** ID usado al crear la ocurrencia (detalle de equipo o biblioteca) */
+  idNormalizado: number = 0;
+  /** Guarda el ID de detalle de biblioteca cuando aplique */
+  idDetalleBiblioteca: number | null = null;
+  /** Guarda el ID de detalle de préstamo de equipo cuando aplique */
+  idDetallePrestamo: number | null = null;
+  /** Guarda el objeto original enviado al abrir el modal */
+  sourceItem: any = null;
 
 constructor(private fb: FormBuilder,
         private auth: AuthService,private genericoService: GenericoService, private materialBibliograficoService: MaterialBibliograficoService, private confirmationService: ConfirmationService, private messageService: MessageService) {
@@ -207,21 +214,56 @@ constructor(private fb: FormBuilder,
         this.ListaSede();
     }
   openModal(objeto: any) {
+    this.sourceItem          = objeto;
+    this.idDetallePrestamo   = objeto.idDetallePrestamo ?? null;
+    this.idDetalleBiblioteca = objeto.idDetalleBiblioteca ?? null;
+
     const idDetectado =
-      objeto.idDetallePrestamo != null ? objeto.idDetallePrestamo : objeto.idEquipo;
+      this.idDetallePrestamo != null
+        ? this.idDetallePrestamo
+        : objeto.idEquipo != null
+          ? objeto.idEquipo
+          : this.idDetalleBiblioteca ?? 0;
+
     this.idNormalizado = idDetectado;
+
+    const decoded = this.auth.getUser();
+    const fullName = (
+      ((decoded?.givenname ?? '') + ' ' + (decoded?.surname ?? '')).trim() ||
+      decoded?.displayname ||
+      decoded?.name ||
+      decoded?.sub ||
+      ''
+    );
 
     // Parcheamos el formulario para que el campo "ID" muestre el valor:
     this.form.patchValue({
       id: idDetectado,
       fechaCreacion: new Date(),
       sedePrestamo: objeto.sedePrestamo ?? objeto.sede?.id ?? null,
-      usuarioCreacion: objeto.usuarioCreacion ?? '',
+      usuarioCreacion: fullName,
       descripcion: ''
     });
 
     this.involucrados = [];
     this.materiales = [];
+
+    if (objeto.nombreEquipo) {
+      this.materiales.push({
+        codigoEquipo: objeto.idEquipo ?? objeto.numeroEquipo,
+        nombre: objeto.nombreEquipo,
+        cantidad: 1
+      });
+    } else if (objeto.idDetalleBiblioteca) {
+      this.materiales.push({
+        codigoEquipo: objeto.numeroIngreso ?? objeto.idDetalleBiblioteca,
+        nombre:
+          objeto.biblioteca?.titulo ||
+          objeto.tipoMaterial?.descripcion ||
+          'Material',
+        cantidad: 1
+      });
+    }
     this.guardado = false;
     this.actualizar = false;
     this.display = true;
@@ -242,11 +284,16 @@ constructor(private fb: FormBuilder,
     }
 
     const dto: OcurrenciaDTO = {
-      idDetallePrestamo: this.idNormalizado,
-      sedePrestamo: this.form.value.sedePrestamo,
-      descripcion: this.form.value.descripcion,
+      sedePrestamo:    this.form.value.sedePrestamo,
+      descripcion:     this.form.value.descripcion,
       usuarioCreacion: this.form.value.usuarioCreacion
     };
+    if (this.idDetallePrestamo != null) {
+      dto.idDetallePrestamo = this.idDetallePrestamo;
+    }
+    if (this.idDetalleBiblioteca != null) {
+      dto.idDetalleBiblioteca = this.idDetalleBiblioteca;
+    }
 
     this.materialBibliograficoService.crearOcurrencia(dto).subscribe({
       next: (created: OcurrenciaDTO) => {
@@ -258,8 +305,17 @@ constructor(private fb: FormBuilder,
         this.guardado = true;
         this.saved.emit();
 
+        // Si la ocurrencia proviene de un equipo sin préstamo,
+        // registramos automáticamente ese equipo como material involucrado
+        if (!this.idDetallePrestamo && !this.idDetalleBiblioteca && this.sourceItem?.idEquipo) {
+          this.materialBibliograficoService
+            .addMaterial(this.idNormalizado, { idEquipo: this.sourceItem.idEquipo, cantidad: 1 })
+            .subscribe(() => this.loadMateriales());
+        } else {
+          this.loadMateriales();
+        }
+
         this.loadInvolucrados();
-        this.loadMateriales();
       },
       error: () => {
         this.messageService.add({ severity: 'error', detail: 'Error al registrar.' });
@@ -287,8 +343,11 @@ constructor(private fb: FormBuilder,
 openForEdit(ocurrencia: OcurrenciaDTO) {
   this.actualizar = true;
   this.detalle = ocurrencia;
-    this.guardado = true;
-    this.display = true;
+  this.guardado = true;
+  this.display = true;
+  this.idNormalizado = ocurrencia.id!;
+  this.idDetallePrestamo   = ocurrencia.idDetallePrestamo ?? null;
+  this.idDetalleBiblioteca = ocurrencia.idDetalleBiblioteca ?? null;
   this.form.patchValue({
     id:                ocurrencia.id,
     fechaCreacion:     ocurrencia.fechaCreacion ? new Date(ocurrencia.fechaCreacion) : null,
@@ -297,23 +356,24 @@ openForEdit(ocurrencia: OcurrenciaDTO) {
     descripcion:       ocurrencia.descripcion,
     // … el resto …
   });
+  if (ocurrencia.idDetallePrestamo) {
     this.materialBibliograficoService
-      .getDetallePrestamo(ocurrencia.idDetallePrestamo!)
+      .getDetallePrestamo(ocurrencia.idDetallePrestamo)
       .subscribe(dp => {
         // Tabla de estudiantes:
         this.involucrados = [{
-          login:     dp.codigoUsuario,
+          login: dp.codigoUsuario,
           email: dp.usuarioPrestamo
         }];
 
         // Tabla de materiales:
         this.materiales = [{
-          idEquipo:   dp.equipo.idEquipo!,
-          nombreEquipo: dp.equipo.nombreEquipo!,
-          cantidad: 1,          // si siempre vienen de a uno
-          ip:       dp.equipo.ip!
+          codigoEquipo: dp.equipo.idEquipo!,
+          nombre: dp.equipo.nombreEquipo!,
+          cantidad: 1
         }];
       });
+  }
   this.loadInvolucrados();
   this.loadMateriales();
 }
@@ -329,13 +389,26 @@ openForEdit(ocurrencia: OcurrenciaDTO) {
     this.materialBibliograficoService
       .listarMaterialesOcurrencia(this.idNormalizado)
       .subscribe((dtos: OcurrenciaMaterialDTO[]) => {
-        this.materiales = dtos.map((dto) => ({
-          idEquipo: parseInt(dto.codigoEquipo, 10),
-          nombreEquipo: dto.nombreEquipo,
-          cantidad: dto.cantidad,
-          costo: dto.costo ?? 0,
-          subTotal: (dto.costo ?? 0) * dto.cantidad
-        }));
+        if (dtos.length > 0) {
+          this.materiales = dtos.map((dto) => ({
+            codigoEquipo: dto.codigoEquipo,
+            nombre: dto.nombreEquipo,
+            cantidad: dto.cantidad,
+            costo: dto.costo ?? 0,
+            subTotal: (dto.costo ?? 0) * dto.cantidad
+          }));
+        } else if (this.idDetalleBiblioteca != null && this.sourceItem) {
+          this.materiales = [{
+            codigoEquipo: this.sourceItem.numeroIngreso ?? this.sourceItem.idDetalleBiblioteca,
+            nombre:
+              this.sourceItem.biblioteca?.titulo ||
+              this.sourceItem.tipoMaterial?.descripcion ||
+              'Material',
+            cantidad: 1
+          }];
+        } else {
+          this.materiales = [];
+        }
       });
   }
 
