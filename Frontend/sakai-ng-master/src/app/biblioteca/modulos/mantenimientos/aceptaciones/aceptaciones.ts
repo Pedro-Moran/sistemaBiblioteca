@@ -20,6 +20,7 @@ import { TemplateModule } from '../../../template.module';
 import { BibliotecaVirtualService } from '../../../services/biblioteca-virtual.service';
 import { TipoMaterial } from '../../../interfaces/material-bibliografico/tipo-material';
 import { TipoAdquisicion } from '../../../interfaces/material-bibliografico/tipo-adquisicion';
+import { ModalNuevoOcurencia } from '../../laboratorio-computo/modal-nuevo-ocurrencia';
 
 
 @Component({
@@ -149,6 +150,7 @@ import { TipoAdquisicion } from '../../../interfaces/material-bibliografico/tipo
                 <th>Fecha de ingreso</th>
                 <th>Estado</th>
                 <th>Cargar MB</th>
+                <th>Ocurrencia</th>
             </tr>
         </ng-template>
         <ng-template pTemplate="body" let-objetoDetalle>
@@ -159,7 +161,7 @@ import { TipoAdquisicion } from '../../../interfaces/material-bibliografico/tipo
                 <td>{{ objetoDetalle.tipoMaterial?.descripcion }}</td>
                 <td>{{ objetoDetalle.fechaIngreso }}</td>
                 <td>
-                  <span [ngClass]="objetoDetalle.estado?.id === 1 ? 'text-primary' : 'text-green-500'">
+                 <span [ngClass]="objetoDetalle.estado?.id === 1 ? 'text-primary' : 'text-green-500'">
                     {{ objetoDetalle.estado?.descripcion }}
                   </span>
                 </td>
@@ -173,6 +175,16 @@ import { TipoAdquisicion } from '../../../interfaces/material-bibliografico/tipo
                    pTooltip="Marcar Disponible"
                    tooltipPosition="bottom">
                  </button>
+                </td>
+                <td>
+                 <p-button
+                   icon="pi pi-file"
+                   rounded
+                   outlined
+                   pTooltip="Registrar ocurrencia"
+                   tooltipPosition="bottom"
+                   (click)="onAbrirOcurrencia(objetoDetalle)">
+                 </p-button>
                 </td>
             </tr>
         </ng-template>
@@ -196,10 +208,11 @@ import { TipoAdquisicion } from '../../../interfaces/material-bibliografico/tipo
                 </div>
             </div>
 
+            <app-modal-nuevo-ocurrencia #modalOcurrencia></app-modal-nuevo-ocurrencia>
 
             <p-confirmDialog [style]="{width: '450px'}"></p-confirmDialog>
             <p-toast></p-toast>`,
-  imports: [TemplateModule,TooltipModule],
+  imports: [TemplateModule,TooltipModule, ModalNuevoOcurencia],
   providers: [MessageService, ConfirmationService]
 })
 export class Aceptaciones implements OnInit {
@@ -216,6 +229,7 @@ export class Aceptaciones implements OnInit {
   selectedItem: any;
   @ViewChild('menu') menu!: Menu;
   @ViewChild('filter') filter!: ElementRef;
+  @ViewChild('modalOcurrencia') modal!: ModalNuevoOcurencia;
   dataSede: Sedes[] = [];
   sedeFiltro: Sedes = new Sedes();
   filtros: ClaseGeneral[] = [];
@@ -385,6 +399,10 @@ aceptarDetalle(detalle: any) {
   showMenu(event: MouseEvent, selectedItem: any) {
     this.selectedItem = selectedItem;
     this.menu.toggle(event);
+  }
+
+  onAbrirOcurrencia(item: any) {
+    this.modal.openModal(item);
   }
 
   verDetalle(objeto:any){
