@@ -85,6 +85,15 @@ public class DetalleBiblioteca {
     @Column(name = "TIPOPRESTAMO", length = 80)
     private String tipoPrestamo;         // ej. "A DOMICILIO", "EN SALA", etc.
 
+    @Column(name = "HORA_INICIO", length = 30)
+    private String horaInicio;           // horario desde el cual se puede prestar
+
+    @Column(name = "HORA_FIN", length = 30)
+    private String horaFin;              // horario límite de préstamo
+
+    @Column(name = "MAX_HORAS")
+    private Integer maxHoras;            // máximo de horas permitido
+
     @Column(name = "USUARIOINGRESO", length = 30)
     private String usuarioIngreso;
 

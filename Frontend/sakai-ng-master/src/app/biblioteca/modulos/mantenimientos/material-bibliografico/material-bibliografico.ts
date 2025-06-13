@@ -23,6 +23,11 @@ import { TemplateModule } from '../../../template.module';
 import { ModalTesisComponent } from './modal-tesis';
 import { BibliotecaDTO  } from '../../../interfaces/material-bibliografico/biblioteca.model';
 
+interface Column {
+  field: string;
+  header: string;
+}
+
 @Component({
   selector: 'app-material-bibliografico',
   standalone: true,
@@ -99,41 +104,17 @@ import { BibliotecaDTO  } from '../../../interfaces/material-bibliografico/bibli
                        </ng-template>
                             <ng-template pTemplate="header">
                                 <tr>
-                                <th  >Imagen</th>
-                                <th pSortableColumn="codigo" style="width: 4rem">Codigo<p-sortIcon field="codigo"></p-sortIcon></th>
-                                <th pSortableColumn="titulo" style="min-width:200px">Titulo<p-sortIcon field="titulo"></p-sortIcon></th>
-                                    <th pSortableColumn="autor" style="min-width:200px">Autor<p-sortIcon field="autor"></p-sortIcon></th>
-                                    <th pSortableColumn="coleccion"  style="min-width:200px">Ciudad<p-sortIcon field="coleccion"></p-sortIcon></th>
-                                    <th pSortableColumn="editorial"  style="min-width:200px">Editorial<p-sortIcon field="editorial"></p-sortIcon></th>
-                                    <th pSortableColumn="anio" style="width: 8rem">Año<p-sortIcon field="anio"></p-sortIcon></th>
-                                    <th style="width: 4rem" >Opciones</th>
-
+                                    <th>Imagen</th>
+                                    <th *ngFor="let col of columns" [pSortableColumn]="col.field">
+                                        {{ col.header }}<p-sortIcon [field]="col.field"></p-sortIcon>
+                                    </th>
+                                    <th style="width: 4rem">Opciones</th>
                                 </tr>
                             </ng-template>
                             <ng-template pTemplate="body" let-objeto>
                                 <tr>
-                                <td>
-
-                                    </td>
-                                <td>{{objeto.codigoLocalizacion}}
-                                    </td>
-                                    <td>
-                                        {{objeto.titulo}}
-
-                                    </td>
-                                    <td>
-                                        {{objeto.autorPersonal}}<br/>
-
-                                    </td>
-                                    <td>
-                                        {{objeto.ciudadCodigo}}
-                                    </td>
-                                    <td>
-                                        {{objeto.editorialPublicacion}}
-                                    </td>
-                                    <td>
-                                        {{objeto.anioPublicacion}}
-                                    </td>
+                                    <td></td>
+                                    <td *ngFor="let col of columns">{{ objeto[col.field] }}</td>
                                     <td class="text-center">
                                         <div style="position: relative;">
                                             <button pButton type="button" icon="pi pi-ellipsis-v"
@@ -141,7 +122,6 @@ import { BibliotecaDTO  } from '../../../interfaces/material-bibliografico/bibli
                                                 (click)="showMenu($event, objeto)"></button>
                                             <p-menu #menu [popup]="true" [model]="items" appendTo="body"></p-menu>
                                         </div>
-
                                     </td>
                                 </tr>
                             </ng-template>
@@ -171,8 +151,16 @@ import { BibliotecaDTO  } from '../../../interfaces/material-bibliografico/bibli
     [tipoMaterialId]="tipoRecursoFiltro.tipo.id"
     (saved)="onSaved()">
 </app-modal-revista>
-<app-modal-tesis #modalTesis></app-modal-tesis>
-<app-modal-otros #modalOtros></app-modal-otros>
+<app-modal-tesis
+    #modalTesis
+    [tipoMaterialId]="tipoRecursoFiltro.tipo.id"
+    (saved)="onSaved()">
+</app-modal-tesis>
+<app-modal-otros
+    #modalOtros
+    [tipoMaterialId]="tipoRecursoFiltro.tipo.id"
+    (saved)="onSaved()">
+</app-modal-otros>
 
 
             <p-confirmDialog [style]="{width: '450px'}"></p-confirmDialog>
@@ -214,6 +202,7 @@ export class MaterialBibliografico {
   palabra: any;
   itemsMaterial: any[] = [];
   palabraClave:string="";
+  columns: Column[] = [];
 
   @ViewChild('modalLibro') modalLibro!: ModalLibroComponent;
   @ViewChild('modalRevista') modalRevista!: ModalRevistaComponent;
@@ -222,6 +211,52 @@ export class MaterialBibliografico {
 
   constructor(private materialBibliograficoService: MaterialBibliograficoService, private genericoService: GenericoService, private fb: FormBuilder,
     private router: Router, private authService: AuthService, private confirmationService: ConfirmationService, private messageService: MessageService) { }
+
+  private setColumns(): void {
+    const tipo = this.tipoRecursoFiltro?.tipo?.id;
+    switch (tipo) {
+      case 1: // Libro
+        this.columns = [
+          { field: 'codigoLocalizacion', header: 'Codigo' },
+          { field: 'titulo', header: 'Titulo' },
+          { field: 'autorPersonal', header: 'Autor' },
+          { field: 'ciudadCodigo', header: 'Ciudad' },
+          { field: 'editorialPublicacion', header: 'Editorial' },
+          { field: 'anioPublicacion', header: 'Año' }
+        ];
+        break;
+      case 2: // Revista
+        this.columns = [
+          { field: 'codigoLocalizacion', header: 'Codigo' },
+          { field: 'titulo', header: 'Titulo' },
+          { field: 'autorInstitucional', header: 'Institución' },
+          { field: 'director', header: 'Director' },
+          { field: 'editorialPublicacion', header: 'Editorial' },
+          { field: 'anioPublicacion', header: 'Año' }
+        ];
+        break;
+      case 3: // Tesis
+        this.columns = [
+          { field: 'codigoLocalizacion', header: 'Codigo' },
+          { field: 'titulo', header: 'Titulo' },
+          { field: 'autorPersonal', header: 'Autor' },
+          { field: 'director', header: 'Director' },
+          { field: 'paisId', header: 'País' },
+          { field: 'anioPublicacion', header: 'Año' }
+        ];
+        break;
+      default: // Otros
+        this.columns = [
+          { field: 'codigoLocalizacion', header: 'Codigo' },
+          { field: 'titulo', header: 'Título' },
+          { field: 'autorPersonal', header: 'Autor' },
+          { field: 'editorialPublicacion', header: 'Revista' },
+          { field: 'numeroPaginas', header: 'Páginas' },
+          { field: 'anioPublicacion', header: 'Año' }
+        ];
+        break;
+    }
+  }
   async ngOnInit() {
     this.items = [
       {
@@ -249,6 +284,7 @@ export class MaterialBibliografico {
     await this.ListaTipo();
 //     await this.ListaSede();
     await this.listar();
+    this.setColumns();
     this.formValidar();
   }
   limpiar() {
@@ -308,13 +344,26 @@ onSaved(): void {
     table.clear();
     this.filter.nativeElement.value = '';
   }
-    async editarRegistro(objeto: BibliotecaDTO) {
-        const idTipo = objeto.tipoMaterialId ?? this.tipoRecursoFiltro?.id ?? null;
-       await this.modalLibro.ListaEspecialidad();
+  async editarRegistro(objeto: BibliotecaDTO) {
+    const idTipo = objeto.tipoMaterialId ?? this.tipoRecursoFiltro?.id ?? null;
+
+    switch (objeto.tipoMaterialId ?? this.tipoRecursoFiltro?.tipo?.id) {
+      case 1: // Libro
+        await this.modalLibro.ListaEspecialidad();
         await this.modalLibro.ListaPais();
-//         await this.modalLibro.ListaCiudad(objeto.paisId!);
         this.modalLibro.editarRegistro(objeto, idTipo);
+        break;
+      case 2: // Revista
+        this.modalRevista.editarBiblioteca(objeto, idTipo);
+        break;
+      case 3: // Tesis
+        this.modalTesis.editarBiblioteca(objeto, idTipo);
+        break;
+      default: // Otros
+        this.modalOtros.editarBiblioteca(objeto, idTipo);
+        break;
     }
+  }
 
 
 
@@ -324,15 +373,15 @@ onSaved(): void {
 //   }
 
   nuevoRegistro() {
-    if(this.tipoRecursoFiltro.tipo.id==1){//Libro
-      const idTipo = this.tipoRecursoFiltro?.id ?? null;   // el combo del padre
-        this.modalLibro.openModal(idTipo);                   // <-- lo pasa
-    }else if(this.tipoRecursoFiltro.tipo.id==2){
-      this.modalRevista.openModal();
-    }else if(this.tipoRecursoFiltro.tipo.id==3){
-      this.modalTesis.openModal();
-    }else{
-      this.modalOtros.openModal();
+    const idTipo = this.tipoRecursoFiltro?.id ?? null;   // valor del combo padre
+    if (this.tipoRecursoFiltro.tipo.id == 1) {
+      this.modalLibro.openModal(idTipo);
+    } else if (this.tipoRecursoFiltro.tipo.id == 2) {
+      this.modalRevista.openModal(idTipo);
+    } else if (this.tipoRecursoFiltro.tipo.id == 3) {
+      this.modalTesis.openModal(idTipo);
+    } else {
+      this.modalOtros.openModal(idTipo);
     }
     this.formValidar();
     //this.objetoDialog = true;
@@ -396,7 +445,7 @@ onSaved(): void {
   async ListaTipo() {
     try {
       const result: any = await this.genericoService.tipo_get('conf/tipo-lista').toPromise();
-      if (result.status === "0") {
+      if (result.status == 0) {
         this.dataTipo = result.data;
         let tipos = [{ id: 0, descripcion: 'TODAS LOS TIPOS', activo: true, estado: 1 }, ...this.dataTipo];
 
@@ -416,7 +465,7 @@ onSaved(): void {
       .subscribe(
         (result: any) => {
           this.loading = false;
-          if (result.status == "0") {
+          if (result.status == 0) {
 //             let recursosFiltrados = result.data.filter((recurso: { tipo: { id: any; }; }) => recurso.tipo.id === 1);
 
             this.dataTipoRecurso = result.data;
@@ -433,7 +482,7 @@ onSaved(): void {
   async ListaSede() {
     try {
       const result: any = await this.genericoService.sedes_get('conf/tipo-lista').toPromise();
-      if (result.status === "0") {
+      if (result.status == 0) {
         this.dataSede = result.data;
         let sedes = [{ id: 0, descripcion: 'TODAS LAS SEDES', activo: true, estado: 1 }, ...this.dataSede];
 
@@ -463,6 +512,7 @@ onSaved(): void {
 async listar() {
   this.loading = true;
   this.data = [];
+  this.setColumns();
 
   // Si se ingresa palabra clave o se ha seleccionado una opción de búsqueda distinta a "TODOS"
   if (this.palabraClave && this.palabraClave.trim() !== ""||
@@ -472,7 +522,8 @@ async listar() {
     const tipoParam = this.tipoRecursoFiltro?.tipo?.id ? `tipoMaterial=${this.tipoRecursoFiltro.tipo.id}&` : "";
     const opcionParam = this.opcionFiltro?.descripcion ? `opcion=${this.opcionFiltro.descripcion}&` : "";
     const valorParam = `valor=${encodeURIComponent(this.palabraClave.trim())}`;
-    const endpoint = `api/biblioteca/search?${tipoParam}${opcionParam}${valorParam}`;
+    const extraParam = `soloEnProceso=false`;
+    const endpoint = `api/biblioteca/search?${tipoParam}${opcionParam}${valorParam}&${extraParam}`;
 
     console.log(tipoParam);
     console.log(opcionParam);
@@ -483,7 +534,8 @@ async listar() {
         (result: any) => {
           // Supongamos que el endpoint devuelve directamente un array
           console.log(result);
-          this.data = Array.isArray(result) ? result : result.data;
+          const lista = Array.isArray(result) ? result : result.data;
+          this.data = lista.filter((b: any) => Number(b.estadoId) === 2);
           this.loading = false;
         },
         (error: HttpErrorResponse) => {

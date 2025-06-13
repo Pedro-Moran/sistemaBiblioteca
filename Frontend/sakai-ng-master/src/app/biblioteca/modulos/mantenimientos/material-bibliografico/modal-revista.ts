@@ -208,7 +208,7 @@ import { AuthService } from '../../../services/auth.service';
                   modelo="portada"
                   ver="portada"></app-input-validation>
 </div>
-<div class="flex flex-col gap-2 w-full" *ngIf="formPortada.get('portada')?.value.length>0">
+<div class="flex flex-col gap-2 w-full" *ngIf="formPortada.get('portada')?.value">
       <label for="adjunto">Portada</label>
       <p-fileupload
         #fu
@@ -291,7 +291,7 @@ import { AuthService } from '../../../services/auth.service';
                                 <div style="position: relative;">
                                     <button pButton type="button" icon="pi pi-ellipsis-v"
                                         class="p-button-rounded p-button-text p-button-plain"
-                                        (click)="showMenu($event, detalle)"></button>
+                                        (click)="showMenu($event, detalle, rowIndex)"></button>
                                     <p-menu #menu [popup]="true" [model]="items" appendTo="body"></p-menu>
                                 </div>
 
@@ -348,6 +348,15 @@ import { AuthService } from '../../../services/auth.service';
 </p-datepicker>
 
   <app-input-validation [form]="formDetalle" modelo="fechaIngreso" ver="Fecha Ingreso"></app-input-validation>
+  <label for="horaInicio">Hora Inicio</label>
+  <p-calendar id="horaInicio" formControlName="horaInicio" timeOnly="true" hourFormat="24" appendTo="body" class="w-full"></p-calendar>
+  <app-input-validation [form]="formDetalle" modelo="horaInicio" ver="Hora Inicio"></app-input-validation>
+  <label for="horaFin">Hora Fin</label>
+  <p-calendar id="horaFin" formControlName="horaFin" timeOnly="true" hourFormat="24" appendTo="body" class="w-full"></p-calendar>
+  <app-input-validation [form]="formDetalle" modelo="horaFin" ver="Hora Fin"></app-input-validation>
+  <label for="maxHoras">Máx Horas</label>
+  <input pInputText id="maxHoras" type="number" formControlName="maxHoras" />
+  <app-input-validation [form]="formDetalle" modelo="maxHoras" ver="Máx Horas"></app-input-validation>
 </div>
 
       <div class="flex flex-col gap-2 md:w-1/2">
@@ -408,6 +417,7 @@ export class ModalRevistaComponent implements OnInit {
     items!: MenuItem[];
     uploadedFiles: any[] = [];
     editingIndex: number | null = null;
+    selectedIndex!: number;
     private id?: number;
     @Input() tipoMaterialId!: number | null;
     @Output() saved = new EventEmitter<void>();
@@ -509,7 +519,7 @@ export class ModalRevistaComponent implements OnInit {
         {
           label: 'Actualizar',
           icon: 'pi pi-pencil',
-          command: (event) => this.editarRegistro(this.selectedItem)
+          command: () => this.editarDetalle(this.selectedItem, this.selectedIndex)
         },
         {
           label: 'Eliminar',
@@ -543,6 +553,15 @@ export class ModalRevistaComponent implements OnInit {
                 Validators.required
             ]
             ],
+            horaInicio: [
+              this.objetoDetalle?.horaInicio ? this.stringToDate(this.objetoDetalle.horaInicio) : null,
+              [Validators.required]
+            ],
+            horaFin: [
+              this.objetoDetalle?.horaFin ? this.stringToDate(this.objetoDetalle.horaFin) : null,
+              [Validators.required]
+            ],
+            maxHoras: [this.objetoDetalle?.maxHoras ?? null, [Validators.required, Validators.min(1)]],
             costo: [this.objetoDetalle?.costo,
             [
                 Validators.required,
@@ -600,6 +619,35 @@ export class ModalRevistaComponent implements OnInit {
         this.display = true;
     }
 
+    editarBiblioteca(mat: BibliotecaDTO, tipoId?: number | null) {
+        const id = tipoId ?? this.tipoMaterialId ?? null;
+        this.formRevista.reset();
+        this.objetoRevista.id = mat.id ?? 0;
+        this.formRevista.patchValue({
+            id: mat.id ?? null,
+            tipoMaterialId: id,
+            codigo: mat.codigoLocalizacion,
+            titulo: mat.titulo,
+            institucion: mat.autorInstitucional,
+            director: mat.director,
+            editorialPublicacion: mat.editorialPublicacion,
+            periodicidad: mat.periodicidadId,
+            pais: mat.paisId,
+            ciudad: mat.ciudadCodigo,
+            especialidad: mat.idEspecialidad,
+            cantidad: mat.numeroPaginas,
+            anioPublicacion: mat.anioPublicacion,
+            issn: mat.issn,
+            descriptores: mat.descriptor,
+            notaGeneral: mat.notaGeneral,
+            formatoDigital: mat.fladigitalizado,
+            urlPublicacion: mat.linkPublicacion
+        });
+        this.tipoMaterialId = id;
+        this.display = true;
+        this.ListaDetalle();
+    }
+
     closeModal() {
         this.display = false;
     }
@@ -623,7 +671,7 @@ export class ModalRevistaComponent implements OnInit {
       });
     });
 
-    if (this.formRevista.invalid || this.formDetalle.invalid) {
+    if (this.formRevista.invalid || this.detalles.length === 0) {
       this.messageService.add({severity:'warn', summary:'Campos obligatorios', detail:'Revisa los formularios'});
       return;
     }
@@ -656,7 +704,7 @@ export class ModalRevistaComponent implements OnInit {
     async ListaEspecialidad() {
         try {
             const result: any = await this.materialBibliograficoService.lista_especialidad('material-bibliografico/especialidad').toPromise();
-            if (result.status === "0") {
+            if (result.status == 0) {
                 console.log("dentro");
                 this.especialidadLista = result.data;
             }
@@ -721,7 +769,7 @@ export class ModalRevistaComponent implements OnInit {
     async ListaPeriodicidad() {
         try {
             const result: any = await this.materialBibliograficoService.lista_periodicidad('material-bibliografico/ciudad').toPromise();
-            if (result.status === "0") {
+            if (result.status == 0) {
                 this.periodicidadLista = result.data;
             }
         } catch (error) {
@@ -733,7 +781,7 @@ export class ModalRevistaComponent implements OnInit {
     async ListaDescripcionFisica() {
         try {
             const result: any = await this.materialBibliograficoService.lista_descripcion_fisica('material-bibliografico/ciudad').toPromise();
-            if (result.status === "0") {
+            if (result.status == 0) {
                 this.descripcionFisicaLista = result.data;
             }
         } catch (error) {
@@ -745,7 +793,7 @@ export class ModalRevistaComponent implements OnInit {
     async ListaAnioPublicacion() {
         try {
             const result: any = await this.materialBibliograficoService.lista_anio_publicacion('material-bibliografico/ciudad').toPromise();
-            if (result.status === "0") {
+            if (result.status == 0) {
                 this.anioPublicacionLista = result.data;
             }
         } catch (error) {
@@ -769,7 +817,7 @@ export class ModalRevistaComponent implements OnInit {
     async ListaTipoMaterial() {
         try {
             const result: any = await this.genericoService.sedes_get('api/equipos/sedes').toPromise();
-            if (result.status === "0") {
+            if (result.status == 0) {
                 this.tipoMaterialLista = result.data;
             }
         } catch (error) {
@@ -797,11 +845,39 @@ export class ModalRevistaComponent implements OnInit {
           }
         }
     async ListaDetalle() {
-        try {console.log("detalle");
-            const result: any = await this.materialBibliograficoService.lista_ejemplares('material-bibliografico/ciudad').toPromise();
-            if (result.status === "0") {
-                this.detalles = result.data;
-            }
+        const idBib = this.objetoRevista?.id;
+        if (!idBib) { return; }
+        try {
+            const data = await this.materialBibliograficoService
+                .listarDetallesPorBiblioteca(idBib, false)
+                .toPromise();
+
+            this.detalles = (data ?? []).map(d => {
+                const sedeId  = d.codigoSede ?? d.biblioteca?.sedeId ?? null;
+                const tipoMat = d.tipoMaterialId ?? d.biblioteca?.tipoMaterialId ?? null;
+                const tipoAdq = d.tipoAdquisicionId ?? d.biblioteca?.tipoAdquisicionId ?? null;
+
+                const sedeObj      = this.sedesLista.find(s => s.id === sedeId) ?? null;
+                const tipoMatObj   = this.tipoMaterialLista.find(t => t.id === tipoMat) ?? null;
+                const tipoAdqObj   = this.tipoAdquisicionLista.find(t => t.id === tipoAdq) ?? null;
+
+                return {
+                    idDetalleBiblioteca: d.idDetalleBiblioteca,
+                    codigoSede:        sedeId,
+                    tipoMaterialId:    tipoMat,
+                    tipoAdquisicionId: tipoAdq,
+                    horaInicio: d.horaInicio ?? null,
+                    horaFin:    d.horaFin ?? null,
+                    maxHoras:   d.maxHoras ?? null,
+                    costo: d.costo ?? null,
+                    numeroFactura: d.numeroFactura ?? null,
+                    fechaIngreso: d.fechaIngreso ?? null,
+                    sede: sedeObj,
+                    tipoMaterial: tipoMatObj,
+                    tipoAdquisicion: tipoAdqObj,
+                    idEstado: d.idEstado
+                } as DetalleDisplay;
+            });
         } catch (error) {
             console.log(error);
             this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Ocurrió un error. No se pudo cargar especialidad' });
@@ -844,15 +920,19 @@ export class ModalRevistaComponent implements OnInit {
           onGlobalFilter(table: Table, event: Event) {
             table.filterGlobal((event.target as HTMLInputElement).value, 'contains');
         }
-        showMenu(event: MouseEvent, selectedItem: any) {
+        showMenu(event: MouseEvent, selectedItem: any, idx: number) {
           this.selectedItem = selectedItem;
+          this.selectedIndex = idx;
           this.menu.toggle(event);
         }
 
-          editarRegistro(objeto:Detalle){
-            this.objetoDetalle = JSON.parse(JSON.stringify(objeto));
+          editarDetalle(det: DetalleDisplay, idx: number){
+            this.editingIndex = idx;
+            this.objetoDetalle = JSON.parse(JSON.stringify(det));
+            this.formDetalle.reset();
+            this.formDetalle.enable();
             this.formValidarDetalle();
-            this.displayDetalle = true;
+            this.displayEjemplar = true;
           }
 
 
@@ -883,10 +963,11 @@ export class ModalRevistaComponent implements OnInit {
                     }
                 });
             }
-            nuevoEjemplar(){
-                this.formValidarDetalle();
-                this.displayEjemplar = true;
-            }
+    nuevoEjemplar(){
+        this.editingIndex = null;
+        this.formValidarDetalle();
+        this.displayEjemplar = true;
+    }
         guardarEjemplar() {
             this.confirmationService.confirm({
             message : '¿Estás seguro(a) de que quieres registrar?',
@@ -902,6 +983,9 @@ export class ModalRevistaComponent implements OnInit {
               codigoSede        : sedeId,
               tipoAdquisicionId : tipoAdqId,
               tipoMaterialId    : tipoMaterialId,    // ← añade esta línea
+              horaInicio        : this.timeToString(this.formDetalle.value.horaInicio ?? null),
+              horaFin           : this.timeToString(this.formDetalle.value.horaFin ?? null),
+              maxHoras          : this.formDetalle.value.maxHoras,
               costo             : this.formDetalle.value.costo,
               numeroFactura     : this.formDetalle.value.nroFactura,
               fechaIngreso      : this.formatDateTime(this.formDetalle.value.fechaIngreso),
@@ -950,18 +1034,22 @@ export class ModalRevistaComponent implements OnInit {
                           ? d.tipoAdquisicionId?.id ?? null  // ‹– sólo number | null
                           : d.tipoAdquisicionId ?? null,
               tipoMaterialId     : d.tipoMaterialId!,
+              horaInicio         : this.timeToString(d.horaInicio ?? null),
+              horaFin            : this.timeToString(d.horaFin ?? null),
+              maxHoras           : d.maxHoras ?? null,
               costo              : d.costo ?? null,
               numeroFactura      : d.numeroFactura ?? null,
               fechaIngreso       : d.fechaIngreso ?? null,
               existencias        : d.existencias,
-              idEstado           : d.idEstado ?? 1
+              // asignar estado 1 para sincronizar con la biblioteca actualizada
+              idEstado           : 1
             };
           });
 
 
           return {
             /* ------ claves y datos propios de Biblioteca ------ */
-            id               : revista.id ?? null,
+            id               : revista.id > 0 ? revista.id : null,
             idEspecialidad   : revista.especialidad,
             paisId           : revista.pais,
             ciudadCodigo     : revista.ciudad,
@@ -992,9 +1080,25 @@ export class ModalRevistaComponent implements OnInit {
       if (typeof d === 'string' && d.length > 10) { return d; }
 
       /* Convertimos Date → ‘yyyy-MM-ddTHH:mm:ss’  (sin milisegundos / sin Z) */
-      const dt = typeof d === 'string' ? new Date(d) : d;
-      return dt.toISOString().split('.')[0];          // ej. “2025-05-07T00:00:00”
-    }
+  const dt = typeof d === 'string' ? new Date(d) : d;
+  return dt.toISOString().split('.')[0];          // ej. “2025-05-07T00:00:00”
+  }
+
+  private timeToString(t: Date | string | null): string | null {
+    if (!t) { return null; }
+    if (typeof t === 'string') { return t.length > 5 ? t.slice(11,16) : t; }
+    const h = t.getHours().toString().padStart(2,'0');
+    const m = t.getMinutes().toString().padStart(2,'0');
+    return `${h}:${m}`; // hora local
+  }
+
+  /** Convierte "HH:mm" o "yyyy-MM-ddTHH:mm" a objeto Date para p-calendar */
+  private stringToDate(hhmm: string): Date {
+    const parts = hhmm.includes('T') ? hhmm.split('T')[1].split(':') : hhmm.split(':');
+    const d = new Date();
+    d.setHours(+parts[0], +parts[1], 0, 0);
+    return d;
+  }
 
     idToSede(id: number|null) {
       return this.sedesLista.find(s => s.id === id);

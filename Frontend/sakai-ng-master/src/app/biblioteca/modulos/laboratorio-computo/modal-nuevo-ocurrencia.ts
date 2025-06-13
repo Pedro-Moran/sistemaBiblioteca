@@ -208,7 +208,11 @@ constructor(private fb: FormBuilder,
     }
   openModal(objeto: any) {
     const idDetectado =
-      objeto.idDetallePrestamo != null ? objeto.idDetallePrestamo : objeto.idEquipo;
+      objeto.idDetallePrestamo != null
+        ? objeto.idDetallePrestamo
+        : objeto.idEquipo != null
+          ? objeto.idEquipo
+          : objeto.idDetalleBiblioteca;
     this.idNormalizado = idDetectado;
 
     // Parcheamos el formulario para que el campo "ID" muestre el valor:

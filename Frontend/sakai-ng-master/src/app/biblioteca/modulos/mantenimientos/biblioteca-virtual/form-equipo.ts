@@ -87,8 +87,7 @@ import { Sede } from '../../../interfaces/biblioteca-virtual/sede';
                         <!-- Máximo de Horas -->
                         <div class="flex flex-col gap-2">
                           <label for="maxHoras">Máximo de Horas</label>
-                          <input pInputText id="maxHoras" type="number" formControlName="maxHoras" class="p-inputtext w-full" min="1"
-                            max="8" />
+                          <input pInputText id="maxHoras" type="number" formControlName="maxHoras" class="p-inputtext w-full" min="1" />
                           <app-input-validation [form]="form" modelo="maxHoras" ver="Máximo de Horas">
                           </app-input-validation>
                         </div>
@@ -143,7 +142,7 @@ export class FormEquipo implements OnInit, OnChanges {
               ]],
           horaInicio: [null, [Validators.required]],
                 horaFin: [null, [Validators.required]],
-                maxHoras: [null, [Validators.required, Validators.min(1), Validators.max(24)]],
+                maxHoras: [null, [Validators.required, Validators.min(1)]],
           equipoDiscapacidad: [false],
                 sede: [null, [Validators.required, this.sedeSeleccionadaValidator]]
 
@@ -228,11 +227,12 @@ async editarRegistro(material: Equipo) {
     }
     guardar(): void {
       this.loading = true;
-      const equipo: Equipo = this.form.value;  // Extraemos los datos del formulario
-      const materialCompleto = {
-                    equipo: this.form.value,
-                  };
-      console.log("ver equipo: "+ materialCompleto.equipo.id);
+      const raw = this.form.value;
+      const equipo: Equipo = {
+        ...raw,
+        horaInicio: this.timeToString(raw.horaInicio ?? null),
+        horaFin:    this.timeToString(raw.horaFin ?? null)
+      };
       // Verificamos si el id existe y es mayor a 0
       if (equipo.id && equipo.id > 0) {
         // Actualizar: Llamamos al método de actualización
@@ -319,6 +319,17 @@ setData(equipo: Equipo): void {
     const d = new Date();
     d.setHours(+parts[0], +parts[1], 0, 0);
     return d;
+  }
+
+  /** Convierte Date -> "HH:mm" para enviar al backend */
+  private timeToString(t: Date | string | null): string | null {
+    if (!t) { return null; }
+    if (typeof t === 'string') {
+      return t.length > 5 ? t.slice(-5) : t;
+    }
+    const h = t.getHours().toString().padStart(2, '0');
+    const m = t.getMinutes().toString().padStart(2, '0');
+    return `${h}:${m}`;
   }
 
 

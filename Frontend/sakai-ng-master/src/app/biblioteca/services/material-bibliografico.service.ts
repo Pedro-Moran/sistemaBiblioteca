@@ -12,7 +12,7 @@ import { Usuario } from '../interfaces/usuario';
 import { Equipo } from '../interfaces/biblioteca-virtual/equipo';
 import { OcurrenciaUsuario } from '../interfaces/OcurrenciaUsuario';
 import { OcurrenciaMaterialDTO } from '../interfaces/OcurrenciaMaterialDTO';
-import { DetalleBibliotecaDTO } from '../interfaces/material-bibliografico/DetalleBibliotecaDTO';
+import { DetalleBibliotecaDTO } from '../interfaces/material-bibliografico/biblioteca.model';
 @Injectable({
   providedIn: 'root'
 })
@@ -341,16 +341,22 @@ listarUsuariosOcurrencia(id: number): Observable<OcurrenciaUsuario[]> {
         .pipe(map(resp => resp.data));
     }
 
-  listarDetallesPorBiblioteca(bibliotecaId: number): Observable<DetalleBibliotecaDTO[]> {
+  listarDetallesPorBiblioteca(
+    bibliotecaId: number,
+    soloEnProceso: boolean = false
+  ): Observable<DetalleBibliotecaDTO[]> {
     const headers = new HttpHeaders().set(
       'Authorization',
       `Bearer ${this.authService.getToken()}`
+    );
+    const params = new HttpParams().set(
+      'soloEnProceso', String(soloEnProceso)
     );
 
     return this.http
       .get<{ status: number; data: DetalleBibliotecaDTO[] }>(
         `${this.apiUrl}/api/biblioteca/${bibliotecaId}/detalles`,
-        { headers }
+        { headers, params }
       )
       .pipe(map(resp => resp.data));
   }

@@ -28,9 +28,10 @@ export interface BibliotecaDTO {
   tipoConteo?: number;
   numeroConteo?: string;
   numeroConteo2?: string;
-  edicion?: number;
+  edicion?: string;
   reimpresion?: number;
   descriptor?: string;
+  descripcionRevista?: string;
   notaContenido?: string;
   notaGeneral?: string;
   notaResumen?: string;
@@ -53,7 +54,9 @@ export interface BibliotecaDTO {
   flasyllabus?: boolean;
   fladigitalizado?: boolean;
   linkPublicacion?: string;
-  numeroPaginas?: string;
+  numeroPaginas?: number;
+  /** Numero generado en BD */
+  numeroDeIngreso?: number;
   sedeId?: number;
   tipoAdquisicionId?: number;
   fechaIngreso?: string;
@@ -70,13 +73,18 @@ export interface BibliotecaDTO {
 export interface DetalleBibliotecaDTO {
   idDetalleBiblioteca?: number;
   codigoSede?: number | null;
+  sede?: Sedes | null;
   tipoMaterialId?: number | null;
+  tipoMaterial?: TipoMaterial | null;
   tipoAdquisicionId?: number | null;
   numeroIngreso?: number;
   codigoBarra?: string;
   costo?: number | null;
   numeroFactura?: string | null;
   nroExistencia?: number;
+  horaInicio?: string | null;
+  horaFin?: string | null;
+  maxHoras?: number | null;
   usuarioIngreso?: string;
   fechaIngreso?: string | null;
   usuarioAceptacion?: string;
@@ -86,6 +94,7 @@ export interface DetalleBibliotecaDTO {
   usuarioModificacion?: string;
   fechaModificacion?: string;
   idEstado?: number;
+  /** Detalle puede venir anidado con datos de la biblioteca */
   biblioteca?: BibliotecaDTO;
 }
 
@@ -95,6 +104,9 @@ export interface DetalleInput {
   costo:             number | null;
   numeroFactura:     string | null;
   fechaIngreso:      string | null;      // → en ISO ‘yyyy-MM-ddTHH:mm:ss’
+  horaInicio?:       string | null;
+  horaFin?:          string | null;
+  maxHoras?:         number | null;
 }
 export interface DetalleDisplay extends DetalleInput {
 
