@@ -35,6 +35,16 @@ public class OcurrenciaBibliotecaController {
         return ResponseEntity.ok(svc.listarTodas());
     }
 
+    @GetMapping("/materiales")
+    public ResponseEntity<List<OcurrenciaBibliotecaDTO>> listarMateriales() {
+        return ResponseEntity.ok(svc.listarMateriales());
+    }
+
+    @GetMapping("/equipos")
+    public ResponseEntity<List<OcurrenciaBibliotecaDTO>> listarEquipos() {
+        return ResponseEntity.ok(svc.listarEquipos());
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<OcurrenciaBibliotecaDTO> obtener(@PathVariable Long id) {
         OcurrenciaBibliotecaDTO dto = svc.buscarPorId(id);
