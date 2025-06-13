@@ -437,6 +437,7 @@ export class ModalOtrosComponent implements OnInit {
             ]
             ],
             tipoMaterial: [this.objetoDetalle?.tipoMaterial],
+
             fechaIngreso: [this.objetoDetalle?.fechaIngreso,
             [
                 Validators.required
@@ -452,6 +453,7 @@ export class ModalOtrosComponent implements OnInit {
             ],
             maxHoras: [this.objetoDetalle?.maxHoras ?? null, [Validators.required, Validators.min(1)]],
             tipoAdquisicion: [this.objetoDetalle?.tipoAdquisicion]
+            ]
         });
     }
 
@@ -529,11 +531,15 @@ export class ModalOtrosComponent implements OnInit {
             idDetalleBiblioteca: d.idDetalleBiblioteca ?? undefined,
             codigoSede: d.codigoSede ?? null,
             tipoAdquisicionId: (d.tipoAdquisicion as any)?.id ?? d.tipoAdquisicionId ?? null,
+
             tipoMaterialId:
               (d.tipoMaterial as any)?.id ?? d.tipoMaterialId ?? parentTipo,
             horaInicio: this.timeToString(d.horaInicio ?? null),
             horaFin:    this.timeToString(d.horaFin ?? null),
             maxHoras:   d.maxHoras ?? null,
+
+            tipoMaterialId: (d.tipoMaterial as any)?.id ?? d.tipoMaterialId ?? null,
+
             costo: d.costo ?? null,
             numeroFactura: d.numeroFactura ?? null,
             fechaIngreso: d.fechaIngreso ?? null,
@@ -665,6 +671,7 @@ export class ModalOtrosComponent implements OnInit {
         try {
             const result: any = await this.genericoService.sedes_get('api/equipos/sedes').toPromise();
             if (result.status == 0) {
+            if (result.status === 0) {
                 this.sedesLista = result.data;
             }
         } catch (error) {
@@ -819,6 +826,8 @@ export class ModalOtrosComponent implements OnInit {
             }
             guardarEjemplar() {
               this.confirmationService.confirm({
+            guardarEjemplar(){
+            this.confirmationService.confirm({
                 message: '¿Estás seguro(a) de que quieres registrar?',
                 header: 'Confirmar',
                 icon: 'pi pi-exclamation-triangle',
@@ -827,6 +836,7 @@ export class ModalOtrosComponent implements OnInit {
                 accept: () => {
                   const sedeVal  = this.formDetalle.value.sede;
                   const tipoMatVal = this.tipoMaterialId ?? this.formDetalle.value.tipoMaterial;
+                  const tipoMatVal = this.formDetalle.value.tipoMaterial;
                   const tipoAdqVal = this.formDetalle.value.tipoAdquisicion;
 
                   const sedeId  = typeof sedeVal === 'object' ? sedeVal?.id : sedeVal;
@@ -881,6 +891,20 @@ export class ModalOtrosComponent implements OnInit {
               const d = new Date();
               d.setHours(+parts[0], +parts[1], 0, 0);
               return d;
+            }
+
+            idToSede(id: number | null) {
+              return this.sedesLista.find(s => s.id === id);
+            }
+
+            idToTipo(id: number | null) {
+              return this.tipoAdquisicionLista.find(t => t.id === id);
+            }
+            private formatDateTime(d: Date | string | null): string | null {
+              if (!d) { return null; }
+              if (typeof d === 'string' && d.length > 10) { return d; }
+              const dt = typeof d === 'string' ? new Date(d) : d;
+              return dt.toISOString().split('.')[0];
             }
 
             idToSede(id: number | null) {
