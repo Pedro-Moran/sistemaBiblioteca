@@ -60,7 +60,7 @@ import { AuthService } from '../../../services/auth.service';
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4">
       <div class="flex flex-col gap-2">
         <label for="pais">País</label>
-        <p-select appendTo="body" formControlName="pais" [options]="paisLista" optionLabel="nombrePais" optionValue="paisId" placeholder="Seleccionar" (onChange)="ListaCiudad()" />
+                <p-select appendTo="body" formControlName="pais" [options]="paisLista" optionLabel="nombrePais" optionValue="paisId" placeholder="Seleccionar" (onChange)="ListaCiudad()" />
         <app-input-validation [form]="formOtro" modelo="pais" ver="pais"></app-input-validation>
       </div>
 
@@ -69,20 +69,10 @@ import { AuthService } from '../../../services/auth.service';
         <p-select appendTo="body" formControlName="ciudad" [options]="ciudadLista" optionLabel="nombreCiudad" optionValue="ciudadCodigo" placeholder="Seleccionar" />
         <app-input-validation [form]="formOtro" modelo="ciudad" ver="ciudad"></app-input-validation>
       </div>
-      <div class="flex flex-col gap-2">
-        <label for="descripcionFisica">Descripción Física</label>
-        <p-select appendTo="body" formControlName="descripcionFisica" [options]="descripcionFisicaLista" optionLabel="descripcion" placeholder="Seleccionar" />
-        <app-input-validation [form]="formOtro" modelo="descripcionFisica" ver="descripcionFisica"></app-input-validation>
-      </div>
       <div class="flex flex-col gap-2 min-w-[100px] ">
         <label for="cantidad">Cantidad</label>
         <input pInputText id="cantidad" type="text" formControlName="cantidad" />
         <app-input-validation [form]="formOtro" modelo="cantidad" ver="cantidad"></app-input-validation>
-      </div>
-      <div class="flex flex-col gap-2">
-        <label for="anioPublicacion">Año Publicación</label>
-        <p-select appendTo="body" formControlName="anioPublicacion" [options]="anioPublicacionLista" optionLabel="descripcion" placeholder="Seleccionar" />
-        <app-input-validation [form]="formOtro" modelo="anioPublicacion" ver="anioPublicacion"></app-input-validation>
       </div>
 
       <div class="flex flex-col gap-2 min-w-[100px]">
@@ -263,7 +253,7 @@ import { AuthService } from '../../../services/auth.service';
 
                         </tr>
                     </ng-template>
-                    <ng-template pTemplate="body" let-objeto>
+                    <ng-template pTemplate="body" let-objeto let-rowIndex="rowIndex">
                         <tr>
                             <td>
                                 {{objeto.sede.descripcion}}
@@ -317,7 +307,11 @@ import { AuthService } from '../../../services/auth.service';
         <app-input-validation [form]="formDetalle" modelo="sede" ver="Sede"></app-input-validation>
       </div>
 
-        <!-- Tipo Material y Tipo Adquisicion se heredan del modulo padre -->
+      <div class="flex flex-col gap-2">
+        <label for="tipoAdquisicion">Tipo Adquisicion</label>
+        <p-select appendTo="body" formControlName="tipoAdquisicion" [options]="tipoAdquisicionLista" optionLabel="descripcion" placeholder="Seleccionar" />
+        <app-input-validation [form]="formDetalle" modelo="tipoAdquisicion" ver="Tipo Adquisicion"></app-input-validation>
+      </div>
       <div class="flex flex-col gap-2 w-full">
   <label for="fechaIngreso">Fecha Ingreso</label>
   <p-datepicker
@@ -436,22 +430,11 @@ export class ModalTesisComponent implements OnInit {
                   Validators.required
               ]
               ],
-
-          descripcionFisica: [this.objetoOtro?.descripcionFisica,
-              [
-                  Validators.required
-              ]
-              ],
               cantidad: [this.objetoOtro?.cantidad,
               [
                   Validators.required,
                   Validators.maxLength(100),
                   Validators.pattern('^[0-9]+$')
-              ]
-              ],
-              anioPublicacion: [this.objetoOtro?.anioPublicacion,
-              [
-                  Validators.required
               ]
               ],
               anio: [this.objetoOtro?.anio,
@@ -503,7 +486,11 @@ export class ModalTesisComponent implements OnInit {
                 Validators.required
             ]
             ],
-            tipoMaterial: [this.objetoDetalle?.tipoMaterial],
+            tipoMaterial: [this.objetoDetalle?.tipoMaterial,
+            [
+                Validators.required
+            ]
+            ],
             fechaIngreso: [this.objetoDetalle?.fechaIngreso,
             [
                 Validators.required
@@ -546,10 +533,8 @@ export class ModalTesisComponent implements OnInit {
         const id = tipoId ?? this.tipoMaterialId ?? null;
         this.formOtro.patchValue({ tipoMaterialId: id });
         this.tipoMaterialId = id;
-
         this.display = true;
     }
-
     editarBiblioteca(mat: BibliotecaDTO, tipoId?: number | null) {
         const id = tipoId ?? this.tipoMaterialId ?? null;
         this.formOtro.reset();
@@ -593,7 +578,6 @@ export class ModalTesisComponent implements OnInit {
     private buildDto(): BibliotecaDTO {
         const t = this.formOtro.value;
         const decoded = this.authService.getUser();
-
         const parentTipo = t.tipoMaterialId ?? this.tipoMaterialId ?? null;
 
         const detalles: DetalleBibliotecaDTO[] = this.detalles.map(d => ({
@@ -608,7 +592,6 @@ export class ModalTesisComponent implements OnInit {
             costo: d.costo ?? null,
             numeroFactura: d.numeroFactura ?? null,
             fechaIngreso: d.fechaIngreso ?? null,
-            // detalle debe tener estado 1 al guardar o actualizar
             idEstado: 1,
         }));
 
@@ -707,7 +690,7 @@ export class ModalTesisComponent implements OnInit {
     async ListaPeriodicidad() {
         try {
             const result: any = await this.materialBibliograficoService.lista_periodicidad('material-bibliografico/ciudad').toPromise();
-            if (result.status == 0) {
+            if (result.status === 0) {
                 this.periodicidadLista = result.data;
             }
         } catch (error) {
@@ -902,8 +885,8 @@ export class ModalTesisComponent implements OnInit {
                 }
                 this.displayEjemplar = true;
             }
-            guardarEjemplar() {
-              this.confirmationService.confirm({
+            guardarEjemplar(){
+            this.confirmationService.confirm({
                 message: '¿Estás seguro(a) de que quieres registrar?',
                 header: 'Confirmar',
                 icon: 'pi pi-exclamation-triangle',
@@ -944,9 +927,9 @@ export class ModalTesisComponent implements OnInit {
                   this.formDetalle.reset();
                   this.displayEjemplar = false;
                 }
-              });
-            }
+            });
 
+            }
             private formatDateTime(d: Date | string | null): string | null {
               if (!d) { return null; }
               if (typeof d === 'string' && d.length > 10) { return d; }

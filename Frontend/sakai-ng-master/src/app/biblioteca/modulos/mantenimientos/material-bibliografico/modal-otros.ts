@@ -68,11 +68,6 @@ import { AuthService } from '../../../services/auth.service';
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4">
 
 
-      <div class="flex flex-col gap-2">
-        <label for="descripcionFisica">Descripción Física</label>
-        <p-select appendTo="body" formControlName="descripcionFisica" [options]="descripcionFisicaLista" optionLabel="descripcion" placeholder="Seleccionar" />
-        <app-input-validation [form]="formOtro" modelo="descripcionFisica" ver="descripcionFisica"></app-input-validation>
-      </div>
       <div class="flex flex-col gap-2 min-w-[100px] ">
         <label for="cantidad">Cantidad</label>
         <input pInputText id="cantidad" type="text" formControlName="cantidad" />
@@ -270,7 +265,6 @@ import { AuthService } from '../../../services/auth.service';
         <app-input-validation [form]="formDetalle" modelo="sede" ver="Sede"></app-input-validation>
       </div>
 
-        <!-- Tipo Material y Tipo Adquisicion se heredan del modulo padre -->
 
       <div class="flex flex-col gap-2 w-full">
   <label for="fechaIngreso">Fecha Ingreso</label>
@@ -284,15 +278,15 @@ import { AuthService } from '../../../services/auth.service';
 </p-datepicker>
 
   <app-input-validation [form]="formDetalle" modelo="fechaIngreso" ver="Fecha Ingreso"></app-input-validation>
-  <label for="horaInicio">Hora Inicio</label>
-  <p-calendar id="horaInicio" formControlName="horaInicio" timeOnly="true" hourFormat="24" appendTo="body" class="w-full"></p-calendar>
-  <app-input-validation [form]="formDetalle" modelo="horaInicio" ver="Hora Inicio"></app-input-validation>
-  <label for="horaFin">Hora Fin</label>
-  <p-calendar id="horaFin" formControlName="horaFin" timeOnly="true" hourFormat="24" appendTo="body" class="w-full"></p-calendar>
-  <app-input-validation [form]="formDetalle" modelo="horaFin" ver="Hora Fin"></app-input-validation>
-  <label for="maxHoras">Máx Horas</label>
-  <input pInputText id="maxHoras" type="number" formControlName="maxHoras" />
-  <app-input-validation [form]="formDetalle" modelo="maxHoras" ver="Máx Horas"></app-input-validation>
+    <label for="horaInicio">Hora Inicio</label>
+    <p-calendar id="horaInicio" formControlName="horaInicio" timeOnly="true" hourFormat="24" appendTo="body" class="w-full"></p-calendar>
+    <app-input-validation [form]="formDetalle" modelo="horaInicio" ver="Hora Inicio"></app-input-validation>
+    <label for="horaFin">Hora Fin</label>
+    <p-calendar id="horaFin" formControlName="horaFin" timeOnly="true" hourFormat="24" appendTo="body" class="w-full"></p-calendar>
+    <app-input-validation [form]="formDetalle" modelo="horaFin" ver="Hora Fin"></app-input-validation>
+    <label for="maxHoras">Máx Horas</label>
+    <input pInputText id="maxHoras" type="number" formControlName="maxHoras" />
+    <app-input-validation [form]="formDetalle" modelo="maxHoras" ver="Máx Horas"></app-input-validation>
 </div>
 
     </div>
@@ -358,7 +352,6 @@ export class ModalOtrosComponent implements OnInit {
 
             id: [this.objetoOtro.id],
             tipoMaterialId: [null],
-
             tituloArticulo: [this.objetoOtro.tituloArticulo,
                 [
                     Validators.required,
@@ -387,12 +380,6 @@ export class ModalOtrosComponent implements OnInit {
                 Validators.pattern('^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\\s./()-]+$') // Permite letras, números, espacios, punto, guion, slash y paréntesis
             ]
             ],
-
-          descripcionFisica: [this.objetoOtro?.descripcionFisica,
-              [
-                  Validators.required
-              ]
-              ],
               cantidad: [this.objetoOtro?.cantidad,
               [
                   Validators.required,
@@ -437,7 +424,6 @@ export class ModalOtrosComponent implements OnInit {
             ]
             ],
             tipoMaterial: [this.objetoDetalle?.tipoMaterial],
-
             fechaIngreso: [this.objetoDetalle?.fechaIngreso,
             [
                 Validators.required
@@ -453,7 +439,6 @@ export class ModalOtrosComponent implements OnInit {
             ],
             maxHoras: [this.objetoDetalle?.maxHoras ?? null, [Validators.required, Validators.min(1)]],
             tipoAdquisicion: [this.objetoDetalle?.tipoAdquisicion]
-            ]
         });
     }
 
@@ -470,6 +455,7 @@ export class ModalOtrosComponent implements OnInit {
         await this.ListaTipoAdquisicion();
         await this.ListaDetalle();
     }
+
     openModal(tipoId?: number | null) {
         this.objetoOtro = new Otro();
         this.objetoDetalle = new Detalle();
@@ -481,10 +467,8 @@ export class ModalOtrosComponent implements OnInit {
         const id = tipoId ?? this.tipoMaterialId ?? null;
         this.formOtro.patchValue({ tipoMaterialId: id });
         this.tipoMaterialId = id;
-
         this.display = true;
     }
-
     editarBiblioteca(mat: BibliotecaDTO, tipoId?: number | null) {
         const id = tipoId ?? this.tipoMaterialId ?? null;
         this.formOtro.reset();
@@ -524,26 +508,20 @@ export class ModalOtrosComponent implements OnInit {
     private buildDto(): BibliotecaDTO {
         const otro = this.formOtro.value;
         const decoded = this.authService.getUser();
-
         const parentTipo = otro.tipoMaterialId ?? this.tipoMaterialId ?? null;
 
         const detalles: DetalleBibliotecaDTO[] = this.detalles.map(d => ({
             idDetalleBiblioteca: d.idDetalleBiblioteca ?? undefined,
             codigoSede: d.codigoSede ?? null,
             tipoAdquisicionId: (d.tipoAdquisicion as any)?.id ?? d.tipoAdquisicionId ?? null,
-
             tipoMaterialId:
               (d.tipoMaterial as any)?.id ?? d.tipoMaterialId ?? parentTipo,
             horaInicio: this.timeToString(d.horaInicio ?? null),
             horaFin:    this.timeToString(d.horaFin ?? null),
             maxHoras:   d.maxHoras ?? null,
-
-            tipoMaterialId: (d.tipoMaterial as any)?.id ?? d.tipoMaterialId ?? null,
-
             costo: d.costo ?? null,
             numeroFactura: d.numeroFactura ?? null,
             fechaIngreso: d.fechaIngreso ?? null,
-            // forzar estado 1 para que el detalle quede pendiente de aprobación
             idEstado: 1,
         }));
 
@@ -671,7 +649,6 @@ export class ModalOtrosComponent implements OnInit {
         try {
             const result: any = await this.genericoService.sedes_get('api/equipos/sedes').toPromise();
             if (result.status == 0) {
-            if (result.status === 0) {
                 this.sedesLista = result.data;
             }
         } catch (error) {
@@ -824,8 +801,6 @@ export class ModalOtrosComponent implements OnInit {
                 }
                 this.displayEjemplar = true;
             }
-            guardarEjemplar() {
-              this.confirmationService.confirm({
             guardarEjemplar(){
             this.confirmationService.confirm({
                 message: '¿Estás seguro(a) de que quieres registrar?',
@@ -836,7 +811,6 @@ export class ModalOtrosComponent implements OnInit {
                 accept: () => {
                   const sedeVal  = this.formDetalle.value.sede;
                   const tipoMatVal = this.tipoMaterialId ?? this.formDetalle.value.tipoMaterial;
-                  const tipoMatVal = this.formDetalle.value.tipoMaterial;
                   const tipoAdqVal = this.formDetalle.value.tipoAdquisicion;
 
                   const sedeId  = typeof sedeVal === 'object' ? sedeVal?.id : sedeVal;
@@ -867,7 +841,8 @@ export class ModalOtrosComponent implements OnInit {
                   this.formDetalle.reset();
                   this.displayEjemplar = false;
                 }
-              });
+            });
+
             }
 
             private formatDateTime(d: Date | string | null): string | null {
@@ -891,20 +866,6 @@ export class ModalOtrosComponent implements OnInit {
               const d = new Date();
               d.setHours(+parts[0], +parts[1], 0, 0);
               return d;
-            }
-
-            idToSede(id: number | null) {
-              return this.sedesLista.find(s => s.id === id);
-            }
-
-            idToTipo(id: number | null) {
-              return this.tipoAdquisicionLista.find(t => t.id === id);
-            }
-            private formatDateTime(d: Date | string | null): string | null {
-              if (!d) { return null; }
-              if (typeof d === 'string' && d.length > 10) { return d; }
-              const dt = typeof d === 'string' ? new Date(d) : d;
-              return dt.toISOString().split('.')[0];
             }
 
             idToSede(id: number | null) {

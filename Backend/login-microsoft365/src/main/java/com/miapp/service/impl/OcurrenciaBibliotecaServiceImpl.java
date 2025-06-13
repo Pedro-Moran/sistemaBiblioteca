@@ -33,12 +33,17 @@ public class OcurrenciaBibliotecaServiceImpl implements OcurrenciaBibliotecaServ
     @Override
     public OcurrenciaBibliotecaDTO crear(OcurrenciaBibliotecaDTO dto) {
         OcurrenciaBiblioteca ent = new OcurrenciaBiblioteca();
-        ent.setDetallePrestamo(
-                detallePrestamoRepo.findById(dto.getIdDetallePrestamo()).orElseThrow());
-        if (dto.getIdDetalleBiblioteca()!=null) {
+
+        if (dto.getIdDetallePrestamo() != null) {
+            ent.setDetallePrestamo(
+                    detallePrestamoRepo.findById(dto.getIdDetallePrestamo()).orElseThrow());
+        }
+
+        if (dto.getIdDetalleBiblioteca() != null) {
             ent.setDetalleBiblioteca(
                     detalleBiblioRepo.findById(dto.getIdDetalleBiblioteca()).orElse(null));
         }
+
         if (dto.getSedePrestamo()!=null) {
             ent.setSedePrestamo(
                     sedeRepo.findById(dto.getSedePrestamo()).orElse(null));
@@ -87,12 +92,14 @@ public class OcurrenciaBibliotecaServiceImpl implements OcurrenciaBibliotecaServ
     private OcurrenciaBibliotecaDTO toDTO(OcurrenciaBiblioteca e) {
         OcurrenciaBibliotecaDTO dto = new OcurrenciaBibliotecaDTO();
         dto.setId(e.getId());
-        dto.setIdDetallePrestamo(e.getDetallePrestamo().getId());
-        Equipo eq = e.getDetallePrestamo().getEquipo();
-        if (eq != null) {
-            dto.setEquipoNombre(eq.getNombreEquipo());
-            dto.setEquipoNumero(eq.getNumeroEquipo());
-            dto.setEquipoIp(eq.getIp());
+        if (e.getDetallePrestamo() != null) {
+            dto.setIdDetallePrestamo(e.getDetallePrestamo().getId());
+            Equipo eq = e.getDetallePrestamo().getEquipo();
+            if (eq != null) {
+                dto.setEquipoNombre(eq.getNombreEquipo());
+                dto.setEquipoNumero(eq.getNumeroEquipo());
+                dto.setEquipoIp(eq.getIp());
+            }
         }
         if (e.getDetalleBiblioteca()!=null)
             dto.setIdDetalleBiblioteca(e.getDetalleBiblioteca().getIdDetalle());
@@ -145,17 +152,19 @@ public class OcurrenciaBibliotecaServiceImpl implements OcurrenciaBibliotecaServ
 
     @Override
     public List<OcurrenciaUsuarioDTO> listarUsuariosDeOcurrencia(Long idOcurrencia) {
-        // 1) Traer el usuario original del DetallePrestamo
+        // 1) Traer el usuario original del DetallePrestamo (puede ser nulo)
         OcurrenciaBiblioteca oc = repo.findById(idOcurrencia).orElseThrow();
         DetallePrestamo dp = oc.getDetallePrestamo();
         List<OcurrenciaUsuarioDTO> lista = new ArrayList<>();
 
-        // usuario que ya venía en el préstamo
-        lista.add(new OcurrenciaUsuarioDTO(
-                /* id */    null,
-                /* login */ dp.getCodigoUsuario(),
-                /* tipo */  dp.getTipoUsuario()
-        ));
+        if (dp != null) {
+            // usuario que ya venía en el préstamo
+            lista.add(new OcurrenciaUsuarioDTO(
+                    /* id */    null,
+                    /* login */ dp.getCodigoUsuario(),
+                    /* tipo */  dp.getTipoUsuario()
+            ));
+        }
 
         // 2) luego todos los que tú hayas insertado en OCURRENCIA_USUARIO
         repoU.findByIdocurrencia(idOcurrencia).forEach(u ->
@@ -168,46 +177,62 @@ public class OcurrenciaBibliotecaServiceImpl implements OcurrenciaBibliotecaServ
     @Override
     @Transactional
     public List<OcurrenciaMaterialDTO> listarMaterialesDeOcurrencia(Long idOcurrencia) {
-        // 1) Obtenemos la ocurrencia y el detalle de préstamo asociado
+        // 1) Obtenemos la ocurrencia y el detalle de préstamo asociado (puede ser nulo)
         OcurrenciaBiblioteca oc = repo.findById(idOcurrencia)
                 .orElseThrow(() -> new EntityNotFoundException("Ocurrencia " + idOcurrencia + " no encontrada"));
         DetallePrestamo dp = oc.getDetallePrestamo();
 
-        // 2) Buscamos si ya existe un registro en OCURRENCIA_MATERIAL para el equipo original
-        Long idEquipoOriginal = dp.getEquipo().getIdEquipo();
-        OcurrenciaMaterial originalEnTabla = repoM
-                .findByIdocurrenciaAndIdEquipoLaboratorio(idOcurrencia, idEquipoOriginal)
-                .orElse(null);
-
-        if (originalEnTabla == null) {
-            // Si no existía aún, lo creamos con cantidad = 1 y sin costo
-            OcurrenciaMaterial mNuevo = new OcurrenciaMaterial();
-            mNuevo.setIdocurrencia(idOcurrencia);
-            mNuevo.setIdEquipoLaboratorio(idEquipoOriginal);
-            mNuevo.setCantidad(1);
-            // no seteamos costoUnitario, queda null
-            originalEnTabla = repoM.save(mNuevo);
-        }
-
-        // 3) Capturamos el ID de 'originalEnTabla' en una variable final para usarla dentro de la lambda
-        final Long idOriginal = originalEnTabla.getId();
-
-        // 4) Preparamos la lista de DTOs e incluimos primero el “material original”
         List<OcurrenciaMaterialDTO> lista = new ArrayList<>();
-        lista.add(new OcurrenciaMaterialDTO(
-                idOriginal,                              // idMaterial (nunca null)
-                idEquipoOriginal.toString(),             // codigoEquipo
-                dp.getEquipo().getNombreEquipo(),        // nombreEquipo
-                originalEnTabla.getCantidad(),           // cantidad
-                originalEnTabla.getCostoUnitario()       // costo (puede ser null)
-        ));
 
-        // 5) Luego añadimos el resto de materiales asociados a la ocurrencia,
-        //    excluyendo el que ya acabamos de insertar/obtener (con id == idOriginal)
-        repoM.findByIdocurrencia(idOcurrencia).forEach(m -> {
-            if (!m.getId().equals(idOriginal)) {
-                Equipo e = equipoRepo.findById(m.getIdEquipoLaboratorio())
-                        .orElse(null);
+        if (dp != null) {
+            // 2) Buscamos si ya existe un registro en OCURRENCIA_MATERIAL para el equipo original
+            Long idEquipoOriginal = dp.getEquipo().getIdEquipo();
+            OcurrenciaMaterial originalEnTabla = repoM
+                    .findByIdocurrenciaAndIdEquipoLaboratorio(idOcurrencia, idEquipoOriginal)
+                    .orElse(null);
+
+            if (originalEnTabla == null) {
+                // Si no existía aún, lo creamos con cantidad = 1 y sin costo
+                OcurrenciaMaterial mNuevo = new OcurrenciaMaterial();
+                mNuevo.setIdocurrencia(idOcurrencia);
+                mNuevo.setIdEquipoLaboratorio(idEquipoOriginal);
+                mNuevo.setCantidad(1);
+                // no seteamos costoUnitario, queda null
+                originalEnTabla = repoM.save(mNuevo);
+            }
+
+            // 3) Capturamos el ID de 'originalEnTabla' en una variable final para usarla dentro de la lambda
+            final Long idOriginal = originalEnTabla.getId();
+
+            // 4) Preparamos la lista de DTOs e incluimos primero el “material original”
+            lista.add(new OcurrenciaMaterialDTO(
+                    idOriginal,
+                    idEquipoOriginal.toString(),
+                    dp.getEquipo().getNombreEquipo(),
+                    originalEnTabla.getCantidad(),
+                    originalEnTabla.getCostoUnitario()
+            ));
+
+            // 5) Luego añadimos el resto de materiales asociados a la ocurrencia,
+            //    excluyendo el que ya acabamos de insertar/obtener (con id == idOriginal)
+            repoM.findByIdocurrencia(idOcurrencia).forEach(m -> {
+                if (!m.getId().equals(idOriginal)) {
+                    Equipo e = equipoRepo.findById(m.getIdEquipoLaboratorio())
+                            .orElse(null);
+                    String nombreEquipo = (e != null) ? e.getNombreEquipo() : "<sin nombre>";
+                    lista.add(new OcurrenciaMaterialDTO(
+                            m.getId(),
+                            m.getIdEquipoLaboratorio().toString(),
+                            nombreEquipo,
+                            m.getCantidad(),
+                            m.getCostoUnitario()
+                    ));
+                }
+            });
+        } else {
+            // Si la ocurrencia no está ligada a un préstamo de equipo, solo listamos los materiales registrados
+            repoM.findByIdocurrencia(idOcurrencia).forEach(m -> {
+                Equipo e = equipoRepo.findById(m.getIdEquipoLaboratorio()).orElse(null);
                 String nombreEquipo = (e != null) ? e.getNombreEquipo() : "<sin nombre>";
                 lista.add(new OcurrenciaMaterialDTO(
                         m.getId(),
@@ -216,8 +241,8 @@ public class OcurrenciaBibliotecaServiceImpl implements OcurrenciaBibliotecaServ
                         m.getCantidad(),
                         m.getCostoUnitario()
                 ));
-            }
-        });
+            });
+        }
 
         return lista;
     }
