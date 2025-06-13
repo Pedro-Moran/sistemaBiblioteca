@@ -12,6 +12,8 @@ import java.util.List;
 public interface OcurrenciaBibliotecaService {
     OcurrenciaBibliotecaDTO crear(OcurrenciaBibliotecaDTO dto);
     List<OcurrenciaBibliotecaDTO> listarTodas();
+    List<OcurrenciaBibliotecaDTO> listarMateriales();
+    List<OcurrenciaBibliotecaDTO> listarEquipos();
     OcurrenciaBibliotecaDTO buscarPorId(Long id);
     OcurrenciaUsuario saveUsuario(Long idOcurrencia, String codigoUsuario, Integer tipoUsuario);
     OcurrenciaMaterial saveMaterial(Long idOcurrencia, Long idEquipo, Integer cantidad);

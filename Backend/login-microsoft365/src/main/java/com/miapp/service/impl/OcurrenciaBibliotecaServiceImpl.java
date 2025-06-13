@@ -81,7 +81,26 @@ public class OcurrenciaBibliotecaServiceImpl implements OcurrenciaBibliotecaServ
 
     @Override
     public List<OcurrenciaBibliotecaDTO> listarTodas() {
-        return repo.findAll().stream().map(this::toDTO).collect(Collectors.toList());
+        return repo.findAllByOrderByIdDesc()
+                .stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<OcurrenciaBibliotecaDTO> listarMateriales() {
+        return repo.findByDetalleBibliotecaIsNotNullOrderByIdDesc()
+                .stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<OcurrenciaBibliotecaDTO> listarEquipos() {
+        return repo.findByDetallePrestamoIsNotNullOrderByIdDesc()
+                .stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -101,8 +120,18 @@ public class OcurrenciaBibliotecaServiceImpl implements OcurrenciaBibliotecaServ
                 dto.setEquipoIp(eq.getIp());
             }
         }
-        if (e.getDetalleBiblioteca()!=null)
-            dto.setIdDetalleBiblioteca(e.getDetalleBiblioteca().getIdDetalle());
+        if (e.getDetalleBiblioteca()!=null) {
+            DetalleBiblioteca det = e.getDetalleBiblioteca();
+            dto.setIdDetalleBiblioteca(det.getIdDetalle());
+            dto.setIdEjemplar(
+                    det.getNumeroIngreso()!=null
+                            ? det.getNumeroIngreso().toString()
+                            : String.valueOf(det.getIdDetalle())
+            );
+            dto.setEjemplar(det.getBiblioteca()!=null ? det.getBiblioteca().getTitulo() : null);
+            dto.setSede(det.getSede()!=null ? det.getSede().getDescripcion() : null);
+            dto.setTipoMaterial(det.getTipoMaterial()!=null ? det.getTipoMaterial().getDescripcion() : null);
+        }
         dto.setCodigoLocalizacion(e.getCodigoLocalizacion());
         dto.setCodigoUsuario(e.getCodigoUsuario());
         dto.setCosto(e.getCosto());
@@ -219,6 +248,49 @@ public class OcurrenciaBibliotecaServiceImpl implements OcurrenciaBibliotecaServ
                 if (!m.getId().equals(idOriginal)) {
                     Equipo e = equipoRepo.findById(m.getIdEquipoLaboratorio())
                             .orElse(null);
+                    String nombreEquipo = (e != null) ? e.getNombreEquipo() : "<sin nombre>";
+                    lista.add(new OcurrenciaMaterialDTO(
+                            m.getId(),
+                            m.getIdEquipoLaboratorio().toString(),
+                            nombreEquipo,
+                            m.getCantidad(),
+                            m.getCostoUnitario()
+                    ));
+                }
+            });
+        } else if (oc.getDetalleBiblioteca() != null) {
+            // Ocurrencia asociada a material bibliográfico
+            DetalleBiblioteca db = oc.getDetalleBiblioteca();
+            Long idRef = db.getNumeroIngreso() != null ? db.getNumeroIngreso() : db.getIdDetalle();
+
+            OcurrenciaMaterial originalEnTabla = repoM
+                    .findByIdocurrenciaAndIdEquipoLaboratorio(idOcurrencia, idRef)
+                    .orElse(null);
+
+            if (originalEnTabla == null) {
+                OcurrenciaMaterial nuevo = new OcurrenciaMaterial();
+                nuevo.setIdocurrencia(idOcurrencia);
+                nuevo.setIdEquipoLaboratorio(idRef);
+                nuevo.setCantidad(1);
+                originalEnTabla = repoM.save(nuevo);
+            }
+
+            final Long idOriginal = originalEnTabla.getId();
+            String nombre = (db.getBiblioteca() != null)
+                    ? db.getBiblioteca().getTitulo()
+                    : (db.getTipoMaterial() != null ? db.getTipoMaterial().getDescripcion() : "<sin nombre>");
+
+            lista.add(new OcurrenciaMaterialDTO(
+                    idOriginal,
+                    idRef.toString(),
+                    nombre,
+                    originalEnTabla.getCantidad(),
+                    originalEnTabla.getCostoUnitario()
+            ));
+
+            repoM.findByIdocurrencia(idOcurrencia).forEach(m -> {
+                if (!m.getId().equals(idOriginal)) {
+                    Equipo e = equipoRepo.findById(m.getIdEquipoLaboratorio()).orElse(null);
                     String nombreEquipo = (e != null) ? e.getNombreEquipo() : "<sin nombre>";
                     lista.add(new OcurrenciaMaterialDTO(
                             m.getId(),

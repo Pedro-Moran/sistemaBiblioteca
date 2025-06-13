@@ -369,6 +369,17 @@ openForEdit(ocurrencia: OcurrenciaDTO) {
           ip: dp.equipo.ip!
         }];
       });
+  } else if (ocurrencia.idDetalleBiblioteca) {
+    this.materialBibliograficoService
+      .getDetalleBiblioteca(ocurrencia.idDetalleBiblioteca)
+      .subscribe(det => {
+        this.sourceItem = det;
+        this.materiales = [{
+          codigoEquipo: det.numeroIngreso ?? det.idDetalleBiblioteca,
+          nombre: det.biblioteca?.titulo || det.tipoMaterial?.descripcion || 'Material',
+          cantidad: 1
+        }];
+      });
   }
   this.loadInvolucrados();
   this.loadMateriales();

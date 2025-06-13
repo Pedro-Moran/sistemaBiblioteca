@@ -306,14 +306,33 @@ loadInvolucrados(ocurrenciaId: number) {
     this.materialBibliograficoService
       .listarMaterialesOcurrencia(ocurrenciaId)
       .subscribe((dtos: OcurrenciaMaterialDTO[]) => {
-        this.materiales = dtos.map(dto => ({
-          idMaterial:   dto.idMaterial ?? undefined,               // puede venir null
-          idEquipo:     Number(dto.codigoEquipo),                  // parseamos string → number
-          nombreEquipo: dto.nombreEquipo,
-          cantidad:     dto.cantidad,
-          costo:        dto.costo ?? 0,                            // si dto.costo = null → 0
-          subTotal:     (dto.costo ?? 0) * dto.cantidad
-        }));
+        if (dtos.length > 0) {
+          this.materiales = dtos.map(dto => ({
+            idMaterial:   dto.idMaterial ?? undefined,
+            idEquipo:     Number(dto.codigoEquipo),
+            nombreEquipo: dto.nombreEquipo,
+            cantidad:     dto.cantidad,
+            costo:        dto.costo ?? 0,
+            subTotal:     (dto.costo ?? 0) * dto.cantidad
+          }));
+        } else if (this.detalle?.idDetalleBiblioteca) {
+          this.materialBibliograficoService
+            .getDetalleBiblioteca(this.detalle.idDetalleBiblioteca)
+            .subscribe(det => {
+              this.materiales = [{
+                idMaterial:   undefined,
+                // `numeroIngreso` o `idDetalleBiblioteca` pueden venir indefinidos
+                // Convertimos a número para cumplir con la interfaz
+                idEquipo:     Number(det.numeroIngreso ?? det.idDetalleBiblioteca ?? 0),
+                nombreEquipo: det.biblioteca?.titulo || det.tipoMaterial?.descripcion || 'Material',
+                cantidad:     1,
+                costo:        0,
+                subTotal:     0
+              }];
+            });
+        } else {
+          this.materiales = [];
+        }
         this.recalcularTotal();
       });
   }

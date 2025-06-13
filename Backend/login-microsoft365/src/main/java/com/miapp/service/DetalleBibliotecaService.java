@@ -39,4 +39,11 @@ public class DetalleBibliotecaService {
                 .map(detalle -> mapper.toDetalleDto(detalle))
                 .collect(Collectors.toList());
     }
+
+    /** Obtiene un detalle por ID y lo mapea a DTO */
+    public DetalleBibliotecaDTO findById(Long id) {
+        return detalleBibliotecaRepository.findById(id)
+                .map(mapper::toDetalleDto)
+                .orElse(null);
+    }
 }

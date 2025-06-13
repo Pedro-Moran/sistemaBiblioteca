@@ -242,9 +242,18 @@ crearOcurrencia(dto: OcurrenciaDTO): Observable<OcurrenciaDTO> {
   );
 }
 
+  /** Ocurrencias ligadas a equipos de cómputo */
   api_ocurrencias_laboratorio(): Observable<OcurrenciaDTO[]> {
     return this.http.get<OcurrenciaDTO[]>(
-      `${this.apiUrl}/api/ocurrencias-biblio`,
+      `${this.apiUrl}/api/ocurrencias-biblio/equipos`,
+      { headers: this.headers }
+    );
+  }
+
+  /** Ocurrencias ligadas a material bibliográfico */
+  api_ocurrencias_biblioteca(): Observable<OcurrenciaDTO[]> {
+    return this.http.get<OcurrenciaDTO[]>(
+      `${this.apiUrl}/api/ocurrencias-biblio/materiales`,
       { headers: this.headers }
     );
   }
@@ -260,6 +269,14 @@ crearOcurrencia(dto: OcurrenciaDTO): Observable<OcurrenciaDTO> {
     return this.http
       .get<{status:string, data: DetallePrestamo}>(`${this.apiUrl}/api/prestamos/${id}`, { headers: this.headers })
       .pipe(map(resp => resp.data));
+  }
+
+  /** Obtiene un detalle de biblioteca por su ID */
+  getDetalleBiblioteca(id: number): Observable<DetalleBibliotecaDTO> {
+    return this.http.get<DetalleBibliotecaDTO>(
+      `${this.apiUrl}/api/biblioteca/detalles/${id}`,
+      { headers: this.headers }
+    );
   }
 
     /** Lista usuarios; si pasas `search` filtra por código o email */
@@ -316,7 +333,8 @@ listarUsuariosOcurrencia(id: number): Observable<OcurrenciaUsuario[]> {
 
   listarMaterialesOcurrencia(idOcurrencia: number): Observable<OcurrenciaMaterialDTO[]> {
     return this.http.get<OcurrenciaMaterialDTO[]>(
-      `${this.apiUrl}/api/ocurrencias-biblio/${idOcurrencia}/materiales`
+      `${this.apiUrl}/api/ocurrencias-biblio/${idOcurrencia}/materiales`,
+      { headers: this.headers }
     );
   }
 
@@ -326,7 +344,8 @@ listarUsuariosOcurrencia(id: number): Observable<OcurrenciaUsuario[]> {
   ): Observable<void> {
     return this.http.post<void>(
       `${this.apiUrl}/api/ocurrencias-biblio/${idOcurrencia}/costos`,
-      payload
+      payload,
+      { headers: this.headers }
     );
   }
 

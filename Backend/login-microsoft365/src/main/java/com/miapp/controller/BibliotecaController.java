@@ -188,6 +188,15 @@ public class BibliotecaController {
         return ResponseEntity.ok(Map.of("status", 0, "data", dtos));
     }
 
+    /** Devuelve un detalle de biblioteca por su ID */
+    @GetMapping("/detalles/{id}")
+    public ResponseEntity<DetalleBibliotecaDTO> getDetalleById(@PathVariable Long id) {
+        DetalleBibliotecaDTO dto = detalleService.findById(id);
+        return dto != null
+                ? ResponseEntity.ok(dto)
+                : ResponseEntity.notFound().build();
+    }
+
     /** Endpoint para obtener todos los detalles reservados (con su “biblioteca” anidada) */
     @GetMapping("/detalles-reservados")
     public ResponseEntity<Map<String, Object>> getDetallesReservados() {

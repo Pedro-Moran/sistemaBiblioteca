@@ -16,4 +16,12 @@ export interface OcurrenciaDTO {
   equipoNombre?:    string;
     equipoNumero?:    number;
     equipoIp?:        string;
-}
+  /** Codigo o número de ingreso del material */
+  idEjemplar?: string;
+  /** Título o nombre del material */
+  ejemplar?: string;
+  /** Descripción de la sede a la que pertenece el material */
+  sede?: string;
+  /** Descripción del tipo de material */
+  tipoMaterial?: string;
+  }
