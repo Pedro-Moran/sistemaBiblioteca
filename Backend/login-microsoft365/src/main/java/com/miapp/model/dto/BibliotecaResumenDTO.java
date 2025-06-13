@@ -97,6 +97,9 @@ public class BibliotecaResumenDTO {
     /** 27) Descriptor (LOB) */
     private String descriptor;
 
+    /** 27b) Descripción de la revista (String) */
+    private String descripcionRevista;
+
     /** 28) Nota de contenido (LOB) */
     private String notaContenido;
 

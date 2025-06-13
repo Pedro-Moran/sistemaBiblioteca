@@ -1,6 +1,9 @@
 export interface OcurrenciaDTO {
     id?: number;
-  idDetallePrestamo: number;
+  /** Identificador del detalle de préstamo de equipo (opcional) */
+  idDetallePrestamo?: number;
+  /** Identificador del detalle de biblioteca (opcional) */
+  idDetalleBiblioteca?: number;
   descripcion:       string;
   fechaCreacion?: string;
   fechaOcurrencia?:  string;

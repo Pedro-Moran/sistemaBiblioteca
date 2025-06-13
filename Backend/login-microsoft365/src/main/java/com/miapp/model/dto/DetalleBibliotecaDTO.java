@@ -23,12 +23,27 @@ public class DetalleBibliotecaDTO {
     /** 4) Código de sede (FK a Sede) */
     private Long codigoSede;
 
+    /** Objeto sede con descripción opcional */
+    private com.miapp.model.SedeDTO sede;
+
     private String codigoUsuario;
 
     private String tipoPrestamo;
 
+    /** Hora de inicio permitida para préstamo */
+    private String horaInicio;
+
+    /** Hora fin permitida para préstamo */
+    private String horaFin;
+
+    /** Máximo de horas de préstamo */
+    private Integer maxHoras;
+
     /** 5) ID de tipo de material (FK a TipoMaterial) */
     private Long tipoMaterialId;
+
+    /** Objeto tipoMaterial con descripción opcional */
+    private com.miapp.model.TipoMaterialDTO tipoMaterial;
 
     /** 6) ID de tipo de adquisición (FK a TipoAdquisicion) */
     private Long tipoAdquisicionId;

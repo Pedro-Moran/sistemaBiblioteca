@@ -37,6 +37,7 @@ public class BibliotecaDTO {
     private String edicion;
     private Integer reimpresion;
     private String descriptor;
+    private String descripcionRevista;
     private String notaContenido;
     private String notaGeneral;
     private String notaResumen;
