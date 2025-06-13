@@ -60,7 +60,7 @@ import { AuthService } from '../../../services/auth.service';
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4">
       <div class="flex flex-col gap-2">
         <label for="pais">País</label>
-        <p-select appendTo="body" formControlName="pais" [options]="paisLista" optionLabel="nombrePais" optionValue="paisId" placeholder="Seleccionar" (onChange)="ListaCiudad()" />
+                <p-select appendTo="body" formControlName="pais" [options]="paisLista" optionLabel="nombrePais" optionValue="paisId" placeholder="Seleccionar" (onChange)="ListaCiudad()" />
         <app-input-validation [form]="formOtro" modelo="pais" ver="pais"></app-input-validation>
       </div>
 
@@ -69,20 +69,10 @@ import { AuthService } from '../../../services/auth.service';
         <p-select appendTo="body" formControlName="ciudad" [options]="ciudadLista" optionLabel="nombreCiudad" optionValue="ciudadCodigo" placeholder="Seleccionar" />
         <app-input-validation [form]="formOtro" modelo="ciudad" ver="ciudad"></app-input-validation>
       </div>
-      <div class="flex flex-col gap-2">
-        <label for="descripcionFisica">Descripción Física</label>
-        <p-select appendTo="body" formControlName="descripcionFisica" [options]="descripcionFisicaLista" optionLabel="descripcion" placeholder="Seleccionar" />
-        <app-input-validation [form]="formOtro" modelo="descripcionFisica" ver="descripcionFisica"></app-input-validation>
-      </div>
       <div class="flex flex-col gap-2 min-w-[100px] ">
         <label for="cantidad">Cantidad</label>
         <input pInputText id="cantidad" type="text" formControlName="cantidad" />
         <app-input-validation [form]="formOtro" modelo="cantidad" ver="cantidad"></app-input-validation>
-      </div>
-      <div class="flex flex-col gap-2">
-        <label for="anioPublicacion">Año Publicación</label>
-        <p-select appendTo="body" formControlName="anioPublicacion" [options]="anioPublicacionLista" optionLabel="descripcion" placeholder="Seleccionar" />
-        <app-input-validation [form]="formOtro" modelo="anioPublicacion" ver="anioPublicacion"></app-input-validation>
       </div>
 
       <div class="flex flex-col gap-2 min-w-[100px]">
@@ -263,7 +253,7 @@ import { AuthService } from '../../../services/auth.service';
 
                         </tr>
                     </ng-template>
-                    <ng-template pTemplate="body" let-objeto>
+                    <ng-template pTemplate="body" let-objeto let-rowIndex="rowIndex">
                         <tr>
                             <td>
                                 {{objeto.sede.descripcion}}
@@ -317,7 +307,11 @@ import { AuthService } from '../../../services/auth.service';
         <app-input-validation [form]="formDetalle" modelo="sede" ver="Sede"></app-input-validation>
       </div>
 
-        <!-- Tipo Material y Tipo Adquisicion se heredan del modulo padre -->
+      <div class="flex flex-col gap-2">
+        <label for="tipoAdquisicion">Tipo Adquisicion</label>
+        <p-select appendTo="body" formControlName="tipoAdquisicion" [options]="tipoAdquisicionLista" optionLabel="descripcion" placeholder="Seleccionar" />
+        <app-input-validation [form]="formDetalle" modelo="tipoAdquisicion" ver="Tipo Adquisicion"></app-input-validation>
+      </div>
       <div class="flex flex-col gap-2 w-full">
   <label for="fechaIngreso">Fecha Ingreso</label>
   <p-datepicker
@@ -364,8 +358,7 @@ export class ModalTesisComponent implements OnInit {
     displayEditorial: boolean = false;
     displayDetalle: boolean = false;
     displayEjemplar: boolean = false;
-    /** Datos de la tesis que se está editando */
-    objetoTesis: Tesis = new Tesis();
+    objetoOtro: Tesis = new Tesis();
     objetoEditorial: Editorial = new Editorial();
     objetoDetalle: Detalle = new Detalle();
     detalles: DetalleDisplay[] = [];
@@ -400,26 +393,26 @@ export class ModalTesisComponent implements OnInit {
             descripcion: ['', [Validators.required, Validators.maxLength(50), Validators.pattern('^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\\s\\-()]+$')]]
         });
         this.formPortada = this.fb.group({
-            portada: [this.objetoTesis.portada],
+            portada: [this.objetoOtro.portada],
             adjunto: ['']
         });
         this.formOtro = this.fb.group({
 
-            id: [this.objetoTesis.id],
+            id: [this.objetoOtro.id],
             tipoMaterialId: [null],
-            codigo: [this.objetoTesis.codigo, [
+            codigo: [this.objetoOtro.codigo, [
                 Validators.required,
                 Validators.maxLength(20),
                 Validators.pattern('^[a-zA-Z0-9./]+$') // Permite letras, números, puntos y slash
             ]],
-            titulo: [this.objetoTesis.titulo,
+            titulo: [this.objetoOtro.titulo,
             [
                 Validators.required,
                 Validators.maxLength(100),
                 Validators.pattern('^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\\s./()-]+$') // Permite letras, números, espacios, punto, guion, slash y paréntesis
             ]
             ],
-            autorPrincipal: [this.objetoTesis.autorPrincipal,
+            autorPrincipal: [this.objetoOtro.autorPrincipal,
             [
                 Validators.required,
                 Validators.maxLength(100),
@@ -427,55 +420,44 @@ export class ModalTesisComponent implements OnInit {
             ]
             ],
 
-            pais: [this.objetoTesis?.pais,
+            pais: [this.objetoOtro?.pais,
               [
                   Validators.required
               ]
               ],
-              ciudad: [this.objetoTesis?.ciudad,
+              ciudad: [this.objetoOtro?.ciudad,
               [
                   Validators.required
               ]
               ],
-
-          descripcionFisica: [this.objetoTesis?.descripcionFisica,
-              [
-                  Validators.required
-              ]
-              ],
-              cantidad: [this.objetoTesis?.cantidad,
+              cantidad: [this.objetoOtro?.cantidad,
               [
                   Validators.required,
                   Validators.maxLength(100),
                   Validators.pattern('^[0-9]+$')
               ]
               ],
-              anioPublicacion: [this.objetoTesis?.anioPublicacion,
-              [
-                  Validators.required
-              ]
-              ],
-              anio: [this.objetoTesis?.anio,
+              anio: [this.objetoOtro?.anio,
               [
                   Validators.required,
                   Validators.maxLength(4),
                   Validators.pattern('^[0-9]+$')
               ]
               ],
-              especialidad: [this.objetoTesis.especialidad, Validators.required],
-            formatoDigital: [this.objetoTesis.formatoDigital],
-            urlPublicacion: [this.objetoTesis.urlPublicacion],
-            descriptores: [this.objetoTesis.descriptores, [
+              especialidad: [this.objetoOtro.especialidad, Validators.required],
+            formatoDigital: [this.objetoOtro.formatoDigital],
+            urlPublicacion: [this.objetoOtro.urlPublicacion],
+            descriptores: [this.objetoOtro.descriptores, [
                 Validators.required,
                 Validators.maxLength(100),
                 Validators.pattern('^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\\s./()-]+$') // Permite letras, números, espacios, punto, guion, slash y paréntesis
             ]],
-            notasTesis: [this.objetoTesis.notasTesis, [
+            notasTesis: [this.objetoOtro.notasTesis, [
                 Validators.required,
                 Validators.maxLength(100),
                 Validators.pattern('^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\\s./()-]+$') // Permite letras, números, espacios, punto, guion, slash y paréntesis
             ]],
-            notasGeneral: [this.objetoTesis.notasGeneral, [
+            notasGeneral: [this.objetoOtro.notasGeneral, [
                 Validators.required,
                 Validators.maxLength(100),
                 Validators.pattern('^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\\s./()-]+$') // Permite letras, números, espacios, punto, guion, slash y paréntesis
@@ -504,7 +486,11 @@ export class ModalTesisComponent implements OnInit {
                 Validators.required
             ]
             ],
-            tipoMaterial: [this.objetoDetalle?.tipoMaterial],
+            tipoMaterial: [this.objetoDetalle?.tipoMaterial,
+            [
+                Validators.required
+            ]
+            ],
             fechaIngreso: [this.objetoDetalle?.fechaIngreso,
             [
                 Validators.required
@@ -537,7 +523,7 @@ export class ModalTesisComponent implements OnInit {
         await this.ListaDetalle();
     }
     openModal(tipoId?: number | null) {
-        this.objetoTesis = new Tesis();
+        this.objetoOtro = new Tesis();
         this.objetoDetalle = new Detalle();
         this.detalles = [];
 
@@ -547,14 +533,12 @@ export class ModalTesisComponent implements OnInit {
         const id = tipoId ?? this.tipoMaterialId ?? null;
         this.formOtro.patchValue({ tipoMaterialId: id });
         this.tipoMaterialId = id;
-
         this.display = true;
     }
-
     editarBiblioteca(mat: BibliotecaDTO, tipoId?: number | null) {
         const id = tipoId ?? this.tipoMaterialId ?? null;
         this.formOtro.reset();
-        this.objetoTesis.id = mat.id ?? 0;
+        this.objetoOtro.id = mat.id ?? 0;
         this.formOtro.patchValue({
             id: mat.id ?? null,
             tipoMaterialId: id,
@@ -594,7 +578,6 @@ export class ModalTesisComponent implements OnInit {
     private buildDto(): BibliotecaDTO {
         const t = this.formOtro.value;
         const decoded = this.authService.getUser();
-
         const parentTipo = t.tipoMaterialId ?? this.tipoMaterialId ?? null;
 
         const detalles: DetalleBibliotecaDTO[] = this.detalles.map(d => ({
@@ -609,7 +592,6 @@ export class ModalTesisComponent implements OnInit {
             costo: d.costo ?? null,
             numeroFactura: d.numeroFactura ?? null,
             fechaIngreso: d.fechaIngreso ?? null,
-            // detalle debe tener estado 1 al guardar o actualizar
             idEstado: 1,
         }));
 
@@ -708,7 +690,7 @@ export class ModalTesisComponent implements OnInit {
     async ListaPeriodicidad() {
         try {
             const result: any = await this.materialBibliograficoService.lista_periodicidad('material-bibliografico/ciudad').toPromise();
-            if (result.status == 0) {
+            if (result.status === 0) {
                 this.periodicidadLista = result.data;
             }
         } catch (error) {
@@ -776,7 +758,7 @@ export class ModalTesisComponent implements OnInit {
         }
     }
     async ListaDetalle() {
-        const idBib = this.objetoTesis?.id;
+        const idBib = this.objetoOtro?.id;
         if (!idBib) { return; }
         try {
             const data = await this.materialBibliograficoService
@@ -903,8 +885,8 @@ export class ModalTesisComponent implements OnInit {
                 }
                 this.displayEjemplar = true;
             }
-            guardarEjemplar() {
-              this.confirmationService.confirm({
+            guardarEjemplar(){
+            this.confirmationService.confirm({
                 message: '¿Estás seguro(a) de que quieres registrar?',
                 header: 'Confirmar',
                 icon: 'pi pi-exclamation-triangle',
@@ -945,9 +927,9 @@ export class ModalTesisComponent implements OnInit {
                   this.formDetalle.reset();
                   this.displayEjemplar = false;
                 }
-              });
-            }
+            });
 
+            }
             private formatDateTime(d: Date | string | null): string | null {
               if (!d) { return null; }
               if (typeof d === 'string' && d.length > 10) { return d; }

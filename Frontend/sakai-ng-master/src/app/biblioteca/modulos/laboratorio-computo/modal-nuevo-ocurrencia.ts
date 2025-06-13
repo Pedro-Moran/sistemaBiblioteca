@@ -186,7 +186,6 @@ export class ModalNuevoOcurencia implements OnInit {
     detalle!: OcurrenciaDTO;
         @ViewChild('modalMaterial') modalMaterial!: ModalMaterial;
         @ViewChild('modalInvolucrado') modalInvolucrado!: ModalInvolucrado;
-          /** Aquí guardamos el ID normalizado (puede venir de idDetallePrestamo o idEquipo) */
   /** ID usado al crear la ocurrencia (detalle de equipo o biblioteca) */
   idNormalizado: number = 0;
   /** Guarda el ID de detalle de biblioteca cuando aplique */
@@ -217,14 +216,12 @@ constructor(private fb: FormBuilder,
     this.sourceItem          = objeto;
     this.idDetallePrestamo   = objeto.idDetallePrestamo ?? null;
     this.idDetalleBiblioteca = objeto.idDetalleBiblioteca ?? null;
-
     const idDetectado =
       this.idDetallePrestamo != null
         ? this.idDetallePrestamo
         : objeto.idEquipo != null
           ? objeto.idEquipo
           : this.idDetalleBiblioteca ?? 0;
-
     this.idNormalizado = idDetectado;
 
     const decoded = this.auth.getUser();
@@ -247,7 +244,6 @@ constructor(private fb: FormBuilder,
 
     this.involucrados = [];
     this.materiales = [];
-
     if (objeto.nombreEquipo) {
       this.materiales.push({
         codigoEquipo: objeto.idEquipo ?? objeto.numeroEquipo,
@@ -305,8 +301,6 @@ constructor(private fb: FormBuilder,
         this.guardado = true;
         this.saved.emit();
 
-        // Si la ocurrencia proviene de un equipo sin préstamo,
-        // registramos automáticamente ese equipo como material involucrado
         if (!this.idDetallePrestamo && !this.idDetalleBiblioteca && this.sourceItem?.idEquipo) {
           this.materialBibliograficoService
             .addMaterial(this.idNormalizado, { idEquipo: this.sourceItem.idEquipo, cantidad: 1 })
@@ -316,6 +310,7 @@ constructor(private fb: FormBuilder,
         }
 
         this.loadInvolucrados();
+        this.loadMateriales();
       },
       error: () => {
         this.messageService.add({ severity: 'error', detail: 'Error al registrar.' });
@@ -370,7 +365,8 @@ openForEdit(ocurrencia: OcurrenciaDTO) {
         this.materiales = [{
           codigoEquipo: dp.equipo.idEquipo!,
           nombre: dp.equipo.nombreEquipo!,
-          cantidad: 1
+          cantidad: 1,
+          ip: dp.equipo.ip!
         }];
       });
   }
