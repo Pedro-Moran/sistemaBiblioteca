@@ -206,6 +206,12 @@ public class BibliotecaController {
         resp.put("data", lista);
         return ResponseEntity.ok(resp);
     }
+    /** Reporte: ejemplares mas prestados */
+    @GetMapping("/reporte/ejemplar-mas-prestado")
+    public ResponseEntity<?> reporteEjemplarMasPrestado() {
+        return ResponseEntity.ok(Map.of("status", 0, "data", bibliotecaService.reporteEjemplarMasPrestado()));
+    }
+
 
 
 }

@@ -36,6 +36,7 @@ public class BibliotecaServiceImpl implements BibliotecaService {
     private final BibliotecaMapper mapper;
     private final OcurrenciaUsuarioRepository repoU;
     private final OcurrenciaMaterialRepository repoM;
+    private final OcurrenciaBibliotecaRepository ocurrenciaBibliotecaRepository;
     private final NotificacionService notificacionService;
     private final EmailService emailService;
 
@@ -51,6 +52,7 @@ public class BibliotecaServiceImpl implements BibliotecaService {
                                  BibliotecaMapper mapper,
                                  OcurrenciaUsuarioRepository repoU,
                                  OcurrenciaMaterialRepository repoM,
+                                 OcurrenciaBibliotecaRepository ocurrenciaBibliotecaRepository,
                                  NotificacionService notificacionService,
                                  EmailService emailService) {
         this.bibliotecaRepository = bibliotecaRepository;
@@ -65,6 +67,7 @@ public class BibliotecaServiceImpl implements BibliotecaService {
         this.mapper = mapper;
         this.repoU = repoU;
         this.repoM = repoM;
+        this.ocurrenciaBibliotecaRepository = ocurrenciaBibliotecaRepository;
         this.notificacionService = notificacionService;
         this.emailService = emailService;
     }
@@ -688,6 +691,11 @@ public class BibliotecaServiceImpl implements BibliotecaService {
         return listaEntidades.stream()
                 .map(mapper::toDetalleDto)   // Aquí dentro toDetalleDto ya verá d.getBiblioteca() != null
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<EjemplarPrestadoDTO> reporteEjemplarMasPrestado() {
+        return ocurrenciaBibliotecaRepository.reporteEjemplarMasPrestado();
     }
 
 

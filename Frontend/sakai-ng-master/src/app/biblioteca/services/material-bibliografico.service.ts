@@ -1,4 +1,5 @@
 import { HttpClient, HttpHeaders, HttpParams  } from '@angular/common/http';
+import { EjemplarPrestadoDTO } from '../interfaces/reportes/ejemplar-prestado';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { AuthService } from './auth.service';
@@ -448,4 +449,9 @@ listarUsuariosOcurrencia(id: number): Observable<OcurrenciaUsuario[]> {
   }
 
 
+  /** Obtiene el reporte de ejemplares mas prestados */
+  reporteEjemplarMasPrestado(): Observable<EjemplarPrestadoDTO[]> {
+    const headers = new HttpHeaders().set('Authorization', `Bearer ${this.authService.getToken()}`);
+    return this.http.get<{ status: number; data: EjemplarPrestadoDTO[] }>(`${this.apiUrl}/api/biblioteca/reporte/ejemplar-mas-prestado`, { headers }).pipe(map(resp => resp.data));
+  }
 }

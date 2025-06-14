@@ -6,6 +6,7 @@ import com.miapp.model.Biblioteca;
 import com.miapp.model.dto.CambioEstadoBibliotecaRequest;
 import com.miapp.model.dto.DetalleBibliotecaDTO;
 import com.miapp.model.dto.ResponseDTO;
+import com.miapp.model.dto.EjemplarPrestadoDTO;
 import jakarta.transaction.Transactional;
 
 import java.util.List;
@@ -25,4 +26,7 @@ public interface BibliotecaService {
     List<BibliotecaDTO> findDisponibles();
 
     List<DetalleBibliotecaDTO> listarTodosDetallesReservados();
+
+    /** Reporte de ejemplares más prestados */
+    List<EjemplarPrestadoDTO> reporteEjemplarMasPrestado();
 }
