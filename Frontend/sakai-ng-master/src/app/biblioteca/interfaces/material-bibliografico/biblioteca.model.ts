@@ -94,6 +94,14 @@ export interface DetalleBibliotecaDTO {
   usuarioModificacion?: string;
   fechaModificacion?: string;
   idEstado?: number;
+  /** Usuario que reservó el material */
+  codigoUsuario?: string;
+  /** Nombre del usuario que hizo la reserva */
+  nombreUsuario?: string;
+  /** Tipo de préstamo de la reserva */
+  tipoPrestamo?: string | null;
+  /** Fecha de la reserva */
+  fechaReserva?: string | null;
   /** Detalle puede venir anidado con datos de la biblioteca */
   biblioteca?: BibliotecaDTO;
 }

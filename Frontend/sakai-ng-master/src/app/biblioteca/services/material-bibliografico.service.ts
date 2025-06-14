@@ -408,38 +408,42 @@ listarUsuariosOcurrencia(id: number): Observable<OcurrenciaUsuario[]> {
         .pipe(map(resp => resp.data));
     }
   /**
-   * Llama al endpoint para marcar un detalle como “prestado”.
-   * Equivale a DELETE /auth/api/prestamos/prestar con body { id }.
+   * Marca un detalle como “prestado”.
    */
   prestarDetalle(idDetalle: number): Observable<any> {
     const headers = new HttpHeaders().set(
       'Authorization',
       `Bearer ${this.authService.getToken()}`
     );
-    return this.http.delete<any>(
-      `${this.apiUrl}/api/prestamos/prestar`,
-      {
-        body: { id: idDetalle },
-        headers
-      }
+    const payload = {
+      idDetalleBiblioteca: idDetalle,
+      idEstado: 4,
+      idUsuario: this.authService.getUser()?.sub ?? 0
+    };
+    return this.http.put<any>(
+      `${this.apiUrl}/api/biblioteca/detalles/estado`,
+      payload,
+      { headers }
     );
   }
 
   /**
-   * Llama al endpoint para cancelar la reserva de un detalle.
-   * Equivale a DELETE /auth/api/prestamos/cancelar con body { id }.
+   * Cancela la reserva de un detalle, regresándolo a DISPONIBLE.
    */
   cancelarDetalle(idDetalle: number): Observable<any> {
     const headers = new HttpHeaders().set(
       'Authorization',
       `Bearer ${this.authService.getToken()}`
     );
-    return this.http.delete<any>(
-      `${this.apiUrl}/api/prestamos/cancelar`,
-      {
-        body: { id: idDetalle },
-        headers
-      }
+    const payload = {
+      idDetalleBiblioteca: idDetalle,
+      idEstado: 2,
+      idUsuario: this.authService.getUser()?.sub ?? 0
+    };
+    return this.http.put<any>(
+      `${this.apiUrl}/api/biblioteca/detalles/estado`,
+      payload,
+      { headers }
     );
   }
 

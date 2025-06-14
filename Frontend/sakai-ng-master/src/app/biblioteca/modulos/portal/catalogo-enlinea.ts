@@ -209,7 +209,7 @@ import { forkJoin } from 'rxjs';
                             <tr>
                             <td colspan="8">
                             <p-table
-    [value]="detalle"
+    [value]="detallesPorBiblioteca[product.id]"
     showGridlines
     [tableStyle]="{ 'min-width': '50rem' }">
         <ng-template #header>
@@ -278,14 +278,14 @@ import { forkJoin } from 'rxjs';
         <div class="flex flex-col">
           <label>Fecha de inicio</label>
           <p-calendar name="fechaInicioDate" [minDate]="minDate" [(ngModel)]="prestamo.fechaInicioDate" dateFormat="yy-mm-dd"
-            [showTime]="false" appendTo="body" (ngModelChange)="onDateRangeChange()">
+            [showTime]="false" (ngModelChange)="onDateRangeChange()">
           </p-calendar>
         </div>
 
         <div class="flex flex-col">
           <label>Hora de inicio</label>
           <p-calendar name="fechaInicioTime" [(ngModel)]="prestamo.fechaInicioTime" timeOnly="true" hourFormat="24"
-            appendTo="body" [minDate]="minHora" [maxDate]="maxHora" (ngModelChange)="onDateRangeChange()">
+            [minDate]="minHora" [maxDate]="maxHora" (ngModelChange)="onDateRangeChange()">
           </p-calendar>
         </div>
       </div>
@@ -293,14 +293,14 @@ import { forkJoin } from 'rxjs';
         <div class="flex flex-col">
           <label>Fecha de devolución</label>
           <p-calendar name="fechaFinDate" [minDate]="minDate" [(ngModel)]="prestamo.fechaFinDate" dateFormat="yy-mm-dd" [showTime]="false"
-            appendTo="body" (ngModelChange)="onDateRangeChange()">
+            (ngModelChange)="onDateRangeChange()">
           </p-calendar>
         </div>
 
         <div class="flex flex-col">
           <label>Hora de devolución</label>
           <p-calendar name="fechaFinTime" [(ngModel)]="prestamo.fechaFinTime" timeOnly="true" hourFormat="24"
-            appendTo="body" [minDate]="minHora" [maxDate]="maxHora" (ngModelChange)="onDateRangeChange()">
+            [minDate]="minHora" [maxDate]="maxHora" (ngModelChange)="onDateRangeChange()">
           </p-calendar>
         </div>
       </div>
@@ -356,7 +356,8 @@ export class CatalogoEnLineaComponent {
     @ViewChild('filter') filter!: ElementRef;
     data: any[] = [];
     expandedRows = {};
-    detalle: any[] = [];
+    /** Detalles de ejemplares disponibles por id de biblioteca */
+    detallesPorBiblioteca: { [id: number]: any[] } = {};
     reservas: any[] = [];
     members = [
         { name: 'Amy Elsner', image: 'amyelsner.png', email: 'amy@email.com', role: 'Owner' },
@@ -446,9 +447,10 @@ export class CatalogoEnLineaComponent {
     ) { }
 
     async ngOnInit() {
-        this.user = { "idusuario": 0 };
+        // Tomamos el usuario autenticado del token para registrar la reserva
+        this.user = this.authService.getUser();
         this.listar();
-        this.detalle = [];
+        this.detallesPorBiblioteca = {};
     }
     listar() {
         // Recupera solo los registros en estado disponible (idEstado = 2)
@@ -488,19 +490,22 @@ export class CatalogoEnLineaComponent {
             .listarDetallesPorBiblioteca(row.id, false)
             .subscribe({
                 next: (lista: any[]) => {
-                    this.detalle = lista.filter(d =>
-                        (d.idEstado === 2 || d.estado?.descripcion === 'DISPONIBLE')
+                    this.detallesPorBiblioteca[row.id] = lista.filter(
+                        d => (d.idEstado === 2 || d.estado?.descripcion === 'DISPONIBLE')
                     );
                 },
                 error: () => {
-                    this.detalle = [];
+                    this.detallesPorBiblioteca[row.id] = [];
                     this.messageService.add({ severity: 'error', detail: 'Error al cargar detalles' });
                 }
             });
     }
 
     onRowCollapse(event: TableRowCollapseEvent) {
-        this.detalle = [];
+        const row = event.data;
+        if (row && row.id && this.detallesPorBiblioteca[row.id]) {
+            delete this.detallesPorBiblioteca[row.id];
+        }
     }
     cancelar(objeto: any) {
         this.reservas = this.reservas.filter(r => r !== objeto);
@@ -641,7 +646,7 @@ export class CatalogoEnLineaComponent {
             const payload = {
                 idDetalleBiblioteca: it.idDetalleBiblioteca ?? it.id,
                 idEstado: 3,
-                idUsuario: this.user?.idusuario ?? 0
+                idUsuario: this.user?.sub ?? this.user?.idusuario ?? 0
             };
             return this.genericoService.conf_event_put(payload, 'api/biblioteca/detalles/estado');
         });
