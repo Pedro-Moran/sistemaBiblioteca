@@ -1,6 +1,7 @@
 package com.miapp.service;
 
 import com.miapp.model.DetallePrestamo;
+import com.miapp.model.DetalleBiblioteca;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -70,6 +71,33 @@ public class EmailService {
                 + "Si necesitas más información, contacta con el administrador.\n\n"
                 + "Saludos,\n"
                 + "Tu App de Préstamos");
+        mailSender.send(msg);
+    }
+
+    public void sendMaterialConfirmation(DetalleBiblioteca detalle) {
+        SimpleMailMessage msg = new SimpleMailMessage();
+        msg.setFrom(from);
+        msg.setTo("moranpedro0398@gmail.com");
+        msg.setSubject("Confirmación de préstamo del material "
+                + detalle.getBiblioteca().getTitulo());
+        msg.setText("Tu préstamo ha sido registrado.\n" +
+                "Fecha devolución: " +
+                (detalle.getFechaFin() != null
+                        ? detalle.getFechaFin().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
+                        : "N/A"));
+        mailSender.send(msg);
+    }
+
+    public void sendMaterialRejection(DetalleBiblioteca detalle) {
+        SimpleMailMessage msg = new SimpleMailMessage();
+        msg.setFrom(from);
+        msg.setTo("moranpedro0398@gmail.com");
+        msg.setSubject("Solicitud de préstamo rechazada");
+        msg.setText("Hola " + detalle.getCodigoUsuario() + ",\n\n"
+                + "Tu solicitud del material “" + detalle.getBiblioteca().getTitulo()
+                + "” ha sido rechazada.\n\n"
+                + "Si necesitas más información, contacta con el administrador.\n\n"
+                + "Saludos,\nTu App de Préstamos");
         mailSender.send(msg);
     }
 }

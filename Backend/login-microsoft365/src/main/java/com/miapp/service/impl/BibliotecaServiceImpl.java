@@ -5,12 +5,15 @@ import com.miapp.model.*;
 import com.miapp.model.dto.*;
 import com.miapp.repository.*;
 import com.miapp.service.BibliotecaService;
+import com.miapp.service.EmailService;
+import com.miapp.service.NotificacionService;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -33,6 +36,8 @@ public class BibliotecaServiceImpl implements BibliotecaService {
     private final BibliotecaMapper mapper;
     private final OcurrenciaUsuarioRepository repoU;
     private final OcurrenciaMaterialRepository repoM;
+    private final NotificacionService notificacionService;
+    private final EmailService emailService;
 
     public BibliotecaServiceImpl(BibliotecaRepository bibliotecaRepository,
                                  TipoAdquisicionRepository tipoAdquisicionRepository,
@@ -45,7 +50,9 @@ public class BibliotecaServiceImpl implements BibliotecaService {
                                  DetalleBibliotecaRepository detalleBibliotecaRepository,
                                  BibliotecaMapper mapper,
                                  OcurrenciaUsuarioRepository repoU,
-                                 OcurrenciaMaterialRepository repoM) {
+                                 OcurrenciaMaterialRepository repoM,
+                                 NotificacionService notificacionService,
+                                 EmailService emailService) {
         this.bibliotecaRepository = bibliotecaRepository;
         this.tipoAdquisicionRepository  = tipoAdquisicionRepository;
         this.especialidadRepository = especialidadRepository;
@@ -58,6 +65,8 @@ public class BibliotecaServiceImpl implements BibliotecaService {
         this.mapper = mapper;
         this.repoU = repoU;
         this.repoM = repoM;
+        this.notificacionService = notificacionService;
+        this.emailService = emailService;
     }
 
     @Override
@@ -563,9 +572,34 @@ public class BibliotecaServiceImpl implements BibliotecaService {
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Detalle no encontrado: " + req.getIdDetalleBiblioteca()));
         detalle.setIdEstado(req.getIdEstado());
+        // Registramos el usuario que realiza la reserva en el campo codigoUsuario
+        // ya que el módulo de préstamos lo utiliza para identificar al solicitante
+        detalle.setCodigoUsuario(req.getIdUsuario());
+        if (req.getIdEstado() != null && req.getIdEstado() == 3L) {
+            // Al reservar registramos la fecha de solicitud/reserva
+            detalle.setFechaSolicitud(
+                    LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+            );
+        }
         detalle.setUsuarioModificacion(req.getIdUsuario());
         detalle.setFechaModificacion(LocalDateTime.now());
         detalleBibliotecaRepository.save(detalle);
+
+        if (Objects.equals(req.getIdEstado(), 4L)) {
+            notificacionService.crearNotificacion(
+                    detalle.getCodigoUsuario(),
+                    "Tu préstamo del material '" +
+                            detalle.getBiblioteca().getTitulo() + "' fue aprobado."
+            );
+            emailService.sendMaterialConfirmation(detalle);
+        } else if (Objects.equals(req.getIdEstado(), 2L)) {
+            notificacionService.crearNotificacion(
+                    detalle.getCodigoUsuario(),
+                    "Tu solicitud del material '" +
+                            detalle.getBiblioteca().getTitulo() + "' fue rechazada."
+            );
+            emailService.sendMaterialRejection(detalle);
+        }
 
         // 2) Busca si quedan otros detalles pendientes en esta misma biblioteca
         Biblioteca bib = detalle.getBiblioteca();

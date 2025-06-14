@@ -89,4 +89,10 @@ public class DetalleBibliotecaDTO {
 
     /** 20) ID de estado (Long) */
     private Long idEstado;
+
+    /** Nombre del usuario que reservó */
+    private String nombreUsuario;
+
+    /** Fecha de la reserva */
+    private String fechaReserva;
 }
