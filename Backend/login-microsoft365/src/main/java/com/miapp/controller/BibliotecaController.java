@@ -212,6 +212,12 @@ public class BibliotecaController {
         return ResponseEntity.ok(Map.of("status", 0, "data", bibliotecaService.reporteEjemplarMasPrestado()));
     }
 
+    /** Reporte: ejemplares que nunca fueron prestados */
+    @GetMapping("/reporte/ejemplar-no-prestados")
+    public ResponseEntity<?> reporteEjemplarNoPrestado() {
+        return ResponseEntity.ok(Map.of("status", 0, "data", bibliotecaService.reporteEjemplarNoPrestado()));
+    }
+
 
 
 }

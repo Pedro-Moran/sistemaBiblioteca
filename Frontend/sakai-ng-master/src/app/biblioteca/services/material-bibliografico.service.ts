@@ -1,5 +1,6 @@
 import { HttpClient, HttpHeaders, HttpParams  } from '@angular/common/http';
 import { EjemplarPrestadoDTO } from '../interfaces/reportes/ejemplar-prestado';
+import { EjemplarNoPrestadoDTO } from '../interfaces/reportes/ejemplar-no-prestado';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { AuthService } from './auth.service';
@@ -453,5 +454,11 @@ listarUsuariosOcurrencia(id: number): Observable<OcurrenciaUsuario[]> {
   reporteEjemplarMasPrestado(): Observable<EjemplarPrestadoDTO[]> {
     const headers = new HttpHeaders().set('Authorization', `Bearer ${this.authService.getToken()}`);
     return this.http.get<{ status: number; data: EjemplarPrestadoDTO[] }>(`${this.apiUrl}/api/biblioteca/reporte/ejemplar-mas-prestado`, { headers }).pipe(map(resp => resp.data));
+  }
+
+  /** Obtiene el reporte de ejemplares que nunca fueron prestados */
+  reporteEjemplarNoPrestado(): Observable<EjemplarNoPrestadoDTO[]> {
+    const headers = new HttpHeaders().set('Authorization', `Bearer ${this.authService.getToken()}`);
+    return this.http.get<{ status: number; data: EjemplarNoPrestadoDTO[] }>(`${this.apiUrl}/api/biblioteca/reporte/ejemplar-no-prestados`, { headers }).pipe(map(resp => resp.data));
   }
 }

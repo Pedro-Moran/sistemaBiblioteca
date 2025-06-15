@@ -235,6 +235,7 @@ public class BibliotecaServiceImpl implements BibliotecaService {
             e.setHoraFin(det.getHoraFin());
             e.setMaxHoras(det.getMaxHoras());
             e.setIdEstado(det.getIdEstado());
+            e.setCantidadPrestamos(det.getCantidadPrestamos() != null ? det.getCantidadPrestamos() : 0);
 
             // 6) Vínculo bidireccional
             e.setBiblioteca(b);
@@ -489,6 +490,7 @@ public class BibliotecaServiceImpl implements BibliotecaService {
 
                     // 14) Estado
                     tmp.setIdEstado(d.getIdEstado());
+                    tmp.setCantidadPrestamos(d.getCantidadPrestamos());
 
                     return tmp;
                 }).toList();
@@ -574,6 +576,8 @@ public class BibliotecaServiceImpl implements BibliotecaService {
         DetalleBiblioteca detalle = detalleBibliotecaRepository.findById(req.getIdDetalleBiblioteca())
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Detalle no encontrado: " + req.getIdDetalleBiblioteca()));
+
+        Long estadoAnterior = detalle.getIdEstado();
         detalle.setIdEstado(req.getIdEstado());
         // Registramos el usuario que realiza la reserva en el campo codigoUsuario
         // ya que el módulo de préstamos lo utiliza para identificar al solicitante
@@ -589,19 +593,30 @@ public class BibliotecaServiceImpl implements BibliotecaService {
         detalleBibliotecaRepository.save(detalle);
 
         if (Objects.equals(req.getIdEstado(), 4L)) {
+            // Incrementa el contador de préstamos del ejemplar
+            Integer veces = detalle.getCantidadPrestamos();
+            detalle.setCantidadPrestamos(veces == null ? 1 : veces + 1);
+            detalleBibliotecaRepository.save(detalle);
+
             notificacionService.crearNotificacion(
                     detalle.getCodigoUsuario(),
                     "Tu préstamo del material '" +
                             detalle.getBiblioteca().getTitulo() + "' fue aprobado."
             );
-            emailService.sendMaterialConfirmation(detalle);
+
+            if (Objects.equals(estadoAnterior, 3L)) {
+                emailService.sendMaterialConfirmation(detalle);
+            }
         } else if (Objects.equals(req.getIdEstado(), 2L)) {
             notificacionService.crearNotificacion(
                     detalle.getCodigoUsuario(),
                     "Tu solicitud del material '" +
                             detalle.getBiblioteca().getTitulo() + "' fue rechazada."
             );
-            emailService.sendMaterialRejection(detalle);
+
+            if (Objects.equals(estadoAnterior, 3L)) {
+                emailService.sendMaterialRejection(detalle);
+            }
         }
 
         // 2) Busca si quedan otros detalles pendientes en esta misma biblioteca
@@ -696,6 +711,11 @@ public class BibliotecaServiceImpl implements BibliotecaService {
     @Override
     public List<EjemplarPrestadoDTO> reporteEjemplarMasPrestado() {
         return ocurrenciaBibliotecaRepository.reporteEjemplarMasPrestado();
+    }
+
+    @Override
+    public List<EjemplarNoPrestadoDTO> reporteEjemplarNoPrestado() {
+        return ocurrenciaBibliotecaRepository.reporteEjemplarNoPrestado();
     }
 
 

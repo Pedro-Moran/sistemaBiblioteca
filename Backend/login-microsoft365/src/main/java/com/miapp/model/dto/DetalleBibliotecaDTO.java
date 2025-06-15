@@ -90,6 +90,9 @@ public class DetalleBibliotecaDTO {
     /** 20) ID de estado (Long) */
     private Long idEstado;
 
+    /** Número de préstamos realizados */
+    private Integer cantidadPrestamos;
+
     /** Nombre del usuario que reservó */
     private String nombreUsuario;
 

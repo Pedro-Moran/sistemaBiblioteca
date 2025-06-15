@@ -321,6 +321,7 @@ public class BibliotecaMapper {
         tmp.setUsuarioModificacion(d.getUsuarioModificacion());
         tmp.setFechaModificacion(d.getFechaModificacion());
         tmp.setIdEstado(d.getIdEstado());
+        tmp.setCantidadPrestamos(d.getCantidadPrestamos());
         tmp.setFechaReserva(d.getFechaSolicitud());
 
         return tmp;
