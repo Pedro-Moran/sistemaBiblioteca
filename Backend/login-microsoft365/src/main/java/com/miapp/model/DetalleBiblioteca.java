@@ -103,6 +103,9 @@ public class DetalleBiblioteca {
     @Column(name = "USUARIOPRESTAMO", length = 80)
     private String usuarioPrestamo;      // quién procesó el préstamo
 
+    @Column(name = "CANTIDADPRESTAMOS")
+    private Integer cantidadPrestamos = 0;  // número de veces que se prestó
+
     @Column(name = "USUARIOCREACION", length = 30)
     private String usuarioCreacion;
 

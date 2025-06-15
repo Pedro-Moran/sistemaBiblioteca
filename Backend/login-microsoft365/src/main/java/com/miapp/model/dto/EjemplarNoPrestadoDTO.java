@@ -1,17 +1,18 @@
 package com.miapp.model.dto;
 
-public class EjemplarPrestadoDTO {
+/**
+ * DTO para ejemplares que no han sido prestados.
+ */
+public class EjemplarNoPrestadoDTO {
     private Long idDetalle;
     private String titulo;
-    private Integer totalPrestamos;
 
-    public EjemplarPrestadoDTO() {
+    public EjemplarNoPrestadoDTO() {
     }
 
-    public EjemplarPrestadoDTO(Long idDetalle, String titulo, Integer totalPrestamos) {
+    public EjemplarNoPrestadoDTO(Long idDetalle, String titulo) {
         this.idDetalle = idDetalle;
         this.titulo = titulo;
-        this.totalPrestamos = totalPrestamos;
     }
 
     public Long getIdDetalle() {
@@ -28,13 +29,5 @@ public class EjemplarPrestadoDTO {
 
     public void setTitulo(String titulo) {
         this.titulo = titulo;
-    }
-
-    public Integer getTotalPrestamos() {
-        return totalPrestamos;
-    }
-
-    public void setTotalPrestamos(Integer totalPrestamos) {
-        this.totalPrestamos = totalPrestamos;
     }
 }

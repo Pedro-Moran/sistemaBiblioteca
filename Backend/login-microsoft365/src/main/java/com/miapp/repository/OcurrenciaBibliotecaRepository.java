@@ -3,6 +3,7 @@ package com.miapp.repository;
 import com.miapp.model.OcurrenciaBiblioteca;
 import org.springframework.data.jpa.repository.JpaRepository;
 import com.miapp.model.dto.EjemplarPrestadoDTO;
+import com.miapp.model.dto.EjemplarNoPrestadoDTO;
 import org.springframework.data.jpa.repository.Query;
 import java.util.List;
 
@@ -25,13 +26,24 @@ public interface OcurrenciaBibliotecaRepository
     @Query(
             "SELECT new com.miapp.model.dto.EjemplarPrestadoDTO(" +
             " d.idDetalle," +
-            " cast(function('DBMS_LOB.SUBSTR', b.titulo, 4000, 1) as string)," +
-            " COUNT(o.id)" +
+            " b.titulo," +
+            " coalesce(d.cantidadPrestamos, 0)" +
             ") " +
-            "FROM OcurrenciaBiblioteca o " +
-            "JOIN o.detalleBiblioteca d " +
-            "JOIN d.biblioteca b " +
-            "GROUP BY d.idDetalle, cast(function('DBMS_LOB.SUBSTR', b.titulo, 4000, 1) as string) " +
-            "ORDER BY COUNT(o.id) DESC")
+            "FROM DetalleBiblioteca d JOIN d.biblioteca b " +
+            "WHERE coalesce(d.cantidadPrestamos, 0) > 0 " +
+            "ORDER BY d.idDetalle DESC")
     List<EjemplarPrestadoDTO> reporteEjemplarMasPrestado();
+
+    /**
+     * Devuelve los ejemplares de material bibliográfico que nunca se han prestado.
+     */
+    @Query(
+            "SELECT new com.miapp.model.dto.EjemplarNoPrestadoDTO(" +
+            " d.idDetalle," +
+            " b.titulo" +
+            ") " +
+            "FROM DetalleBiblioteca d " +
+            "JOIN d.biblioteca b " +
+            "WHERE coalesce(d.cantidadPrestamos,0) = 0")
+    List<EjemplarNoPrestadoDTO> reporteEjemplarNoPrestado();
 }

@@ -7,6 +7,7 @@ import com.miapp.model.dto.CambioEstadoBibliotecaRequest;
 import com.miapp.model.dto.DetalleBibliotecaDTO;
 import com.miapp.model.dto.ResponseDTO;
 import com.miapp.model.dto.EjemplarPrestadoDTO;
+import com.miapp.model.dto.EjemplarNoPrestadoDTO;
 import jakarta.transaction.Transactional;
 
 import java.util.List;
@@ -29,4 +30,7 @@ public interface BibliotecaService {
 
     /** Reporte de ejemplares más prestados */
     List<EjemplarPrestadoDTO> reporteEjemplarMasPrestado();
+
+    /** Reporte de ejemplares que nunca fueron prestados */
+    List<EjemplarNoPrestadoDTO> reporteEjemplarNoPrestado();
 }
