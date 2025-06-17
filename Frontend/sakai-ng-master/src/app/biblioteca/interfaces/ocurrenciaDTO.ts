@@ -12,6 +12,8 @@ export interface OcurrenciaDTO {
   numeroPago?:       number;
   tipoOcurrencia?:   number;
   usuarioCreacion:   string;
+  /** Login del usuario principal asociado a la ocurrencia */
+  codigoUsuario?:   string;
   sedePrestamo?:   string;
   equipoNombre?:    string;
     equipoNumero?:    number;
@@ -24,4 +26,6 @@ export interface OcurrenciaDTO {
   sede?: string;
   /** Descripción del tipo de material */
   tipoMaterial?: string;
+  /** Estado del costo */
+  estadoCosto?: number;
   }

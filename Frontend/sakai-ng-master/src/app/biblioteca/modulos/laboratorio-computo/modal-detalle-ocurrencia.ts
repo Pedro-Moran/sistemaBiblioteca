@@ -150,7 +150,8 @@ import { OcurrenciaMaterialDTO } from '../../interfaces/OcurrenciaMaterialDTO';
 
 
                 <div class="flex justify-center mt-4">
-                <p-button label="OCURRENCIA PENDIENTE DE COSTO" severity="danger" text />
+                <p-button *ngIf="detalle?.estadoCosto !== 1" label="OCURRENCIA PENDIENTE DE COSTO" severity="danger" text />
+                <p-button *ngIf="detalle?.estadoCosto === 1" label="COSTEADA" severity="success" text />
 
 </div>
     }@else {
@@ -274,6 +275,9 @@ constructor(private fb: FormBuilder,private genericoService: GenericoService, pr
             next: () => {
               this.messageService.add({ severity: 'success', detail: 'Costos guardados.' });
               this.guardado = true;
+              if (this.detalle) {
+                this.detalle.estadoCosto = 1;
+              }
               this.loading = false;
             },
             error: () => {

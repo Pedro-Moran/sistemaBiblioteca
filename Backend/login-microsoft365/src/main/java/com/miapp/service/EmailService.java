@@ -100,4 +100,13 @@ public class EmailService {
                 + "Saludos,\nTu App de Préstamos");
         mailSender.send(msg);
     }
+
+    public void sendOcurrenciaCosteada(String to, Long idOcurrencia) {
+        SimpleMailMessage msg = new SimpleMailMessage();
+        msg.setFrom(from);
+        msg.setTo(to);
+        msg.setSubject("Ocurrencia " + idOcurrencia + " costeada");
+        msg.setText("Se registró el costo de la ocurrencia " + idOcurrencia + ".");
+        mailSender.send(msg);
+    }
 }

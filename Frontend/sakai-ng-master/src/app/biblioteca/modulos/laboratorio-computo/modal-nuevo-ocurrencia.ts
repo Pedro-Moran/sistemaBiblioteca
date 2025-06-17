@@ -194,6 +194,8 @@ export class ModalNuevoOcurencia implements OnInit {
   idDetallePrestamo: number | null = null;
   /** Guarda el objeto original enviado al abrir el modal */
   sourceItem: any = null;
+  /** Código del usuario principal relacionado a la ocurrencia */
+  codigoUsuario: string | null = null;
 
 constructor(private fb: FormBuilder,
         private auth: AuthService,private genericoService: GenericoService, private materialBibliograficoService: MaterialBibliograficoService, private confirmationService: ConfirmationService, private messageService: MessageService) {
@@ -216,6 +218,7 @@ constructor(private fb: FormBuilder,
     this.sourceItem          = objeto;
     this.idDetallePrestamo   = objeto.idDetallePrestamo ?? null;
     this.idDetalleBiblioteca = objeto.idDetalleBiblioteca ?? null;
+    this.codigoUsuario       = objeto.codigoUsuario ?? null;
     const idDetectado =
       this.idDetallePrestamo != null
         ? this.idDetallePrestamo
@@ -282,7 +285,8 @@ constructor(private fb: FormBuilder,
     const dto: OcurrenciaDTO = {
       sedePrestamo:    this.form.value.sedePrestamo,
       descripcion:     this.form.value.descripcion,
-      usuarioCreacion: this.form.value.usuarioCreacion
+      usuarioCreacion: this.form.value.usuarioCreacion,
+      codigoUsuario:   this.codigoUsuario ?? undefined
     };
     if (this.idDetallePrestamo != null) {
       dto.idDetallePrestamo = this.idDetallePrestamo;
@@ -343,6 +347,7 @@ openForEdit(ocurrencia: OcurrenciaDTO) {
   this.idNormalizado = ocurrencia.id!;
   this.idDetallePrestamo   = ocurrencia.idDetallePrestamo ?? null;
   this.idDetalleBiblioteca = ocurrencia.idDetalleBiblioteca ?? null;
+  this.codigoUsuario       = ocurrencia.codigoUsuario ?? null;
   this.form.patchValue({
     id:                ocurrencia.id,
     fechaCreacion:     ocurrencia.fechaCreacion ? new Date(ocurrencia.fechaCreacion) : null,
@@ -356,9 +361,10 @@ openForEdit(ocurrencia: OcurrenciaDTO) {
       .getDetallePrestamo(ocurrencia.idDetallePrestamo)
       .subscribe(dp => {
         // Tabla de estudiantes:
+        this.codigoUsuario = dp.codigoUsuario;
         this.involucrados = [{
-          login: dp.codigoUsuario,
-          email: dp.usuarioPrestamo
+          codigoUsuario: dp.codigoUsuario,
+          tipoUsuario:   (dp as any).tipoUsuario
         }];
 
         // Tabla de materiales:
@@ -389,6 +395,9 @@ openForEdit(ocurrencia: OcurrenciaDTO) {
       .listarUsuariosOcurrencia(this.idNormalizado)
       .subscribe((list) => {
         this.involucrados = list;
+        if (!this.codigoUsuario && list.length > 0) {
+          this.codigoUsuario = list[0].codigoUsuario;
+        }
       });
   }
 
@@ -425,7 +434,10 @@ openForEdit(ocurrencia: OcurrenciaDTO) {
         codigoUsuario: u.codigoUsuario,
         tipoUsuario: u.tipoUsuario
       })
-      .subscribe(() => this.loadInvolucrados());
+      .subscribe(() => {
+        this.codigoUsuario = this.codigoUsuario ?? u.codigoUsuario;
+        this.loadInvolucrados();
+      });
   }
 
       /** Y aquí defines el shape del equipo seleccionado */

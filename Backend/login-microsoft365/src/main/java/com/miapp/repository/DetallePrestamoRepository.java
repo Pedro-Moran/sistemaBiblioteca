@@ -15,6 +15,14 @@ public interface DetallePrestamoRepository
     List<DetallePrestamo> findByEstado_Descripcion(String descripcionEstado);
     List<DetallePrestamo> findByEstadoDescripcionIgnoreCase(String descripcion);
     List<DetallePrestamo> findByCodigoUsuario(String codigoUsuario);
+    /** Devuelve los préstamos del usuario que aún no fueron recepcionados */
+    List<DetallePrestamo> findByCodigoUsuarioAndFechaRecepcionIsNull(String codigoUsuario);
+
+    /** Variante sin distinguir mayúsculas/minúsculas */
+    List<DetallePrestamo> findByCodigoUsuarioIgnoreCase(String codigoUsuario);
+
+    /** Variante para pendientes sin distinguir mayúsculas/minúsculas */
+    List<DetallePrestamo> findByCodigoUsuarioIgnoreCaseAndFechaRecepcionIsNull(String codigoUsuario);
     List<DetallePrestamo> findByCodigoSedeAndEstado_DescripcionIgnoreCase(
             String codigoSede,
             String descripcionEstado

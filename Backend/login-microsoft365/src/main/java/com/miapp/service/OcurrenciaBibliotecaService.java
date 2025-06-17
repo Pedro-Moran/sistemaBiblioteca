@@ -22,4 +22,13 @@ public interface OcurrenciaBibliotecaService {
 
     List<OcurrenciaMaterialDTO> listarMaterialesDeOcurrencia(Long idOcurrencia);
     void costearMateriales(Long idOcurrencia, List<MaterialCostDTO> costos);
+
+    /** Devuelve las ocurrencias registradas para el usuario indicado */
+    List<OcurrenciaBibliotecaDTO> listarPorUsuario(String codigoUsuario);
+
+    /** Lista ocurrencias que ya cuentan con costo registrado */
+    List<OcurrenciaBibliotecaDTO> listarCosteadas();
+
+    /** Actualiza el estado de regularización de una ocurrencia */
+    OcurrenciaBibliotecaDTO actualizarRegulariza(Long id, Integer regulariza);
 }

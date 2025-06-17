@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import com.miapp.model.dto.EjemplarPrestadoDTO;
 import com.miapp.model.dto.EjemplarNoPrestadoDTO;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import java.util.List;
 
 public interface OcurrenciaBibliotecaRepository
@@ -18,6 +19,35 @@ public interface OcurrenciaBibliotecaRepository
 
     /** Lista todas las ocurrencias ordenadas de forma descendente */
     List<OcurrenciaBiblioteca> findAllByOrderByIdDesc();
+
+    /** Ocurrencias registradas para un usuario dado */
+    List<OcurrenciaBiblioteca> findByCodigoUsuario(String codigoUsuario);
+
+    /**
+     * Búsqueda sin diferenciar mayúsculas/minúsculas del código de usuario.
+     */
+    List<OcurrenciaBiblioteca> findByCodigoUsuarioIgnoreCase(String codigoUsuario);
+
+    /** Obtiene solo las ocurrencias pendientes de un usuario (sin regularizar ni anuladas) */
+    @Query("SELECT o FROM OcurrenciaBiblioteca o " +
+           "WHERE lower(o.codigoUsuario) = lower(:codigoUsuario) " +
+           "AND (o.regulariza IS NULL OR o.regulariza = 0) " +
+           "AND (o.anulado IS NULL OR o.anulado = 0)")
+    List<OcurrenciaBiblioteca> findPendientesByCodigoUsuarioIgnoreCase(@Param("codigoUsuario") String codigoUsuario);
+
+    /**
+     * Variante que devuelve tanto pendientes sin costear como aquellas ya
+     * costeadas pero que siguen sin regularizar, ordenadas por fecha.
+     */
+    @Query("SELECT o FROM OcurrenciaBiblioteca o " +
+           "WHERE lower(o.codigoUsuario) = lower(:codigoUsuario) " +
+           "AND (o.anulado IS NULL OR o.anulado = 0) " +
+           "AND (o.regulariza IS NULL OR o.regulariza = 0) " +
+           "ORDER BY o.fechaOcurrencia DESC")
+    List<OcurrenciaBiblioteca> findActivasByCodigoUsuarioIgnoreCase(@Param("codigoUsuario") String codigoUsuario);
+
+    /** Obtiene las ocurrencias que ya fueron costeadas */
+    List<OcurrenciaBiblioteca> findByEstadoCostoOrderByIdDesc(Integer estadoCosto);
 
     /**
      * Devuelve los ejemplares de material bibliográfico más prestados

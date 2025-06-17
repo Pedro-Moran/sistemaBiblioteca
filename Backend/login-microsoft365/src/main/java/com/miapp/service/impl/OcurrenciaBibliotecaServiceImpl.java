@@ -6,7 +6,10 @@ import com.miapp.model.dto.OcurrenciaBibliotecaDTO;
 import com.miapp.model.dto.OcurrenciaMaterialDTO;
 import com.miapp.model.dto.OcurrenciaUsuarioDTO;
 import com.miapp.repository.*;
+import com.miapp.service.EmailService;
+import com.miapp.service.NotificacionService;
 import com.miapp.service.OcurrenciaBibliotecaService;
+import com.miapp.repository.UsuarioRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +32,9 @@ public class OcurrenciaBibliotecaServiceImpl implements OcurrenciaBibliotecaServ
     private final OcurrenciaUsuarioRepository repoU;
     private final OcurrenciaMaterialRepository repoM;
     private final EquipoRepository equipoRepo;
+    private final UsuarioRepository usuarioRepository;
+    private final EmailService emailService;
+    private final NotificacionService notificacionService;
 
     @Override
     public OcurrenciaBibliotecaDTO crear(OcurrenciaBibliotecaDTO dto) {
@@ -104,6 +110,14 @@ public class OcurrenciaBibliotecaServiceImpl implements OcurrenciaBibliotecaServ
     }
 
     @Override
+    public List<OcurrenciaBibliotecaDTO> listarPorUsuario(String codigoUsuario) {
+        return repo.findByCodigoUsuarioIgnoreCase(codigoUsuario)
+                .stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public OcurrenciaBibliotecaDTO buscarPorId(Long id) {
         return repo.findById(id).map(this::toDTO).orElse(null);
     }
@@ -134,7 +148,8 @@ public class OcurrenciaBibliotecaServiceImpl implements OcurrenciaBibliotecaServ
         }
         dto.setCodigoLocalizacion(e.getCodigoLocalizacion());
         dto.setCodigoUsuario(e.getCodigoUsuario());
-        dto.setCosto(e.getCosto());
+        // calcular costo total sumando los materiales registrados
+        dto.setCosto(repoM.sumCostoByOcurrencia(e.getId()));
         dto.setDescripcion(e.getDescripcion());
         dto.setDescripcionRegulariza(e.getDescripcionRegulariza());
         dto.setEstadoCosto(e.getEstadoCosto());
@@ -169,7 +184,16 @@ public class OcurrenciaBibliotecaServiceImpl implements OcurrenciaBibliotecaServ
         u.setIdocurrencia(idOcurrencia);
         u.setCodigoUsuario(codigoUsuario);
         u.setTipoUsuario(tipo);
-        return repoU.save(u);
+        OcurrenciaUsuario saved = repoU.save(u);
+
+        // si la ocurrencia no tenía código de usuario principal, lo actualizamos
+        OcurrenciaBiblioteca oc = repo.findById(idOcurrencia).orElse(null);
+        if (oc != null && (oc.getCodigoUsuario() == null || oc.getCodigoUsuario().isBlank())) {
+            oc.setCodigoUsuario(codigoUsuario);
+            repo.save(oc);
+        }
+
+        return saved;
     }
     public OcurrenciaMaterial saveMaterial(Long idOcurrencia, Long idEquipo, Integer cantidad) {
         OcurrenciaMaterial m = new OcurrenciaMaterial();
@@ -332,5 +356,39 @@ public class OcurrenciaBibliotecaServiceImpl implements OcurrenciaBibliotecaServ
             m.setCostoUnitario(dto.costoUnitario());
             repoM.save(m);
         });
+
+        OcurrenciaBiblioteca oc = repo.findById(idOcurrencia)
+                .orElseThrow(() -> new EntityNotFoundException("Ocurrencia " + idOcurrencia + " no encontrada"));
+        oc.setEstadoCosto(1);
+        oc.setFechaCosto(LocalDateTime.now());
+        repo.save(oc);
+
+        List<OcurrenciaUsuario> usuarios = repoU.findByIdocurrencia(idOcurrencia);
+        for (OcurrenciaUsuario u : usuarios) {
+            String login = u.getCodigoUsuario();
+            usuarioRepository.findByLogin(login).ifPresent(user ->
+                    emailService.sendOcurrenciaCosteada(user.getEmail(), idOcurrencia));
+            notificacionService.crearNotificacion(login,
+                    "Ocurrencia " + idOcurrencia + " costeada");
+        }
+    }
+
+    @Override
+    public List<OcurrenciaBibliotecaDTO> listarCosteadas() {
+        return repo.findByEstadoCostoOrderByIdDesc(1)
+                .stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public OcurrenciaBibliotecaDTO actualizarRegulariza(Long id, Integer regulariza) {
+        OcurrenciaBiblioteca oc = repo.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Ocurrencia " + id + " no encontrada"));
+        oc.setRegulariza(regulariza);
+        oc.setFechaModificacion(LocalDateTime.now());
+        repo.save(oc);
+        return toDTO(oc);
     }
 }

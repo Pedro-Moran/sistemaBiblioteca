@@ -87,4 +87,21 @@ public class OcurrenciaBibliotecaController {
         return ResponseEntity.ok().build();
     }
 
+    @GetMapping("/usuario/{codigo}")
+    public ResponseEntity<List<OcurrenciaBibliotecaDTO>> listarPorUsuario(@PathVariable String codigo) {
+        return ResponseEntity.ok(svc.listarPorUsuario(codigo));
+    }
+
+    @GetMapping("/costeadas")
+    public ResponseEntity<List<OcurrenciaBibliotecaDTO>> listarCosteadas() {
+        return ResponseEntity.ok(svc.listarCosteadas());
+    }
+
+    @PutMapping("/{id}/regulariza")
+    public ResponseEntity<OcurrenciaBibliotecaDTO> actualizarRegulariza(
+            @PathVariable Long id,
+            @RequestParam("valor") Integer valor) {
+        return ResponseEntity.ok(svc.actualizarRegulariza(id, valor));
+    }
+
 }
