@@ -35,6 +35,16 @@ public class OcurrenciaBibliotecaController {
         return ResponseEntity.ok(svc.listarTodas());
     }
 
+    @GetMapping("/materiales")
+    public ResponseEntity<List<OcurrenciaBibliotecaDTO>> listarMateriales() {
+        return ResponseEntity.ok(svc.listarMateriales());
+    }
+
+    @GetMapping("/equipos")
+    public ResponseEntity<List<OcurrenciaBibliotecaDTO>> listarEquipos() {
+        return ResponseEntity.ok(svc.listarEquipos());
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<OcurrenciaBibliotecaDTO> obtener(@PathVariable Long id) {
         OcurrenciaBibliotecaDTO dto = svc.buscarPorId(id);
@@ -75,6 +85,23 @@ public class OcurrenciaBibliotecaController {
             @RequestBody List<MaterialCostDTO> costos) {
         svc.costearMateriales(id, costos);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/usuario/{codigo}")
+    public ResponseEntity<List<OcurrenciaBibliotecaDTO>> listarPorUsuario(@PathVariable String codigo) {
+        return ResponseEntity.ok(svc.listarPorUsuario(codigo));
+    }
+
+    @GetMapping("/costeadas")
+    public ResponseEntity<List<OcurrenciaBibliotecaDTO>> listarCosteadas() {
+        return ResponseEntity.ok(svc.listarCosteadas());
+    }
+
+    @PutMapping("/{id}/regulariza")
+    public ResponseEntity<OcurrenciaBibliotecaDTO> actualizarRegulariza(
+            @PathVariable Long id,
+            @RequestParam("valor") Integer valor) {
+        return ResponseEntity.ok(svc.actualizarRegulariza(id, valor));
     }
 
 }

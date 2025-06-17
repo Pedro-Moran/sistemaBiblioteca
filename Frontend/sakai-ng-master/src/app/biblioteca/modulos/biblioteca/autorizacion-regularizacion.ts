@@ -50,7 +50,7 @@ import { ModalRegularizaOcurencia } from './modal-regulariza-ocurrencia';
                         [showCurrentPageReport]="true"
                         currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} registros"
                         [rowsPerPageOptions]="[10, 25, 50]" [loading]="loading" [rowHover]="true" styleClass="p-datatable-gridlines" [paginator]="true" 
-                        [globalFilterFields]="['id','codigo','codTrabajador','nombres']" responsiveLayout="scroll">
+                        [globalFilterFields]="['id','codigoUsuario','idEjemplar']" responsiveLayout="scroll">
                         <ng-template pTemplate="caption">
                        
                        <div class="flex items-center justify-between">
@@ -64,9 +64,8 @@ import { ModalRegularizaOcurencia } from './modal-regulariza-ocurrencia';
                             <ng-template pTemplate="header">
                                 <tr>
                                     <th style="width: 4rem"></th>
-                                <th pSortableColumn="codigo" style="width: 4rem">Codigo<p-sortIcon field="codigo"></p-sortIcon></th>
-                                <th pSortableColumn="codTrabajador" style="min-width:200px">Usuario<p-sortIcon field="codTrabajador"></p-sortIcon></th>
-                                    <th pSortableColumn="nombres" style="min-width:200px">ID Ejemplar<p-sortIcon field="nombres"></p-sortIcon></th>
+                                <th pSortableColumn="codigoUsuario" style="width: 6rem">Código<p-sortIcon field="codigoUsuario"></p-sortIcon></th>
+                                <th pSortableColumn="idEjemplar" style="min-width:200px">ID Ejemplar<p-sortIcon field="idEjemplar"></p-sortIcon></th>
                                     <th style="width: 4rem"></th>
                                 </tr>
                             </ng-template>
@@ -74,24 +73,20 @@ import { ModalRegularizaOcurencia } from './modal-regulariza-ocurrencia';
                                 <tr> 
                                     <td>
                                         <div class="flex flex-wrap justify-center gap-2">
-                                            @if(objeto.activo==true){
-                                                <p-button outlined severity="success" icon="pi pi-check-circle" pTooltip="Autorizado" tooltipPosition="bottom" (click)="estado()"/>
+                                            @if(objeto.regulariza==1){
+                                                <p-button outlined severity="success" icon="pi pi-check-circle" pTooltip="Autorizado" tooltipPosition="bottom" (click)="estado(objeto,0)"/>
                                             }@else {
-                                                <p-button outlined icon="pi pi-check-circle" pTooltip="No autorizado" tooltipPosition="bottom" (click)="estado()"/>
+                                                <p-button outlined icon="pi pi-check-circle" pTooltip="No autorizado" tooltipPosition="bottom" (click)="estado(objeto,1)"/>
                                             }
                                             
                                         </div>
                                     </td> 
-                                <td>{{objeto.codigo}}
+                                <td>{{objeto.codigoUsuario}}
                                     </td>
                                     <td>
-                                        {{objeto.codTrabajador}}
-                                       
-                                    </td>	
-                                    <td>
-                                        {{objeto.nombres}}
-                                       
-                                    </td>	
+                                        {{objeto.idEjemplar}}
+
+                                    </td>
                                     <td>
                                         <div class="flex flex-wrap justify-center gap-2">
                                             <p-button outlined icon="pi pi-align-justify" pTooltip="Más información" tooltipPosition="bottom" (click)="verDetalle()"/>
@@ -145,18 +140,17 @@ export class AutorizacionRegularizacion {
         this.buscar();
     }
     buscar(){
-        this.ocurrenciasService.api_autorizacion_regularizacion('')
-              .subscribe(
-                (result: any) => {
+        this.loading = true;
+        this.ocurrenciasService.api_autorizacion_regularizacion()
+              .subscribe({
+                next: (lista) => {
+                  this.data = [...lista].sort((a:any,b:any)=> (b.id ?? 0) - (a.id ?? 0));
                   this.loading = false;
-                  if (result.status == "0") {
-                    this.data = result.data;
-                  }
-                }
-                , (error: HttpErrorResponse) => {
+                },
+                error: () => {
                   this.loading = false;
                 }
-              );
+              });
     }
     
       onGlobalFilter(table: Table, event: Event) {
@@ -167,7 +161,7 @@ export class AutorizacionRegularizacion {
         table.clear();
         this.filter.nativeElement.value = '';
       }
-      estado(){
+      estado(obj: any, valor: number){
         this.confirmationService.confirm({
             message: '¿Estás seguro(a) de cambiar estado?',
             header: 'Confirmar',
@@ -176,9 +170,17 @@ export class AutorizacionRegularizacion {
             rejectLabel: 'NO',
             accept: () => {
                 this.loading = true;
-                //registrar nueva especiadad
-                this.messageService.add({ severity: 'success', summary: 'Satisfactorio', detail: 'Estado actualizado.' });
-                this.loading = false;
+                this.ocurrenciasService.api_actualizar_regulariza(obj.id, valor)
+                  .subscribe({
+                    next: () => {
+                      obj.regulariza = valor;
+                      this.messageService.add({ severity: 'success', summary: 'Satisfactorio', detail: 'Estado actualizado.' });
+                      this.loading = false;
+                    },
+                    error: () => {
+                      this.loading = false;
+                    }
+                  });
             }
         });
       }

@@ -25,6 +25,14 @@ import { BibliotecaDTO } from '../../../interfaces/material-bibliografico/biblio
 import { DetalleBibliotecaDTO } from '../../../interfaces/material-bibliografico/DetalleBibliotecaDTO';
 import { GrupoBiblioteca, BibliotecaResumen } from '../../../interfaces/material-bibliografico/grupo-biblioteca.model';
 
+interface ReservaUsuario {
+  codigoUsuario: string;
+  nombreUsuario: string;
+  tipoPrestamo: string | null;
+  cantidad: number;
+  detalles: DetalleBibliotecaDTO[];
+}
+
 @Component({
     selector: 'app-aceptaciones',
     standalone: true,
@@ -77,12 +85,12 @@ import { GrupoBiblioteca, BibliotecaResumen } from '../../../interfaces/material
         </p-toolbar>
 
                         <p-table #dt1 [value]="reservadosDetalle"
-                                           dataKey="idDetalleBiblioteca" [rows]="10"
+                                           dataKey="codigoUsuario" [rows]="10"
                         [showCurrentPageReport]="true"
                         [expandedRowKeys]="expandedRows" (onRowExpand)="onRowExpand($event)" (onRowCollapse)="onRowCollapse($event)"
                         currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} registros"
                         [rowsPerPageOptions]="[10, 25, 50]" [loading]="loading" [rowHover]="true" styleClass="p-datatable-gridlines" [paginator]="true"
-                        [globalFilterFields]="['id','sede.descripcion','nombreEquipo','numeroEquipo','ip','estado.descripcion']" responsiveLayout="scroll">
+                        [globalFilterFields]="['nombreUsuario','tipoPrestamo']" responsiveLayout="scroll">
                         <ng-template pTemplate="caption">
 
                        <div class="flex items-center justify-between">
@@ -97,7 +105,7 @@ import { GrupoBiblioteca, BibliotecaResumen } from '../../../interfaces/material
                                 <tr>
                                 <th style="width: 5rem"></th>
                                     <th ></th>
-                                    <th pSortableColumn="nombres" style="min-width:200px">Apellidos y Nombres<p-sortIcon field="nombres"></p-sortIcon></th>
+                                    <th pSortableColumn="nombreUsuario" style="min-width:200px">Apellidos y Nombres<p-sortIcon field="nombreUsuario"></p-sortIcon></th>
                                  <th pSortableColumn="tipo.descripcion" style="width: 8rem">Tipo<p-sortIcon field="tipo.descripcion"></p-sortIcon></th>
                                     <th pSortableColumn="cantidad" style="width: 4rem">Cantidad<p-sortIcon field="cantidad"></p-sortIcon></th>
 
@@ -113,7 +121,7 @@ import { GrupoBiblioteca, BibliotecaResumen } from '../../../interfaces/material
                                 <!--<img [src]="objeto.foto" [alt]="objeto.nombres" width="50" class="shadow-lg" />-->
 
                                     </td>
-                                <td>{{detalle.codigoUsuario}}
+                                <td>{{detalle.nombreUsuario}}
                                     </td>
                                     <td>
                                         {{detalle.tipoPrestamo}}
@@ -131,15 +139,14 @@ import { GrupoBiblioteca, BibliotecaResumen } from '../../../interfaces/material
 
 
                             <p-table
-    [value]="[ detalle.biblioteca ]"
+    [value]="detalle.detalles"
     showGridlines
     [tableStyle]="{ 'min-width': '50rem' }">
         <ng-template pTemplate="header">
             <tr>
-                <th>Coleccion</th>
-                <th>Codigo</th>
+                <th>Título</th>
+                <th>Código</th>
                 <th>N.I</th>
-                <th>Titulo</th>
                 <th>Fecha de reserva</th>
                 <th>Prestar</th>
                 <th>Cancelar</th>
@@ -147,10 +154,9 @@ import { GrupoBiblioteca, BibliotecaResumen } from '../../../interfaces/material
         </ng-template>
         <ng-template pTemplate="body" let-bib>
             <tr>
-                <td>{{ bib.titulo || '-' }}</td>
+                <td>{{ bib.biblioteca?.titulo || '-' }}</td>
                 <td>{{ bib.biblioteca?.id }}</td>
                 <td>{{ bib.numeroIngreso }}</td>
-                <td>{{ bib.titulo }}</td>
                 <td>{{ bib.fechaReserva }}</td>
                 <td>
                    <p-button icon="pi pi-check" rounded outlined (click)="prestar(bib)"pTooltip="Prestar" tooltipPosition="bottom"/>
@@ -210,8 +216,8 @@ export class PrestamoMaterialBibliografico implements OnInit {
     opcionFiltro: ClaseGeneral = new ClaseGeneral();
     palabra: any;
     palabraClave: string = "";
-    expandedRows: { [key: number]: boolean } = {};
-    reservadosDetalle: DetalleBibliotecaDTO[] = [];
+    expandedRows: { [key: string]: boolean } = {};
+    reservadosDetalle: ReservaUsuario[] = [];
     grupos: GrupoBiblioteca[] = [];
     private todosDetallesReservados: DetalleBibliotecaDTO[] = [];
       @ViewChild('modalRegularizar') modalRegularizar!: ModalRegularizarComponent;
@@ -243,8 +249,8 @@ export class PrestamoMaterialBibliografico implements OnInit {
     this.loading = true;
     this.materialBibliograficoService.listarTodosDetallesReservados().subscribe({
       next: (lista: DetalleBibliotecaDTO[]) => {
-        // Guardamos toda la lista en reservadosDetalle
-        this.reservadosDetalle = lista;
+        // Agrupamos por usuario para mostrar un resumen
+        this.reservadosDetalle = this.agruparPorUsuario(lista);
         this.loading = false;
       },
       error: () => {
@@ -259,13 +265,13 @@ export class PrestamoMaterialBibliografico implements OnInit {
   }
 
 
-private agruparPorBiblioteca(
+  private agruparPorBiblioteca(
     detalles: DetalleBibliotecaDTO[]
   ): GrupoBiblioteca[] {
     const mapa = new Map<number, GrupoBiblioteca>();
 
     detalles.forEach((det) => {
-      const bibId = det.bibliotecaId;
+      const bibId = det.biblioteca?.id;
       if (bibId == null) {
         return; // Ignora aquellos sin bibliotecaId
       }
@@ -273,7 +279,7 @@ private agruparPorBiblioteca(
         // Crea el “resumen” de la cabecera (BibliotecaResumen) partiendo de det.biblioteca:
         const padre = det.biblioteca!;
         const resumen: BibliotecaResumen = {
-          id: padre.id,
+          id: bibId,
           codigoLocalizacion: padre.codigoLocalizacion ?? null,
           tipoBibliotecaId: padre.tipoBibliotecaId ?? null,
           autorPersonal: padre.autorPersonal ?? null,
@@ -344,6 +350,35 @@ private agruparPorBiblioteca(
       }
       // Añade el detalle al grupo correspondiente:
       mapa.get(bibId)!.detalles.push(det);
+    });
+
+    return Array.from(mapa.values());
+  }
+
+  private agruparPorUsuario(detalles: DetalleBibliotecaDTO[]): ReservaUsuario[] {
+    const mapa = new Map<string, ReservaUsuario>();
+
+    detalles.forEach(det => {
+      const codigo = det.codigoUsuario ?? 'DESCONOCIDO';
+      const nombre = det.nombreUsuario ?? det.codigoUsuario ?? 'DESCONOCIDO';
+      if (!mapa.has(codigo)) {
+        mapa.set(codigo, {
+          codigoUsuario: codigo,
+          nombreUsuario: nombre,
+          tipoPrestamo: det.tipoPrestamo ?? null,
+          cantidad: 0,
+          detalles: []
+        });
+      }
+      const entry = mapa.get(codigo)!;
+      entry.detalles.push(det);
+      entry.cantidad = entry.detalles.length;
+      if (!entry.tipoPrestamo) {
+        entry.tipoPrestamo = det.tipoPrestamo ?? null;
+      }
+      if (!entry.nombreUsuario) {
+        entry.nombreUsuario = nombre;
+      }
     });
 
     return Array.from(mapa.values());
@@ -487,7 +522,7 @@ private agruparPorBiblioteca(
       rejectLabel: 'NO',
       accept: () => {
         this.loading = true;
-        this.materialBibliograficoService.prestarDetalle(detalle.idDetalleBiblioteca).subscribe({
+        this.materialBibliograficoService.prestarDetalle(detalle.idDetalleBiblioteca!).subscribe({
           next: (resp: any) => {
             this.loading = false;
             if (resp.p_status === 0) {
@@ -527,7 +562,7 @@ private agruparPorBiblioteca(
       rejectLabel: 'NO',
       accept: () => {
         this.loading = true;
-        this.materialBibliograficoService.cancelarDetalle(detalle.idDetalleBiblioteca).subscribe({
+        this.materialBibliograficoService.cancelarDetalle(detalle.idDetalleBiblioteca!).subscribe({
           next: (resp: any) => {
             this.loading = false;
             if (resp.p_status === 0) {

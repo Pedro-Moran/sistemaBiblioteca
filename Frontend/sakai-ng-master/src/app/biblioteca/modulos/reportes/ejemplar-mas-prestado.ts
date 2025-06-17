@@ -4,6 +4,13 @@ import { TooltipModule } from 'primeng/tooltip';
 import { TemplateModule } from '../../template.module';
 import { Sedes } from '../../interfaces/sedes';
 import { ClaseGeneral } from '../../interfaces/clase-general';
+import { MaterialBibliograficoService } from '../../services/material-bibliografico.service';
+import { EjemplarPrestadoDTO } from '../../interfaces/reportes/ejemplar-prestado';
+import { HttpClient } from '@angular/common/http';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import * as ExcelJS from 'exceljs';
+import { saveAs } from 'file-saver';
 
 @Component({
     selector: 'app-reporte-ejemplar-mas-prestado',
@@ -46,9 +53,9 @@ import { ClaseGeneral } from '../../interfaces/clase-general';
                    
                     <div class="flex flex-col gap-2 col-span-3 md:col-span-2 lg:col-span-2">
                     <label for="tipoPrestamo" class="block text-sm font-medium">Fecha inicio</label>
-                        <p-datepicker 
+                        <p-datepicker
                             appendTo="body"
-                            formControlName="fechaInicio"
+                            [(ngModel)]="fechaInicio"
                             [ngClass]="'w-full'"
                             [style]="{ width: '100%' }"
                             [readonlyInput]="true"
@@ -57,9 +64,9 @@ import { ClaseGeneral } from '../../interfaces/clase-general';
                     </div>
                     <div class="flex flex-col gap-2 col-span-3 md:col-span-2 lg:col-span-2">
                     <label for="tipoPrestamo" class="block text-sm font-medium">Fecha fin</label>
-                    <p-datepicker 
+                    <p-datepicker
                             appendTo="body"
-                            formControlName="fechaFin"
+                            [(ngModel)]="fechaFin"
                             [ngClass]="'w-full'"
                             [style]="{ width: '100%' }"
                             [readonlyInput]="true"
@@ -75,13 +82,30 @@ import { ClaseGeneral } from '../../interfaces/clase-general';
             </button>
         </div>
                     <div class="flex col-span-1 md:col-span-2 lg:col-span-2">
-                    
+                        <button pButton icon="pi pi-file-excel" class="mr-2 p-button-danger" (click)="exportExcel()" tooltip="Exportar a Excel"></button>
+                        <button pButton icon="pi pi-file-pdf" class="mr-2 p-button-danger" (click)="exportPdf()" tooltip="Exportar a PDF"></button>
                     </div>
                 </div>
-               
+
             </div>
-       
+
     </p-toolbar>
+    <p-table [value]="resultados" [paginator]="true" [rows]="10" [loading]="loading" scrollable="true" scrollHeight="400px" [style]="{ 'overflow-x': 'auto', 'padding-bottom': '1rem'}">
+        <ng-template pTemplate="header">
+            <tr>
+                <th>ID</th>
+                <th>Título</th>
+                <th>Préstamos</th>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-row>
+            <tr>
+                <td>{{ row.idDetalle }}</td>
+                <td>{{ row.titulo }}</td>
+                <td>{{ row.totalPrestamos }}</td>
+            </tr>
+        </ng-template>
+    </p-table>
 </div>
 `,
             imports: [TemplateModule, TooltipModule],
@@ -112,11 +136,79 @@ export class ReporteEjemplarMasPrestado {
     dataEspecialidad: ClaseGeneral[] = [];
     especialidadFiltro: ClaseGeneral = new ClaseGeneral();
     nroIngreso:string='';
+    fechaInicio: Date = new Date();
+    fechaFin: Date = new Date();
     tipo:number=1;
     loading: boolean = true;
+    resultados: EjemplarPrestadoDTO[] = [];
+
+    constructor(private svc: MaterialBibliograficoService,
+                private messageService: MessageService,
+                private http: HttpClient) {}
 
     async ngOnInit() {
         await this.reporte();
     }
-    reporte(){}
+    async reporte() {
+        this.loading = true;
+        try {
+            this.resultados =
+                (await this.svc
+                    .reporteEjemplarMasPrestado()
+                    .toPromise()) ?? [];
+        } finally {
+            this.loading = false;
+        }
+    }
+
+    async exportExcel() {
+        if (!this.resultados.length) {
+            this.messageService.add({ severity: 'warn', detail: 'No hay datos para exportar.' });
+            return;
+        }
+        const wb = new ExcelJS.Workbook();
+        const ws = wb.addWorksheet('Reporte');
+        const buffer = await this.http.get('/assets/logo.png', { responseType: 'arraybuffer' }).toPromise();
+        const logoId = wb.addImage({ buffer, extension: 'png' });
+        ws.addImage(logoId, { tl: { col: 0.2, row: 0.2 }, ext: { width: 220, height: 80 } });
+        ws.mergeCells('C1', 'E2');
+        const title = ws.getCell('C1');
+        title.value = 'Ejemplares más prestados';
+        title.alignment = { vertical: 'middle', horizontal: 'center' };
+        title.font = { size: 16, bold: true };
+        ws.addRow([]);
+        const headerRow = ws.addRow(['ID', 'Título', 'Préstamos']);
+        headerRow.font = { bold: true };
+        headerRow.alignment = { horizontal: 'center' };
+        this.resultados.forEach(r => ws.addRow([r.idDetalle, r.titulo, r.totalPrestamos]));
+        ws.columns.forEach(col => (col.width = 25));
+        const buf = await wb.xlsx.writeBuffer();
+        saveAs(new Blob([buf]), 'ejemplares_mas_prestados.xlsx');
+    }
+
+    exportPdf() {
+        if (!this.resultados.length) {
+            this.messageService.add({ severity: 'warn', detail: 'No hay datos para exportar.' });
+            return;
+        }
+        const doc = new jsPDF({ orientation: 'landscape' });
+        const img = new Image();
+        img.src = '/assets/logo.png';
+        img.onload = () => {
+            doc.addImage(img, 'PNG', 10, 10, 60, 25);
+            doc.setFontSize(16);
+            doc.text('Ejemplares más prestados', 80, 20);
+            doc.setFontSize(10);
+            const hoy = new Date();
+            doc.text(`Fecha de emisión: ${hoy.toLocaleDateString()}`, 80, 25);
+            autoTable(doc, {
+                head: [['ID', 'Título', 'Préstamos']],
+                body: this.resultados.map(r => [r.idDetalle, r.titulo, r.totalPrestamos]),
+                startY: 35,
+                styles: { fontSize: 8 },
+                headStyles: { fillColor: [41, 128, 185] }
+            });
+            doc.save('ejemplares_mas_prestados.pdf');
+        };
+    }
 }

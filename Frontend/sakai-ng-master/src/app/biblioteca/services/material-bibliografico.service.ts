@@ -1,4 +1,6 @@
 import { HttpClient, HttpHeaders, HttpParams  } from '@angular/common/http';
+import { EjemplarPrestadoDTO } from '../interfaces/reportes/ejemplar-prestado';
+import { EjemplarNoPrestadoDTO } from '../interfaces/reportes/ejemplar-no-prestado';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { AuthService } from './auth.service';
@@ -12,7 +14,7 @@ import { Usuario } from '../interfaces/usuario';
 import { Equipo } from '../interfaces/biblioteca-virtual/equipo';
 import { OcurrenciaUsuario } from '../interfaces/OcurrenciaUsuario';
 import { OcurrenciaMaterialDTO } from '../interfaces/OcurrenciaMaterialDTO';
-import { DetalleBibliotecaDTO } from '../interfaces/material-bibliografico/DetalleBibliotecaDTO';
+import { DetalleBibliotecaDTO } from '../interfaces/material-bibliografico/biblioteca.model';
 @Injectable({
   providedIn: 'root'
 })
@@ -242,9 +244,18 @@ crearOcurrencia(dto: OcurrenciaDTO): Observable<OcurrenciaDTO> {
   );
 }
 
+  /** Ocurrencias ligadas a equipos de cómputo */
   api_ocurrencias_laboratorio(): Observable<OcurrenciaDTO[]> {
     return this.http.get<OcurrenciaDTO[]>(
-      `${this.apiUrl}/api/ocurrencias-biblio`,
+      `${this.apiUrl}/api/ocurrencias-biblio/equipos`,
+      { headers: this.headers }
+    );
+  }
+
+  /** Ocurrencias ligadas a material bibliográfico */
+  api_ocurrencias_biblioteca(): Observable<OcurrenciaDTO[]> {
+    return this.http.get<OcurrenciaDTO[]>(
+      `${this.apiUrl}/api/ocurrencias-biblio/materiales`,
       { headers: this.headers }
     );
   }
@@ -260,6 +271,14 @@ crearOcurrencia(dto: OcurrenciaDTO): Observable<OcurrenciaDTO> {
     return this.http
       .get<{status:string, data: DetallePrestamo}>(`${this.apiUrl}/api/prestamos/${id}`, { headers: this.headers })
       .pipe(map(resp => resp.data));
+  }
+
+  /** Obtiene un detalle de biblioteca por su ID */
+  getDetalleBiblioteca(id: number): Observable<DetalleBibliotecaDTO> {
+    return this.http.get<DetalleBibliotecaDTO>(
+      `${this.apiUrl}/api/biblioteca/detalles/${id}`,
+      { headers: this.headers }
+    );
   }
 
     /** Lista usuarios; si pasas `search` filtra por código o email */
@@ -316,7 +335,8 @@ listarUsuariosOcurrencia(id: number): Observable<OcurrenciaUsuario[]> {
 
   listarMaterialesOcurrencia(idOcurrencia: number): Observable<OcurrenciaMaterialDTO[]> {
     return this.http.get<OcurrenciaMaterialDTO[]>(
-      `${this.apiUrl}/api/ocurrencias-biblio/${idOcurrencia}/materiales`
+      `${this.apiUrl}/api/ocurrencias-biblio/${idOcurrencia}/materiales`,
+      { headers: this.headers }
     );
   }
 
@@ -326,7 +346,8 @@ listarUsuariosOcurrencia(id: number): Observable<OcurrenciaUsuario[]> {
   ): Observable<void> {
     return this.http.post<void>(
       `${this.apiUrl}/api/ocurrencias-biblio/${idOcurrencia}/costos`,
-      payload
+      payload,
+      { headers: this.headers }
     );
   }
 
@@ -341,16 +362,22 @@ listarUsuariosOcurrencia(id: number): Observable<OcurrenciaUsuario[]> {
         .pipe(map(resp => resp.data));
     }
 
-  listarDetallesPorBiblioteca(bibliotecaId: number): Observable<DetalleBibliotecaDTO[]> {
+  listarDetallesPorBiblioteca(
+    bibliotecaId: number,
+    soloEnProceso: boolean = false
+  ): Observable<DetalleBibliotecaDTO[]> {
     const headers = new HttpHeaders().set(
       'Authorization',
       `Bearer ${this.authService.getToken()}`
+    );
+    const params = new HttpParams().set(
+      'soloEnProceso', String(soloEnProceso)
     );
 
     return this.http
       .get<{ status: number; data: DetalleBibliotecaDTO[] }>(
         `${this.apiUrl}/api/biblioteca/${bibliotecaId}/detalles`,
-        { headers }
+        { headers, params }
       )
       .pipe(map(resp => resp.data));
   }
@@ -383,40 +410,55 @@ listarUsuariosOcurrencia(id: number): Observable<OcurrenciaUsuario[]> {
         .pipe(map(resp => resp.data));
     }
   /**
-   * Llama al endpoint para marcar un detalle como “prestado”.
-   * Equivale a DELETE /auth/api/prestamos/prestar con body { id }.
+   * Marca un detalle como “prestado”.
    */
   prestarDetalle(idDetalle: number): Observable<any> {
     const headers = new HttpHeaders().set(
       'Authorization',
       `Bearer ${this.authService.getToken()}`
     );
-    return this.http.delete<any>(
-      `${this.apiUrl}/api/prestamos/prestar`,
-      {
-        body: { id: idDetalle },
-        headers
-      }
+    const payload = {
+      idDetalleBiblioteca: idDetalle,
+      idEstado: 4,
+      idUsuario: this.authService.getUser()?.sub ?? 0
+    };
+    return this.http.put<any>(
+      `${this.apiUrl}/api/biblioteca/detalles/estado`,
+      payload,
+      { headers }
     );
   }
 
   /**
-   * Llama al endpoint para cancelar la reserva de un detalle.
-   * Equivale a DELETE /auth/api/prestamos/cancelar con body { id }.
+   * Cancela la reserva de un detalle, regresándolo a DISPONIBLE.
    */
   cancelarDetalle(idDetalle: number): Observable<any> {
     const headers = new HttpHeaders().set(
       'Authorization',
       `Bearer ${this.authService.getToken()}`
     );
-    return this.http.delete<any>(
-      `${this.apiUrl}/api/prestamos/cancelar`,
-      {
-        body: { id: idDetalle },
-        headers
-      }
+    const payload = {
+      idDetalleBiblioteca: idDetalle,
+      idEstado: 2,
+      idUsuario: this.authService.getUser()?.sub ?? 0
+    };
+    return this.http.put<any>(
+      `${this.apiUrl}/api/biblioteca/detalles/estado`,
+      payload,
+      { headers }
     );
   }
 
 
+  /** Obtiene el reporte de ejemplares mas prestados */
+  reporteEjemplarMasPrestado(): Observable<EjemplarPrestadoDTO[]> {
+    const headers = new HttpHeaders().set('Authorization', `Bearer ${this.authService.getToken()}`);
+    return this.http.get<{ status: number; data: EjemplarPrestadoDTO[] }>(`${this.apiUrl}/api/biblioteca/reporte/ejemplar-mas-prestado`, { headers }).pipe(map(resp => resp.data));
+  }
+
+  /** Obtiene el reporte de ejemplares que nunca fueron prestados */
+  reporteEjemplarNoPrestado(): Observable<EjemplarNoPrestadoDTO[]> {
+    const headers = new HttpHeaders().set('Authorization', `Bearer ${this.authService.getToken()}`);
+    return this.http.get<{ status: number; data: EjemplarNoPrestadoDTO[] }>(`${this.apiUrl}/api/biblioteca/reporte/ejemplar-no-prestados`, { headers }).pipe(map(resp => resp.data));
+  }
 }

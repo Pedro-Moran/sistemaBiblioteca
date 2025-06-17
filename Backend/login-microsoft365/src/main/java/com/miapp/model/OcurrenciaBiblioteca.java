@@ -25,11 +25,12 @@ public class OcurrenciaBiblioteca {
     @Column(name = "IDOCURRENCIA")
     private Long id;
 
-    /** Relación con detalle de préstamo de equipo */
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    /** Relación con detalle de préstamo de equipo (opcional para materiales bibliográficos) */
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(
             name               = "IDDETALLEPRESTAMO",
-            referencedColumnName = "IDDETALLEPRESTAMOEQUIPO"
+            referencedColumnName = "IDDETALLEPRESTAMOEQUIPO",
+            nullable           = true
     )
     private DetallePrestamo detallePrestamo;
 

@@ -39,4 +39,12 @@ public class OcurrenciaBibliotecaDTO {
     private String  usuarioSedEm;
     private BigDecimal abono;
     private Integer anulado;
+
+    // Campos adicionales para mostrar información del material involucrado
+    private String idEjemplar;
+    private String ejemplar;
+    /** Sede a la cual pertenece el ejemplar */
+    private String sede;
+    /** Tipo de material bibliográfico */
+    private String tipoMaterial;
 }

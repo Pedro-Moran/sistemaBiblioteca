@@ -9,6 +9,11 @@ export interface DetallePrestamo {
       descripcion: string;
     };
   };
+  /** Datos del material bibliográfico cuando el préstamo corresponde a un ejemplar */
+  material?: {
+    /** Título o nombre del material */
+    titulo: string;
+  };
   usuarioPrestamo: string;
   codigoUsuario: string;
   tipoPrestamo: string;

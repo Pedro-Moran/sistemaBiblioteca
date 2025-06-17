@@ -38,6 +38,7 @@ public class BibliotecaMapper {
         b.setEdicion(dto.getEdicion());
         b.setReimpresion(dto.getReimpresion());
         b.setDescriptor(dto.getDescriptor());
+        b.setDescripcionRevista(dto.getDescripcionRevista());
         b.setNotaContenido(dto.getNotaContenido());
         b.setNotaGeneral(dto.getNotaGeneral());
         b.setNotaResumen(dto.getNotaResumen());
@@ -131,6 +132,7 @@ public class BibliotecaMapper {
         dto.setEdicion(b.getEdicion());
         dto.setReimpresion(b.getReimpresion());
         dto.setDescriptor(b.getDescriptor());
+        dto.setDescripcionRevista(b.getDescripcionRevista());
         dto.setNotaContenido(b.getNotaContenido());
         dto.setNotaGeneral(b.getNotaGeneral());
         dto.setNotaResumen(b.getNotaResumen());
@@ -219,6 +221,7 @@ public class BibliotecaMapper {
             resumen.setEdicion(padre.getEdicion());
             resumen.setReimpresion(padre.getReimpresion());
             resumen.setDescriptor(padre.getDescriptor());
+            resumen.setDescripcionRevista(padre.getDescripcionRevista());
             resumen.setNotaContenido(padre.getNotaContenido());
             resumen.setNotaGeneral(padre.getNotaGeneral());
             resumen.setNotaResumen(padre.getNotaResumen());
@@ -275,16 +278,37 @@ public class BibliotecaMapper {
 
         // 3) Código de sede, tipoMaterial, tipoAdquisición, etc.
         tmp.setCodigoSede(d.getSede() != null ? d.getSede().getId() : null);
+        if (d.getSede() != null) {
+            tmp.setSede(new com.miapp.model.SedeDTO(
+                    d.getSede().getId(),
+                    d.getSede().getDescripcion(),
+                    d.getSede().getActivo()
+            ));
+        } else {
+            tmp.setSede(null);
+        }
         tmp.setTipoAdquisicionId(
                 d.getTipoAdquisicion() != null ? d.getTipoAdquisicion().getId() : null
         );
         tmp.setTipoMaterialId(
                 d.getTipoMaterial() != null ? d.getTipoMaterial().getIdTipoMaterial() : null
         );
+        if (d.getTipoMaterial() != null) {
+            tmp.setTipoMaterial(new com.miapp.model.TipoMaterialDTO(
+                    d.getTipoMaterial().getIdTipoMaterial(),
+                    d.getTipoMaterial().getDescripcion(),
+                    d.getTipoMaterial().getActivo()
+            ));
+        } else {
+            tmp.setTipoMaterial(null);
+        }
         tmp.setCosto(d.getCosto());
         tmp.setNumeroFactura(d.getNumeroFactura());
         tmp.setCodigoUsuario(d.getCodigoUsuario());
         tmp.setTipoPrestamo(d.getTipoPrestamo());
+        tmp.setHoraInicio(d.getHoraInicio());
+        tmp.setHoraFin(d.getHoraFin());
+        tmp.setMaxHoras(d.getMaxHoras());
         tmp.setFechaIngreso(d.getFechaIngreso());
         tmp.setCodigoBarra(d.getCodigoBarra());
         tmp.setNumeroIngreso(d.getNumeroIngreso());
@@ -297,6 +321,8 @@ public class BibliotecaMapper {
         tmp.setUsuarioModificacion(d.getUsuarioModificacion());
         tmp.setFechaModificacion(d.getFechaModificacion());
         tmp.setIdEstado(d.getIdEstado());
+        tmp.setCantidadPrestamos(d.getCantidadPrestamos());
+        tmp.setFechaReserva(d.getFechaSolicitud());
 
         return tmp;
     }

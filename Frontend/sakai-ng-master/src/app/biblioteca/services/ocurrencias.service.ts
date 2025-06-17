@@ -52,11 +52,30 @@ export class OcurrenciasService {
     );*/
     return this.http.get<any[]>('assets/demo/biblioteca/ocurrencias/ocurrencias-laboratorio.json');
   }
-  api_autorizacion_regularizacion(modulo: any):Observable<any>{
-    /*return this.http.get<any[]>(`${this.apiUrl}/${modulo}`
-    ,{ headers: new HttpHeaders().set('Authorization',`Bearer ${this.authService.getToken()}`)}
-    );*/
-    return this.http.get<any[]>('assets/demo/biblioteca/ocurrencias/autorizacion.json');
+  api_autorizacion_regularizacion():Observable<any[]> {
+    return this.http.get<any[]>(
+      `${this.apiUrl}/api/ocurrencias-biblio/costeadas`,
+      {
+        headers: new HttpHeaders().set(
+          'Authorization',
+          `Bearer ${this.authService.getToken()}`
+        )
+      }
+    );
+  }
+
+  api_actualizar_regulariza(id: number, valor: number): Observable<any> {
+    return this.http.put(
+      `${this.apiUrl}/api/ocurrencias-biblio/${id}/regulariza`,
+      null,
+      {
+        params: { valor },
+        headers: new HttpHeaders().set(
+          'Authorization',
+          `Bearer ${this.authService.getToken()}`
+        )
+      }
+    );
   }
 
   api_ocurrencias_prestamos_lista(modulo: any):Observable<any>{
@@ -78,11 +97,56 @@ export class OcurrenciasService {
     return this.http.get<any[]>('assets/demo/biblioteca/situacionOcurrencia.json');
   }
   
-  api_constancias(modulo: any):Observable<any>{
-    /*return this.http.get<any[]>(`${this.apiUrl}/${modulo}`
-    ,{ headers: new HttpHeaders().set('Authorization',`Bearer ${this.authService.getToken()}`)}
-    );*/
-    return this.http.get<any[]>('assets/demo/biblioteca/constancias/imprimir.json');
+  api_constancias(search: string):Observable<any>{
+    return this.http.get<any[]>(
+      `${this.apiUrl}/api/constancias/search`,
+      {
+        params: { q: search },
+        headers: new HttpHeaders().set(
+          'Authorization',
+          `Bearer ${this.authService.getToken()}`
+        ),
+      }
+    );
+  }
+
+  api_constancias_preview(codigo: string): Observable<Blob> {
+    return this.http.get(
+      `${this.apiUrl}/api/constancias/preview/${codigo}`,
+      {
+        headers: new HttpHeaders().set(
+          'Authorization',
+          `Bearer ${this.authService.getToken()}`
+        ),
+        responseType: 'blob'
+      }
+    );
+  }
+
+  api_constancias_pdf(payload: any): Observable<Blob> {
+    return this.http.post(
+      `${this.apiUrl}/api/constancias/pdf`,
+      payload,
+      {
+        headers: new HttpHeaders().set(
+          'Authorization',
+          `Bearer ${this.authService.getToken()}`
+        ),
+        responseType: 'blob'
+      }
+    );
+  }
+
+  api_ocurrencias_usuario(codigo: string): Observable<any[]> {
+    return this.http.get<any[]>(
+      `${this.apiUrl}/api/ocurrencias-biblio/usuario/${codigo}`,
+      {
+        headers: new HttpHeaders().set(
+          'Authorization',
+          `Bearer ${this.authService.getToken()}`
+        )
+      }
+    );
   }
 
 }

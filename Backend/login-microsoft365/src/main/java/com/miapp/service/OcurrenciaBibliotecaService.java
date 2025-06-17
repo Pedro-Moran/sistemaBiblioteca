@@ -12,6 +12,8 @@ import java.util.List;
 public interface OcurrenciaBibliotecaService {
     OcurrenciaBibliotecaDTO crear(OcurrenciaBibliotecaDTO dto);
     List<OcurrenciaBibliotecaDTO> listarTodas();
+    List<OcurrenciaBibliotecaDTO> listarMateriales();
+    List<OcurrenciaBibliotecaDTO> listarEquipos();
     OcurrenciaBibliotecaDTO buscarPorId(Long id);
     OcurrenciaUsuario saveUsuario(Long idOcurrencia, String codigoUsuario, Integer tipoUsuario);
     OcurrenciaMaterial saveMaterial(Long idOcurrencia, Long idEquipo, Integer cantidad);
@@ -20,4 +22,13 @@ public interface OcurrenciaBibliotecaService {
 
     List<OcurrenciaMaterialDTO> listarMaterialesDeOcurrencia(Long idOcurrencia);
     void costearMateriales(Long idOcurrencia, List<MaterialCostDTO> costos);
+
+    /** Devuelve las ocurrencias registradas para el usuario indicado */
+    List<OcurrenciaBibliotecaDTO> listarPorUsuario(String codigoUsuario);
+
+    /** Lista ocurrencias que ya cuentan con costo registrado */
+    List<OcurrenciaBibliotecaDTO> listarCosteadas();
+
+    /** Actualiza el estado de regularización de una ocurrencia */
+    OcurrenciaBibliotecaDTO actualizarRegulariza(Long id, Integer regulariza);
 }

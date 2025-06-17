@@ -5,12 +5,15 @@ import com.miapp.model.*;
 import com.miapp.model.dto.*;
 import com.miapp.repository.*;
 import com.miapp.service.BibliotecaService;
+import com.miapp.service.EmailService;
+import com.miapp.service.NotificacionService;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -33,6 +36,9 @@ public class BibliotecaServiceImpl implements BibliotecaService {
     private final BibliotecaMapper mapper;
     private final OcurrenciaUsuarioRepository repoU;
     private final OcurrenciaMaterialRepository repoM;
+    private final OcurrenciaBibliotecaRepository ocurrenciaBibliotecaRepository;
+    private final NotificacionService notificacionService;
+    private final EmailService emailService;
 
     public BibliotecaServiceImpl(BibliotecaRepository bibliotecaRepository,
                                  TipoAdquisicionRepository tipoAdquisicionRepository,
@@ -45,7 +51,10 @@ public class BibliotecaServiceImpl implements BibliotecaService {
                                  DetalleBibliotecaRepository detalleBibliotecaRepository,
                                  BibliotecaMapper mapper,
                                  OcurrenciaUsuarioRepository repoU,
-                                 OcurrenciaMaterialRepository repoM) {
+                                 OcurrenciaMaterialRepository repoM,
+                                 OcurrenciaBibliotecaRepository ocurrenciaBibliotecaRepository,
+                                 NotificacionService notificacionService,
+                                 EmailService emailService) {
         this.bibliotecaRepository = bibliotecaRepository;
         this.tipoAdquisicionRepository  = tipoAdquisicionRepository;
         this.especialidadRepository = especialidadRepository;
@@ -58,6 +67,9 @@ public class BibliotecaServiceImpl implements BibliotecaService {
         this.mapper = mapper;
         this.repoU = repoU;
         this.repoM = repoM;
+        this.ocurrenciaBibliotecaRepository = ocurrenciaBibliotecaRepository;
+        this.notificacionService = notificacionService;
+        this.emailService = emailService;
     }
 
     @Override
@@ -105,6 +117,7 @@ public class BibliotecaServiceImpl implements BibliotecaService {
         b.setTipoAnioPublicacion(dto.getTipoAnioPublicacion());
         b.setAnioPublicacion(dto.getAnioPublicacion());
         b.setDescriptor(dto.getDescriptor());
+        b.setDescripcionRevista(dto.getDescripcionRevista());
         b.setNotaContenido(dto.getNotaContenido());
         b.setNotaGeneral(dto.getNotaGeneral());
         b.setSerie(dto.getSerie());
@@ -218,7 +231,11 @@ public class BibliotecaServiceImpl implements BibliotecaService {
             e.setCosto(det.getCosto());
             e.setNumeroFactura(det.getNumeroFactura());
             e.setFechaIngreso(det.getFechaIngreso());
+            e.setHoraInicio(det.getHoraInicio());
+            e.setHoraFin(det.getHoraFin());
+            e.setMaxHoras(det.getMaxHoras());
             e.setIdEstado(det.getIdEstado());
+            e.setCantidadPrestamos(det.getCantidadPrestamos() != null ? det.getCantidadPrestamos() : 0);
 
             // 6) Vínculo bidireccional
             e.setBiblioteca(b);
@@ -265,6 +282,7 @@ public class BibliotecaServiceImpl implements BibliotecaService {
         dto.setEdicion(b.getEdicion());
         dto.setReimpresion(b.getReimpresion());
         dto.setDescriptor(b.getDescriptor());
+        dto.setDescripcionRevista(b.getDescripcionRevista());
         dto.setNotaContenido(b.getNotaContenido());
         dto.setNotaGeneral(b.getNotaGeneral());
         dto.setNotaResumen(b.getNotaResumen());
@@ -357,6 +375,7 @@ public class BibliotecaServiceImpl implements BibliotecaService {
                         resumen.setEdicion(padre.getEdicion());
                         resumen.setReimpresion(padre.getReimpresion());
                         resumen.setDescriptor(padre.getDescriptor());
+                        resumen.setDescripcionRevista(padre.getDescripcionRevista());
                         resumen.setNotaContenido(padre.getNotaContenido());
                         resumen.setNotaGeneral(padre.getNotaGeneral());
                         resumen.setNotaResumen(padre.getNotaResumen());
@@ -441,6 +460,9 @@ public class BibliotecaServiceImpl implements BibliotecaService {
 
                     // 6) Fecha de Ingreso
                     tmp.setFechaIngreso(d.getFechaIngreso());
+                    tmp.setHoraInicio(d.getHoraInicio());
+                    tmp.setHoraFin(d.getHoraFin());
+                    tmp.setMaxHoras(d.getMaxHoras());
 
                     // 7) Código de Barra (insertable=false en BD)
                     tmp.setCodigoBarra(d.getCodigoBarra());
@@ -468,6 +490,7 @@ public class BibliotecaServiceImpl implements BibliotecaService {
 
                     // 14) Estado
                     tmp.setIdEstado(d.getIdEstado());
+                    tmp.setCantidadPrestamos(d.getCantidadPrestamos());
 
                     return tmp;
                 }).toList();
@@ -553,10 +576,48 @@ public class BibliotecaServiceImpl implements BibliotecaService {
         DetalleBiblioteca detalle = detalleBibliotecaRepository.findById(req.getIdDetalleBiblioteca())
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Detalle no encontrado: " + req.getIdDetalleBiblioteca()));
+
+        Long estadoAnterior = detalle.getIdEstado();
         detalle.setIdEstado(req.getIdEstado());
+        // Registramos el usuario que realiza la reserva en el campo codigoUsuario
+        // ya que el módulo de préstamos lo utiliza para identificar al solicitante
+        detalle.setCodigoUsuario(req.getIdUsuario());
+        if (req.getIdEstado() != null && req.getIdEstado() == 3L) {
+            // Al reservar registramos la fecha de solicitud/reserva
+            detalle.setFechaSolicitud(
+                    LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+            );
+        }
         detalle.setUsuarioModificacion(req.getIdUsuario());
         detalle.setFechaModificacion(LocalDateTime.now());
         detalleBibliotecaRepository.save(detalle);
+
+        if (Objects.equals(req.getIdEstado(), 4L)) {
+            // Incrementa el contador de préstamos del ejemplar
+            Integer veces = detalle.getCantidadPrestamos();
+            detalle.setCantidadPrestamos(veces == null ? 1 : veces + 1);
+            detalleBibliotecaRepository.save(detalle);
+
+            notificacionService.crearNotificacion(
+                    detalle.getCodigoUsuario(),
+                    "Tu préstamo del material '" +
+                            detalle.getBiblioteca().getTitulo() + "' fue aprobado."
+            );
+
+            if (Objects.equals(estadoAnterior, 3L)) {
+                emailService.sendMaterialConfirmation(detalle);
+            }
+        } else if (Objects.equals(req.getIdEstado(), 2L)) {
+            notificacionService.crearNotificacion(
+                    detalle.getCodigoUsuario(),
+                    "Tu solicitud del material '" +
+                            detalle.getBiblioteca().getTitulo() + "' fue rechazada."
+            );
+
+            if (Objects.equals(estadoAnterior, 3L)) {
+                emailService.sendMaterialRejection(detalle);
+            }
+        }
 
         // 2) Busca si quedan otros detalles pendientes en esta misma biblioteca
         Biblioteca bib = detalle.getBiblioteca();
@@ -629,12 +690,32 @@ public class BibliotecaServiceImpl implements BibliotecaService {
                 .collect(Collectors.toList());
     }
 
+    /** Devuelve todas las bibliotecas en estado disponible (2) */
+    @Override
+    public List<BibliotecaDTO> findDisponibles() {
+        return bibliotecaRepository
+                .findByIdEstado(2L)
+                .stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+    }
+
     @Override
     public List<DetalleBibliotecaDTO> listarTodosDetallesReservados() {
         List<DetalleBiblioteca> listaEntidades = detalleBibliotecaRepository.findAllConBibliotecaReservados();
         return listaEntidades.stream()
                 .map(mapper::toDetalleDto)   // Aquí dentro toDetalleDto ya verá d.getBiblioteca() != null
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<EjemplarPrestadoDTO> reporteEjemplarMasPrestado() {
+        return ocurrenciaBibliotecaRepository.reporteEjemplarMasPrestado();
+    }
+
+    @Override
+    public List<EjemplarNoPrestadoDTO> reporteEjemplarNoPrestado() {
+        return ocurrenciaBibliotecaRepository.reporteEjemplarNoPrestado();
     }
 
 
