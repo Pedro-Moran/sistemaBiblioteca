@@ -255,8 +255,8 @@ scheduleAutoLogout(): void {
   logout(): void {
     localStorage.removeItem('currentUser');
     localStorage.removeItem(this.TOKEN_NAME);
-    // Redirige a la página de login o principal según tu flujo
-    this.router.navigate(['/login']);
+    // Redirige a la página de inicio luego de cerrar sesión
+    this.router.navigate(['/']);
     return;
   }
 

@@ -49,6 +49,10 @@ public class SecurityConfig {
                             "/auth/activo",
                             "/auth/api/material-bibliografico/**",
                             "/auth/material-bibliografico/especialidad",
+                            "/auth/api/nosotros",
+                            "/auth/api/horarios/listar",
+                            "/auth/api/recursos-digitales/listar",
+                            "/auth/api/noticias/listar",
                             "/uploads/**").permitAll()
                     .anyRequest().authenticated()
             )

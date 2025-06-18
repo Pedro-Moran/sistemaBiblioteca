@@ -73,7 +73,7 @@ procesarPrestamo(id: number, aprobar: boolean): Observable<any> {
 
   getMisPrestamos() {
       return this.http.get<{status:string,data:any[]}>(
-        '/auth/api/prestamos/mis-prestamos'
+        `${this.apiUrl}/api/prestamos/mis-prestamos`
       );
     }
   getNotificacionesNoLeidas(): Observable<Notificacion[]> {
