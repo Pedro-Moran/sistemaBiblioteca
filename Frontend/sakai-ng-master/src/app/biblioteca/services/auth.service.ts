@@ -36,6 +36,10 @@ export class AuthService {
   public currentUser: Observable<Usuario>;
   public currentUsuario: Usuario | undefined;
 
+  private inactivityTimer: any;
+  private activityEvents = ['mousemove', 'keydown', 'click', 'scroll'];
+  private boundResetTimer = this.resetInactivityTimer.bind(this);
+
   private apiUrl = environment.apiUrl;
 
   constructor(private http: HttpClient, private router: Router, private msalService: MsalService) {
@@ -46,7 +50,9 @@ export class AuthService {
       );
 
     this.currentUser = this.currentUserSubject.asObservable();
-
+    if (this.idAuthenticated()) {
+      this.scheduleAutoLogout();
+    }
 
   }
   public get currentUserValue(): Usuario {
@@ -114,6 +120,7 @@ export class AuthService {
         localStorage.setItem("role", JSON.stringify(roles));
         // Emite el usuario incluyendo los roles
         this.currentUserSubject.next({ ...user, roles });
+        this.scheduleAutoLogout();
       }
   }
   getToken(): string {
@@ -223,36 +230,32 @@ register(userData: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/register`, userData);
 }
 
-// Llama a esta función después de un login exitoso para programar el cierre de sesión automático.
+// Inicia el temporizador de inactividad para cerrar sesión tras 1 hora sin movimiento
 scheduleAutoLogout(): void {
-  const token = localStorage.getItem(this.TOKEN_NAME);
-  if (token) {
-    try {
-        const helper = new JwtHelperService();
-        const decoded = helper.decodeToken(token);
-      const expirationTime = decoded.exp * 1000; // Convertir de segundos a milisegundos
-      const currentTime = Date.now();
-      const timeout = expirationTime - currentTime;
+  this.activityEvents.forEach(event =>
+    document.addEventListener(event, this.boundResetTimer)
+  );
+  this.resetInactivityTimer();
+}
 
-      console.log('⏳ Tiempo restante para logout automático (ms):', timeout);
-
-      if (timeout > 0) {
-        setTimeout(() => {
-          console.log('🔒 Token expirado. Cerrando sesión automáticamente...');
-          this.logout();
-        }, timeout);
-      } else {
-        this.logout();
-      }
-    } catch (error) {
-      console.error('❌ Error al decodificar el token:', error);
-      this.logout();
-    }
+private resetInactivityTimer(): void {
+  if (this.inactivityTimer) {
+    clearTimeout(this.inactivityTimer);
   }
+  this.inactivityTimer = setTimeout(() => {
+    console.log('🔒 Sesión cerrada por inactividad.');
+    this.logout();
+  }, 3600000); // 1 hora
 }
 
 
   logout(): void {
+    this.activityEvents.forEach(event =>
+      document.removeEventListener(event, this.boundResetTimer)
+    );
+    if (this.inactivityTimer) {
+      clearTimeout(this.inactivityTimer);
+    }
     localStorage.removeItem('currentUser');
     localStorage.removeItem(this.TOKEN_NAME);
     // Redirige a la página de inicio luego de cerrar sesión

@@ -33,7 +33,7 @@ public class JwtUtil {
 //                .sign(Algorithm.HMAC256(secret));
 //    }
     public String generateToken(String login, String role) {
-        long expirationTime = 3600000; // 20 segundos en milisegundos
+        long expirationTime = 86400000; // 24 horas en milisegundos
         return Jwts.builder()
                 .setSubject(login)
                 .claim("role", role)
