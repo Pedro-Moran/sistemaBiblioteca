@@ -20,4 +20,8 @@ export interface DetallePrestamo {
   fechaPrestamo: string;
   usuarioRecepcion?: string;
   fechaRecepcion?: string;
+  /** Estado actual del préstamo */
+  estado?: {
+    descripcion: string;
+  };
 }
