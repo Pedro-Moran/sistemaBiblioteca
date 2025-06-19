@@ -94,7 +94,7 @@ import { OcurrenciaEventService } from '../../services/ocurrencia-event.service'
                                 </tr>
                             </ng-template>
                             <ng-template pTemplate="body" let-objeto>
-                                <tr>
+                                <tr [ngClass]="{ 'highlight-row': objeto.highlight }">
                                     <td>
                                     <div class="flex flex-wrap justify-center gap-2">
                                 <p-button outlined icon="pi pi-pencil" pTooltip="Actualizar" tooltipPosition="bottom" (click)="editar(objeto)"/>
@@ -170,6 +170,7 @@ export class OcurrenciasLaboratorio {
     @ViewChild('modalNuevoOcurrencia') modalNuevoOcurrencia!: ModalNuevoOcurencia;
     @ViewChild('modalDetalleOcurrencia') modalDetalleOcurrencia!: ModalDetalleOcurencia;
     /** ID de equipo cuyo registro debe resaltarse */
+    @ViewChild('dt1') table!: Table;
     destinoId: number | null = null;
 
     constructor(private ocurrenciasService: OcurrenciasService, private genericoService: GenericoService, private fb: FormBuilder,
@@ -223,13 +224,17 @@ export class OcurrenciasLaboratorio {
     this.modalDetalleOcurrencia.openModal(obj.id!, true);
   }
 
-  /** Resalta temporalmente la fila relacionada con `destinoId` */
+  /** Resalta temporalmente la fila relacionada con `destinoId` y navega a su página */
   private aplicarResaltado(): void {
-    if (!this.destinoId) {
+    if (!this.destinoId || !this.table) {
       return;
     }
-    const fila = this.data.find(d => (d.idEquipo || d.equipoNumero) === this.destinoId);
-    if (fila) {
+    const index = this.data.findIndex(d => (d.idEquipo || d.equipoNumero) === this.destinoId);
+    if (index >= 0) {
+      const pageSize = this.table.rows || 10;
+      const page = Math.floor(index / pageSize);
+      this.table.first = page * pageSize;
+      const fila = this.data[index];
       fila.highlight = true;
       setTimeout(() => fila.highlight = false, 2000);
     }

@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, ElementRef, ViewChild, OnInit } from '@angular/core';
+import { Component, ElementRef, ViewChild, OnInit, AfterViewInit } from '@angular/core';
 import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MessageService, ConfirmationService, MenuItem } from 'primeng/api';
@@ -21,11 +21,16 @@ import { BibliotecaVirtualService } from '../../../services/biblioteca-virtual.s
 import { TipoMaterial } from '../../../interfaces/material-bibliografico/tipo-material';
 import { TipoAdquisicion } from '../../../interfaces/material-bibliografico/tipo-adquisicion';
 import { ModalNuevoOcurencia } from '../../laboratorio-computo/modal-nuevo-ocurrencia';
+import { OcurrenciaEventService } from '../../../services/ocurrencia-event.service';
 
 
 @Component({
   selector: 'app-aceptaciones',
   standalone: true,
+  styles: [
+    `.highlight-row { animation: fadeHighlight 2s ease-in-out forwards; }
+     @keyframes fadeHighlight { from { background-color: #ffe08a; } to { background-color: transparent; } }`
+  ],
   template: ` <div class="">
                 <div class="">
                     <div class="card flex flex-col gap-4 w-full">
@@ -154,7 +159,7 @@ import { ModalNuevoOcurencia } from '../../laboratorio-computo/modal-nuevo-ocurr
             </tr>
         </ng-template>
         <ng-template pTemplate="body" let-objetoDetalle>
-            <tr>
+            <tr [ngClass]="{ 'highlight-row': objetoDetalle.highlight }">
                 <td>{{ objetoDetalle.numeroIngreso  }}</td>
                 <td>{{ objetoDetalle.sede?.descripcion }}</td>
                 <td>{{ objetoDetalle.tipoAdquisicion?.descripcion }}</td>
@@ -169,12 +174,21 @@ import { ModalNuevoOcurencia } from '../../laboratorio-computo/modal-nuevo-ocurr
                  <button
                    pButton
                    type="button"
-                   class="p-button-rounded p-button-success"
+                   class="p-button-rounded"
+                   [ngClass]="objetoDetalle.tieneOcurrencia ? 'p-button-warning' : 'p-button-success'"
                    icon="pi pi-check"
                    (click)="aceptarDetalle(objetoDetalle)"
-                   pTooltip="Marcar Disponible"
+                   [disabled]="objetoDetalle.tieneOcurrencia"
+                   [pTooltip]="objetoDetalle.tieneOcurrencia ? 'Material con observación' : 'Confirmar'"
                    tooltipPosition="bottom">
                  </button>
+                 <span
+                   *ngIf="objetoDetalle.tieneOcurrencia"
+                   (click)="irAutorizacion(objetoDetalle)"
+                   class="text-xs text-blue-500 underline cursor-pointer block mt-1"
+                   pTooltip="Autorizar ocurrencia" tooltipPosition="bottom">
+                   Ver ocurrencia
+                 </span>
                 </td>
                 <td>
                  <p-button
@@ -215,7 +229,7 @@ import { ModalNuevoOcurencia } from '../../laboratorio-computo/modal-nuevo-ocurr
   imports: [TemplateModule,TooltipModule, ModalNuevoOcurencia],
   providers: [MessageService, ConfirmationService]
 })
-export class Aceptaciones implements OnInit {
+export class Aceptaciones implements OnInit, AfterViewInit {
   titulo: string = "Aceptaciones de MB";
   data: any[] = [];
   detalle:any[]=[];
@@ -241,9 +255,32 @@ export class Aceptaciones implements OnInit {
   tipoMaterialLista: TipoMaterial[]     = [];
   estadoLista: EstadoRecurso[]         = [];
   detallePorId: { [bibliotecaId: number]: any[] } = {};
+  /** Detalle seleccionado para registrar ocurrencia */
+  selectedDetalleOcurrencia: any | null = null;
 
   constructor(private materialBibliograficoService: MaterialBibliograficoService, private genericoService: GenericoService, private fb: FormBuilder,
-    private router: Router, private authService: AuthService, private confirmationService: ConfirmationService, private messageService: MessageService) { }
+    private router: Router, private authService: AuthService, private confirmationService: ConfirmationService, private messageService: MessageService,
+    private ocurrenciaEvents: OcurrenciaEventService) { }
+
+  ngAfterViewInit(): void {
+    this.modal.saved.subscribe(() => {
+      if (this.selectedDetalleOcurrencia) {
+        this.selectedDetalleOcurrencia.tieneOcurrencia = true;
+        this.selectedDetalleOcurrencia.highlight = true;
+        const id = this.selectedDetalleOcurrencia.idDetalleBiblioteca || this.selectedDetalleOcurrencia.id;
+        if (id) {
+          this.ocurrenciaEvents.addEquipo(id);
+        }
+        const ref = this.selectedDetalleOcurrencia;
+        setTimeout(() => ref.highlight = false, 2000);
+        this.selectedDetalleOcurrencia = null;
+      }
+    });
+
+    this.ocurrenciaEvents.ocurrenciaAutorizada.subscribe(() => {
+      this.listar();
+    });
+  }
   async ngOnInit() {
     // this.user = this.authService.getUser();
     this.user = {
@@ -402,11 +439,20 @@ aceptarDetalle(detalle: any) {
   }
 
   onAbrirOcurrencia(item: any) {
+    this.selectedDetalleOcurrencia = item;
     this.modal.openModal(item);
   }
 
   verDetalle(objeto:any){
 
+  }
+
+  irAutorizacion(detalle: any): void {
+    const id = detalle.idDetalleBiblioteca || detalle.id;
+    if (id) {
+      this.ocurrenciaEvents.setDestino(id);
+    }
+    this.router.navigate(['/main/biblioteca/ocurrencias']);
   }
   private async listaTipoMaterial() {
     try {
@@ -501,7 +547,9 @@ onRowExpand(event: TableRowExpandEvent) {
           sede: this.dataSede.find(s => s.id == d.codigoSede),
           tipoAdquisicion: this.tipoAdquisicionLista.find(t => t.id == d.tipoAdquisicionId),
           tipoMaterial:    this.tipoMaterialLista.find(m => m.id == d.tipoMaterialId),
-          estado: this.estadoLista.find(e => e.id === Number(d.idEstado))
+          estado: this.estadoLista.find(e => e.id === Number(d.idEstado)),
+          tieneOcurrencia: this.ocurrenciaEvents.tieneOcurrencia(d.idDetalleBiblioteca),
+          highlight: false
         }));
         console.log('→ mapeados:', this.detallePorId[lib.id]);
       });
