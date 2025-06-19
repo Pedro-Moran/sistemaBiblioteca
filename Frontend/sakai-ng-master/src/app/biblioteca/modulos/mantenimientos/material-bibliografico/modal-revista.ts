@@ -416,6 +416,7 @@ export class ModalRevistaComponent implements OnInit {
     nuevaEspecialidad: string = '';
     items!: MenuItem[];
     uploadedFiles: any[] = [];
+    selectedFile: File | null = null;
     editingIndex: number | null = null;
     selectedIndex!: number;
     private id?: number;
@@ -680,8 +681,8 @@ export class ModalRevistaComponent implements OnInit {
     this.loading = true;
 
     const req$ = dto.id
-        ? this.materialBibliograficoService.update(dto.id, dto)
-        : this.materialBibliograficoService.create(dto);
+        ? this.materialBibliograficoService.update(dto.id, dto, this.selectedFile ?? undefined)
+        : this.materialBibliograficoService.create(dto, this.selectedFile ?? undefined);
 
     req$.subscribe({
       next: ({status}) => {
@@ -870,11 +871,11 @@ export class ModalRevistaComponent implements OnInit {
                     horaFin:    d.horaFin ?? null,
                     maxHoras:   d.maxHoras ?? null,
                     costo: d.costo ?? null,
-                    numeroFactura: d.numeroFactura ?? null,
-                    fechaIngreso: d.fechaIngreso ?? null,
-                    sede: sedeObj,
-                    tipoMaterial: tipoMatObj,
-                    tipoAdquisicion: tipoAdqObj,
+                numeroFactura: d.numeroFactura ?? null,
+                fechaIngreso: d.fechaIngreso ?? null,
+                sede: sedeObj,
+                tipoMaterial: tipoMatObj,
+                tipoAdquisicion: tipoAdqObj,
                     idEstado: d.idEstado
                 } as DetalleDisplay;
             });
@@ -987,9 +988,9 @@ export class ModalRevistaComponent implements OnInit {
               horaFin           : this.timeToString(this.formDetalle.value.horaFin ?? null),
               maxHoras          : this.formDetalle.value.maxHoras,
               costo             : this.formDetalle.value.costo,
-              numeroFactura     : this.formDetalle.value.nroFactura,
-              fechaIngreso      : this.formatDateTime(this.formDetalle.value.fechaIngreso),
-              // extras para la vista
+             numeroFactura     : this.formDetalle.value.nroFactura,
+             fechaIngreso      : this.formatDateTime(this.formDetalle.value.fechaIngreso),
+             // extras para la vista
               sede           : this.sedesLista.find(s => s.id === sedeId) ?? null,
               tipoAdquisicion: this.tipoAdquisicionLista.find(t => t.id === tipoAdqId) ?? null,
               tipoMaterial    : this.tipoMaterialLista.find(t => t.idTipoMaterial === tipoMaterialId) ?? null
@@ -1014,6 +1015,7 @@ export class ModalRevistaComponent implements OnInit {
             onFileSelect(event: any) {
                 const file = event.files[0]; // Obtiene el primer archivo seleccionado
                 if (file) {
+                    this.selectedFile = file;
                     this.formPortada.patchValue({ adjunto: file });
                 }
                 this.messageService.add({ severity: 'info', summary: 'Success', detail: 'Se adjunto archivo' });

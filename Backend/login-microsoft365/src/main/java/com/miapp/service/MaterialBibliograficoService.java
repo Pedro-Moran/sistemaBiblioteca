@@ -6,6 +6,7 @@ import jakarta.persistence.criteria.Join;
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Arrays;
 import java.util.Date;
@@ -17,15 +18,19 @@ public class MaterialBibliograficoService {
 
     private final MaterialBibliograficoRepository materialBibliograficoRepository;
     private final TipoMaterialRepository tipoMaterialRepository;
+    private final FileStorageService fileStorageService;
 
 
-    public MaterialBibliograficoService(MaterialBibliograficoRepository materialBibliograficoRepository, TipoMaterialRepository tipoMaterialRepository) {
+    public MaterialBibliograficoService(MaterialBibliograficoRepository materialBibliograficoRepository,
+                                         TipoMaterialRepository tipoMaterialRepository,
+                                         FileStorageService fileStorageService) {
         this.materialBibliograficoRepository = materialBibliograficoRepository;
         this.tipoMaterialRepository = tipoMaterialRepository;
+        this.fileStorageService = fileStorageService;
     }
 
     @Transactional
-    public MaterialBibliografico registerMaterial(MaterialBibliograficoDTO dto) {
+    public MaterialBibliografico registerMaterial(MaterialBibliograficoDTO dto, MultipartFile portada) {
 
         // Crear y llenar la entidad MaterialBibliografico
         MaterialBibliografico material = new MaterialBibliografico();
@@ -69,7 +74,12 @@ public class MaterialBibliograficoService {
         // detalle.setFechaIngreso(convertir(dto.getDetalle().getFechaIngreso()));
         detalle.setCosto(dto.getDetalle().getCosto() != null ? new java.math.BigDecimal(dto.getDetalle().getCosto()) : null);
         detalle.setNumeroFactura(dto.getDetalle().getNumeroFactura());
-        detalle.setPortadaLibroImg(dto.getDetalle().getPortadaLibroImg());
+        if (portada != null && !portada.isEmpty()) {
+            String filename = fileStorageService.store(portada);
+            detalle.setPortadaLibroImg("/uploads/recursos/" + filename);
+        } else {
+            detalle.setPortadaLibroImg(dto.getDetalle().getPortadaLibroImg());
+        }
         // Recupera Sede, TipoMaterial y TipoAdquisicion
         // detalle.setSede(sedeRepository.findById(dto.getDetalle().getSedeId()).orElse(null));
 //         detalle.setTipoMaterial(tipoMaterialRepository.findById(dto.getDetalle().getTipoMaterialId()).orElse(null));
@@ -92,7 +102,7 @@ public class MaterialBibliograficoService {
     }
 
     @Transactional
-    public MaterialBibliografico updateMaterial(Long id, MaterialBibliograficoDTO dto) {
+    public MaterialBibliografico updateMaterial(Long id, MaterialBibliograficoDTO dto, MultipartFile portada) {
 
         // Buscar el material existente por su id
         MaterialBibliografico material = materialBibliograficoRepository.findById(id)
@@ -151,7 +161,12 @@ public class MaterialBibliograficoService {
         // detalle.setFechaIngreso(convertirFecha(infoDetalle.getFechaIngreso()));
         detalle.setCosto(infoDetalle.getCosto() != null ? new java.math.BigDecimal(infoDetalle.getCosto()) : null);
         detalle.setNumeroFactura(infoDetalle.getNumeroFactura());
-        detalle.setPortadaLibroImg(infoDetalle.getPortadaLibroImg());
+        if (portada != null && !portada.isEmpty()) {
+            String filename = fileStorageService.store(portada);
+            detalle.setPortadaLibroImg("/uploads/recursos/" + filename);
+        } else {
+            detalle.setPortadaLibroImg(infoDetalle.getPortadaLibroImg());
+        }
         // Actualiza la sede, tipoMaterial y tipoAdquisicion usando sus respectivos repositorios:
         // detalle.setSede(sedeRepository.findById(infoDetalle.getSedeId()).orElse(null));
 //         detalle.setTipoMaterial(tipoMaterialRepository.findById(infoDetalle.getTipoMaterialId()).orElse(null));

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.miapp.model.*;
 import com.miapp.model.dto.CiudadDTO;
 import com.miapp.service.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -37,9 +38,11 @@ public class MaterialBibliograficoController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> registerMaterial(@RequestBody MaterialBibliograficoDTO dto) {
+    public ResponseEntity<?> registerMaterial(
+            @RequestPart("dto") MaterialBibliograficoDTO dto,
+            @RequestPart(value = "portada", required = false) MultipartFile portada) {
         try {
-            MaterialBibliografico savedMaterial = service.registerMaterial(dto);
+            MaterialBibliografico savedMaterial = service.registerMaterial(dto, portada);
             return ResponseEntity.ok(Map.of("status", 0, "message", "Material registrado exitosamente", "data", savedMaterial));
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -48,9 +51,11 @@ public class MaterialBibliograficoController {
     }
 
     @PutMapping("/update/{id}")
-    public ResponseEntity<?> updateMaterial(@PathVariable Long id, @RequestBody MaterialBibliograficoDTO dto) {
+    public ResponseEntity<?> updateMaterial(@PathVariable Long id,
+                                            @RequestPart("dto") MaterialBibliograficoDTO dto,
+                                            @RequestPart(value = "portada", required = false) MultipartFile portada) {
         try {
-            MaterialBibliografico updatedMaterial = service.updateMaterial(id, dto);
+            MaterialBibliografico updatedMaterial = service.updateMaterial(id, dto, portada);
             return ResponseEntity.ok(Map.of("status", 0, "message", "Material actualizado exitosamente", "data", updatedMaterial));
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)

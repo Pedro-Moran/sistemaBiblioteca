@@ -11,7 +11,7 @@ import { InputValidation } from '../../../input-validation';
 import { TemplateModule } from '../../../template.module';
 import { CardModule } from 'primeng/card';
 import { DividerModule } from 'primeng/divider';
-import { environment } from '../../../../../../src/environments/environment';
+import { environment } from '../../../../../environments/environment';
 @Component({
     selector: 'portal-nosotros',
     standalone: true,
