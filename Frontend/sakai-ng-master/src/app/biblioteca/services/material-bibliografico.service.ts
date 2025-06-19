@@ -317,7 +317,7 @@ crearOcurrencia(dto: OcurrenciaDTO): Observable<OcurrenciaDTO> {
       );
     }
 
-    addMaterial(idOcurrencia: number, material: {idEquipo:number,cantidad:number}) {
+    addMaterial(idOcurrencia: number, material: {idEquipo:number,cantidad:number,esBiblioteca?:boolean}) {
       return this.http.post(
         `${this.apiUrl}/api/ocurrencias-biblio/${idOcurrencia}/materiales`,
         material,

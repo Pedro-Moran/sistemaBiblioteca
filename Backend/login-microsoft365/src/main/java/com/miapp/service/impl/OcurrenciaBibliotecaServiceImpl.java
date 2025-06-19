@@ -95,16 +95,20 @@ public class OcurrenciaBibliotecaServiceImpl implements OcurrenciaBibliotecaServ
 
     @Override
     public List<OcurrenciaBibliotecaDTO> listarMateriales() {
-        return repo.findByDetalleBibliotecaIsNotNullOrderByIdDesc()
+        return repo.findAllByOrderByIdDesc()
                 .stream()
+                .filter(o -> o.getDetalleBiblioteca() != null
+                        || repoM.existsByIdocurrenciaAndEsBibliotecaTrue(o.getId()))
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<OcurrenciaBibliotecaDTO> listarEquipos() {
-        return repo.findByDetallePrestamoIsNotNullOrderByIdDesc()
+        return repo.findAllByOrderByIdDesc()
                 .stream()
+                .filter(o -> o.getDetallePrestamo() != null
+                        || repoM.existsByIdocurrenciaAndEsBibliotecaFalse(o.getId()))
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }
@@ -129,10 +133,27 @@ public class OcurrenciaBibliotecaServiceImpl implements OcurrenciaBibliotecaServ
             dto.setIdDetallePrestamo(e.getDetallePrestamo().getId());
             Equipo eq = e.getDetallePrestamo().getEquipo();
             if (eq != null) {
+                dto.setIdEquipo(eq.getIdEquipo());
                 dto.setEquipoNombre(eq.getNombreEquipo());
                 dto.setEquipoNumero(eq.getNumeroEquipo());
                 dto.setEquipoIp(eq.getIp());
             }
+        } else {
+            // La ocurrencia puede haberse creado manualmente. Si existe un
+            // material de laboratorio asociado, usamos sus datos para
+            // poblar la información básica del equipo en el DTO.
+            repoM.findByIdocurrencia(e.getId()).stream()
+                    .filter(m -> m.getEsBiblioteca() == null || !m.getEsBiblioteca())
+                    .findFirst()
+                    .ifPresent(m -> {
+                        dto.setIdEquipo(m.getIdEquipoLaboratorio());
+                        equipoRepo.findById(m.getIdEquipoLaboratorio())
+                                .ifPresent(eqLab -> {
+                                    dto.setEquipoNombre(eqLab.getNombreEquipo());
+                                    dto.setEquipoNumero(eqLab.getNumeroEquipo());
+                                    dto.setEquipoIp(eqLab.getIp());
+                                });
+                    });
         }
         if (e.getDetalleBiblioteca()!=null) {
             DetalleBiblioteca det = e.getDetalleBiblioteca();
@@ -176,6 +197,7 @@ public class OcurrenciaBibliotecaServiceImpl implements OcurrenciaBibliotecaServ
         dto.setUsuarioSedEm(e.getUsuarioSedEm());
         dto.setAbono(e.getAbono());
         dto.setAnulado(e.getAnulado());
+        dto.setEsBiblioteca(e.getDetalleBiblioteca() != null);
         return dto;
     }
 
@@ -195,11 +217,12 @@ public class OcurrenciaBibliotecaServiceImpl implements OcurrenciaBibliotecaServ
 
         return saved;
     }
-    public OcurrenciaMaterial saveMaterial(Long idOcurrencia, Long idEquipo, Integer cantidad) {
+    public OcurrenciaMaterial saveMaterial(Long idOcurrencia, Long idEquipo, Integer cantidad, Boolean esBiblioteca) {
         OcurrenciaMaterial m = new OcurrenciaMaterial();
         m.setIdocurrencia(idOcurrencia);
         m.setIdEquipoLaboratorio(idEquipo);
         m.setCantidad(cantidad);
+        m.setEsBiblioteca(esBiblioteca != null ? esBiblioteca : Boolean.FALSE);
         return repoM.save(m);
     }
 
@@ -250,6 +273,7 @@ public class OcurrenciaBibliotecaServiceImpl implements OcurrenciaBibliotecaServ
                 mNuevo.setIdocurrencia(idOcurrencia);
                 mNuevo.setIdEquipoLaboratorio(idEquipoOriginal);
                 mNuevo.setCantidad(1);
+                mNuevo.setEsBiblioteca(false);
                 // no seteamos costoUnitario, queda null
                 originalEnTabla = repoM.save(mNuevo);
             }
@@ -263,7 +287,8 @@ public class OcurrenciaBibliotecaServiceImpl implements OcurrenciaBibliotecaServ
                     idEquipoOriginal.toString(),
                     dp.getEquipo().getNombreEquipo(),
                     originalEnTabla.getCantidad(),
-                    originalEnTabla.getCostoUnitario()
+                    originalEnTabla.getCostoUnitario(),
+                    false
             ));
 
             // 5) Luego añadimos el resto de materiales asociados a la ocurrencia,
@@ -278,7 +303,8 @@ public class OcurrenciaBibliotecaServiceImpl implements OcurrenciaBibliotecaServ
                             m.getIdEquipoLaboratorio().toString(),
                             nombreEquipo,
                             m.getCantidad(),
-                            m.getCostoUnitario()
+                            m.getCostoUnitario(),
+                            m.getEsBiblioteca() != null && m.getEsBiblioteca()
                     ));
                 }
             });
@@ -296,6 +322,7 @@ public class OcurrenciaBibliotecaServiceImpl implements OcurrenciaBibliotecaServ
                 nuevo.setIdocurrencia(idOcurrencia);
                 nuevo.setIdEquipoLaboratorio(idRef);
                 nuevo.setCantidad(1);
+                nuevo.setEsBiblioteca(true);
                 originalEnTabla = repoM.save(nuevo);
             }
 
@@ -309,7 +336,8 @@ public class OcurrenciaBibliotecaServiceImpl implements OcurrenciaBibliotecaServ
                     idRef.toString(),
                     nombre,
                     originalEnTabla.getCantidad(),
-                    originalEnTabla.getCostoUnitario()
+                    originalEnTabla.getCostoUnitario(),
+                    true
             ));
 
             repoM.findByIdocurrencia(idOcurrencia).forEach(m -> {
@@ -321,21 +349,31 @@ public class OcurrenciaBibliotecaServiceImpl implements OcurrenciaBibliotecaServ
                             m.getIdEquipoLaboratorio().toString(),
                             nombreEquipo,
                             m.getCantidad(),
-                            m.getCostoUnitario()
+                            m.getCostoUnitario(),
+                            m.getEsBiblioteca() != null && m.getEsBiblioteca()
                     ));
                 }
             });
         } else {
             // Si la ocurrencia no está ligada a un préstamo de equipo, solo listamos los materiales registrados
             repoM.findByIdocurrencia(idOcurrencia).forEach(m -> {
-                Equipo e = equipoRepo.findById(m.getIdEquipoLaboratorio()).orElse(null);
-                String nombreEquipo = (e != null) ? e.getNombreEquipo() : "<sin nombre>";
+                String nombreItem;
+                if (m.getEsBiblioteca() != null && m.getEsBiblioteca()) {
+                    DetalleBiblioteca d = detalleBiblioRepo.findById(m.getIdEquipoLaboratorio()).orElse(null);
+                    nombreItem = d != null && d.getBiblioteca()!=null
+                            ? d.getBiblioteca().getTitulo()
+                            : "<sin nombre>";
+                } else {
+                    Equipo e = equipoRepo.findById(m.getIdEquipoLaboratorio()).orElse(null);
+                    nombreItem = e != null ? e.getNombreEquipo() : "<sin nombre>";
+                }
                 lista.add(new OcurrenciaMaterialDTO(
                         m.getId(),
                         m.getIdEquipoLaboratorio().toString(),
-                        nombreEquipo,
+                        nombreItem,
                         m.getCantidad(),
-                        m.getCostoUnitario()
+                        m.getCostoUnitario(),
+                        m.getEsBiblioteca() != null && m.getEsBiblioteca()
                 ));
             });
         }

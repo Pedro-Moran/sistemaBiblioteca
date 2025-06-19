@@ -41,16 +41,26 @@ export class OcurrenciasService {
   }
 
   api_ocurrencias_biblioteca(modulo: any):Observable<any>{
-    /*return this.http.get<any[]>(`${this.apiUrl}/${modulo}`
-    ,{ headers: new HttpHeaders().set('Authorization',`Bearer ${this.authService.getToken()}`)}
-    );*/
-    return this.http.get<any[]>('assets/demo/biblioteca/ocurrencias/ocurrencias-biblioteca.json');
+    return this.http.get<any[]>(
+      `${this.apiUrl}/api/ocurrencias-biblio/materiales`,
+      {
+        headers: new HttpHeaders().set(
+          'Authorization',
+          `Bearer ${this.authService.getToken()}`
+        )
+      }
+    );
   }
   api_ocurrencias_laboratorio(modulo: any):Observable<any>{
-    /*return this.http.get<any[]>(`${this.apiUrl}/${modulo}`
-    ,{ headers: new HttpHeaders().set('Authorization',`Bearer ${this.authService.getToken()}`)}
-    );*/
-    return this.http.get<any[]>('assets/demo/biblioteca/ocurrencias/ocurrencias-laboratorio.json');
+    return this.http.get<any[]>(
+      `${this.apiUrl}/api/ocurrencias-biblio/equipos`,
+      {
+        headers: new HttpHeaders().set(
+          'Authorization',
+          `Bearer ${this.authService.getToken()}`
+        )
+      }
+    );
   }
   api_autorizacion_regularizacion():Observable<any[]> {
     return this.http.get<any[]>(

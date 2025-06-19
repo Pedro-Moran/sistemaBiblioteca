@@ -225,7 +225,7 @@ constructor(private fb: FormBuilder,private genericoService: GenericoService, pr
                     this.loading = true;
                     this.guardado=true;
                     //registrar nueva especiadad
-                    this.messageService.add({ severity: 'success', summary: 'Satisfactorio', detail: 'Registro satisfactorio.' });
+                    this.messageService.add({ severity: 'warn', summary: 'Advertencia', detail: 'Ocurrencia registrada.' });
                     this.loading = false;
                 }
             });

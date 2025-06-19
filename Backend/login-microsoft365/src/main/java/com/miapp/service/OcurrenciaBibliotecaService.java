@@ -16,7 +16,7 @@ public interface OcurrenciaBibliotecaService {
     List<OcurrenciaBibliotecaDTO> listarEquipos();
     OcurrenciaBibliotecaDTO buscarPorId(Long id);
     OcurrenciaUsuario saveUsuario(Long idOcurrencia, String codigoUsuario, Integer tipoUsuario);
-    OcurrenciaMaterial saveMaterial(Long idOcurrencia, Long idEquipo, Integer cantidad);
+    OcurrenciaMaterial saveMaterial(Long idOcurrencia, Long idEquipo, Integer cantidad, Boolean esBiblioteca);
 
     List<OcurrenciaUsuarioDTO> listarUsuariosDeOcurrencia(Long idOcurrencia);
 

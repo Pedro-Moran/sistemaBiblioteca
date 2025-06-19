@@ -15,6 +15,7 @@ import { Equipo } from '../../interfaces/biblioteca-virtual/equipo';
 import { OcurrenciaUsuario } from '../../interfaces/OcurrenciaUsuario';
 import { OcurrenciaMaterial } from '../../interfaces/OcurrenciaMaterial';
 import { OcurrenciaMaterialDTO } from '../../interfaces/OcurrenciaMaterialDTO';
+import { OcurrenciaEventService } from '../../services/ocurrencia-event.service';
 @Component({
     selector: 'app-modal-nuevo-ocurrencia',
     standalone: true,
@@ -198,7 +199,12 @@ export class ModalNuevoOcurencia implements OnInit {
   codigoUsuario: string | null = null;
 
 constructor(private fb: FormBuilder,
-        private auth: AuthService,private genericoService: GenericoService, private materialBibliograficoService: MaterialBibliograficoService, private confirmationService: ConfirmationService, private messageService: MessageService) {
+        private auth: AuthService,
+        private genericoService: GenericoService,
+        private materialBibliograficoService: MaterialBibliograficoService,
+        private confirmationService: ConfirmationService,
+        private messageService: MessageService,
+        private events: OcurrenciaEventService) {
 }
     ngOnInit() {
         this.guardado=false;
@@ -301,13 +307,19 @@ constructor(private fb: FormBuilder,
         this.idNormalizado = created.id!;
         this.form.patchValue({ id: created.id });
 
-        this.messageService.add({ severity: 'success', detail: 'Ocurrencia guardada.' });
+        this.messageService.add({ severity: 'warn', detail: 'Ocurrencia registrada.' });
         this.guardado = true;
+        if (this.sourceItem) {
+          const id = this.sourceItem.id ?? this.sourceItem.idEquipo;
+          if (id) {
+            this.events.addEquipo(id);
+          }
+        }
         this.saved.emit();
 
         if (!this.idDetallePrestamo && !this.idDetalleBiblioteca && this.sourceItem?.idEquipo) {
           this.materialBibliograficoService
-            .addMaterial(this.idNormalizado, { idEquipo: this.sourceItem.idEquipo, cantidad: 1 })
+            .addMaterial(this.idNormalizado, { idEquipo: this.sourceItem.idEquipo, cantidad: 1, esBiblioteca: false })
             .subscribe(() => this.loadMateriales());
         } else {
           this.loadMateriales();
@@ -411,7 +423,8 @@ openForEdit(ocurrencia: OcurrenciaDTO) {
             nombre: dto.nombreEquipo,
             cantidad: dto.cantidad,
             costo: dto.costo ?? 0,
-            subTotal: (dto.costo ?? 0) * dto.cantidad
+            subTotal: (dto.costo ?? 0) * dto.cantidad,
+            esBiblioteca: dto.esBiblioteca ?? false
           }));
         } else if (this.idDetalleBiblioteca != null && this.sourceItem) {
           this.materiales = [{
@@ -420,7 +433,8 @@ openForEdit(ocurrencia: OcurrenciaDTO) {
               this.sourceItem.biblioteca?.titulo ||
               this.sourceItem.tipoMaterial?.descripcion ||
               'Material',
-            cantidad: 1
+            cantidad: 1,
+            esBiblioteca: true
           }];
         } else {
           this.materiales = [];
@@ -443,7 +457,7 @@ openForEdit(ocurrencia: OcurrenciaDTO) {
       /** Y aquí defines el shape del equipo seleccionado */
   onEquipoSelected(e: { idEquipo: number; nombreEquipo: string; ip: string }) {
     this.materialBibliograficoService
-      .addMaterial(this.idNormalizado, { idEquipo: e.idEquipo, cantidad: 1 })
+      .addMaterial(this.idNormalizado, { idEquipo: e.idEquipo, cantidad: 1, esBiblioteca: false })
       .subscribe(() => this.loadMateriales());
   }
 

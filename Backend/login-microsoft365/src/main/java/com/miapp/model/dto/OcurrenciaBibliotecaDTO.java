@@ -31,6 +31,8 @@ public class OcurrenciaBibliotecaDTO {
     private String equipoNombre;
     private Long equipoNumero;
     private String equipoIp;
+    /** Identificador del equipo involucrado, si aplica */
+    private Long idEquipo;
     private String  usuarioCosto;
     private String  usuarioCreacion;
     private String  usuarioModificacion;
@@ -47,4 +49,7 @@ public class OcurrenciaBibliotecaDTO {
     private String sede;
     /** Tipo de material bibliográfico */
     private String tipoMaterial;
+
+    /** Marca si la ocurrencia pertenece a un material bibliográfico */
+    private Boolean esBiblioteca;
 }

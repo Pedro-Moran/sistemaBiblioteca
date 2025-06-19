@@ -317,7 +317,8 @@ loadInvolucrados(ocurrenciaId: number) {
             nombreEquipo: dto.nombreEquipo,
             cantidad:     dto.cantidad,
             costo:        dto.costo ?? 0,
-            subTotal:     (dto.costo ?? 0) * dto.cantidad
+            subTotal:     (dto.costo ?? 0) * dto.cantidad,
+            esBiblioteca: dto.esBiblioteca ?? false
           }));
         } else if (this.detalle?.idDetalleBiblioteca) {
           this.materialBibliograficoService
@@ -331,7 +332,8 @@ loadInvolucrados(ocurrenciaId: number) {
                 nombreEquipo: det.biblioteca?.titulo || det.tipoMaterial?.descripcion || 'Material',
                 cantidad:     1,
                 costo:        0,
-                subTotal:     0
+                subTotal:     0,
+                esBiblioteca: true
               }];
             });
         } else {

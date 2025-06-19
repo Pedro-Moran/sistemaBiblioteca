@@ -866,6 +866,20 @@ private buildDto(): BibliotecaDTO {
   const editorial = this.formEditorial.value;
   const decoded   = this.authService.getUser();
 
+  const opcion = editorial.autorOpcion?.id;
+  let autorPersonal: string | undefined;
+  let autorSecundario: string | undefined;
+  let autorInstitucional: string | undefined;
+
+  if (opcion === this.opcionesLista[0]?.id) {
+    autorPersonal = editorial.autorPrincipal ?? undefined;
+  } else if (opcion === this.opcionesLista[1]?.id) {
+    autorPersonal   = editorial.autorPrincipal ?? undefined;
+    autorSecundario = editorial.autorSecundario ?? undefined;
+  } else if (opcion === this.opcionesLista[2]?.id) {
+    autorInstitucional = editorial.autorInstitucional ?? undefined;
+  }
+
   const detalles: DetalleBibliotecaDTO[] = this.detalles.map(d => {
     return {
       // aquí coaccionamos `null` → `undefined`
@@ -900,9 +914,9 @@ private buildDto(): BibliotecaDTO {
 
     codigoLocalizacion : libro.codigo,
     titulo             : libro.titulo,
-    autorPersonal      : editorial.autorPrincipal,
-    autorSecundario    : editorial.autorSecundario,
-    autorInstitucional : editorial.autorInstitucional,
+    autorPersonal      : autorPersonal,
+    autorSecundario    : autorSecundario,
+    autorInstitucional : autorInstitucional,
     coordinador        : editorial.coordinador,
     director           : editorial.director,
     editorialPublicacion: editorial.editorial,
@@ -1450,6 +1464,13 @@ public setData(material: BibliotecaDTO, omitPaisCiudad = false): void {
     reimpresion:        clone.reimpresion,
     isbn:               clone.isbn
   };
+
+  const opcionId = clone.autorInstitucional
+                     ? this.opcionesLista[2]?.id
+                     : (clone.autorSecundario
+                        ? this.opcionesLista[1]?.id
+                        : this.opcionesLista[0]?.id);
+  patchEditorial.autorOpcion = this.opcionesLista.find(o => o.id === opcionId) ?? null;
 
   if (!omitPaisCiudad) {
     patchEditorial.pais   = clone.paisId;

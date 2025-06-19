@@ -17,7 +17,11 @@ export interface OcurrenciaDTO {
   sedePrestamo?:   string;
   equipoNombre?:    string;
     equipoNumero?:    number;
-    equipoIp?:        string;
+  equipoIp?:        string;
+  /** Identificador del equipo relacionado */
+  idEquipo?:       number;
+  /** Bandera para resaltar temporalmente la fila */
+  highlight?:      boolean;
   /** Codigo o número de ingreso del material */
   idEjemplar?: string;
   /** Título o nombre del material */
@@ -28,4 +32,6 @@ export interface OcurrenciaDTO {
   tipoMaterial?: string;
   /** Estado del costo */
   estadoCosto?: number;
+  /** Indica si la ocurrencia pertenece a la biblioteca */
+  esBiblioteca?: boolean;
   }

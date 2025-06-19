@@ -8,6 +8,7 @@ import { GenericoService } from '../../services/generico.service';
 import { TemplateModule } from '../../template.module';
 import { Table } from 'primeng/table';
 import { OcurrenciasService } from '../../services/ocurrencias.service';
+import { OcurrenciaEventService } from '../../services/ocurrencia-event.service';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ModalDetalleUsuario } from './modal-usuario';
 import { ModalDetalleOcurencia } from './modal-detalle-ocurrencia';
@@ -135,7 +136,8 @@ export class AutorizacionRegularizacion {
         @ViewChild('modalRegularizaOcurrencia') modalRegularizaOcurrencia!: ModalRegularizaOcurencia;
 
     constructor(private ocurrenciasService: OcurrenciasService, private genericoService: GenericoService, private fb: FormBuilder,
-    private router: Router, private authService: AuthService, private confirmationService: ConfirmationService, private messageService: MessageService) { }
+    private router: Router, private authService: AuthService, private confirmationService: ConfirmationService, private messageService: MessageService,
+    private ocurrenciaEvents: OcurrenciaEventService) { }
     async ngOnInit() {
         this.buscar();
     }
@@ -175,6 +177,9 @@ export class AutorizacionRegularizacion {
                     next: () => {
                       obj.regulariza = valor;
                       this.messageService.add({ severity: 'success', summary: 'Satisfactorio', detail: 'Estado actualizado.' });
+                      if (obj.idEquipo) {
+                        this.ocurrenciaEvents.notifyAutorizada(obj.idEquipo);
+                      }
                       this.loading = false;
                     },
                     error: () => {

@@ -160,7 +160,9 @@ export class OcurrenciasBiblioteca implements OnInit {
     this.loading = true;
     this.materialBsvc.api_ocurrencias_biblioteca().subscribe({
       next: (lista) => {
-        const ordered = [...lista].sort((a:any,b:any)=> (b.id ?? 0) - (a.id ?? 0));
+        // Filtramos solo ocurrencias marcadas como de biblioteca
+        const soloMateriales = lista.filter(o => o.esBiblioteca);
+        const ordered = [...soloMateriales].sort((a:any,b:any)=> (b.id ?? 0) - (a.id ?? 0));
         // aseguramos un campo usuarioNombre para filtros o visualización
         this.data = ordered.map((o:any)=> ({
           ...o,

@@ -14,6 +14,12 @@ public interface OcurrenciaMaterialRepository extends JpaRepository<OcurrenciaMa
     // Devuelve el registro para el “material original” (si ya existe) dado el idOcurrencia y el idEquipoLaboratorio
     Optional<OcurrenciaMaterial> findByIdocurrenciaAndIdEquipoLaboratorio(Long idOcurrencia, Long idEquipoLaboratorio);
 
+    /** Indica si la ocurrencia contiene al menos un material de laboratorio */
+    boolean existsByIdocurrenciaAndEsBibliotecaFalse(Long idocurrencia);
+
+    /** Indica si la ocurrencia contiene al menos un material bibliográfico */
+    boolean existsByIdocurrenciaAndEsBibliotecaTrue(Long idocurrencia);
+
     @Query("select coalesce(sum(m.costoUnitario * m.cantidad),0) from OcurrenciaMaterial m where m.idocurrencia = :id")
     BigDecimal sumCostoByOcurrencia(@Param("id") Long id);
 

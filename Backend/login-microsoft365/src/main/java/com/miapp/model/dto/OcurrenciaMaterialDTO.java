@@ -7,5 +7,6 @@ public record OcurrenciaMaterialDTO(
         String      codigoEquipo,
         String      nombreEquipo,
         Integer     cantidad,
-        BigDecimal costo
+        BigDecimal  costo,
+        Boolean     esBiblioteca
 ) {}

@@ -66,7 +66,9 @@ public class OcurrenciaBibliotecaController {
                                          @RequestBody Map<String,Object> body) {
         Long equipo = Long.valueOf(body.get("idEquipo").toString());
         Integer cant = (Integer) body.get("cantidad");
-        return ResponseEntity.ok(svc.saveMaterial(id,equipo,cant));
+        Boolean esBiblioteca = body.get("esBiblioteca") != null ?
+                Boolean.valueOf(body.get("esBiblioteca").toString()) : null;
+        return ResponseEntity.ok(svc.saveMaterial(id, equipo, cant, esBiblioteca));
     }
 
     @GetMapping("/{id}/usuarios")
