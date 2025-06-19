@@ -115,15 +115,13 @@ import { OcurrenciaEventService } from '../../../services/ocurrencia-event.servi
                 [pTooltip]="objeto.tieneOcurrencia ? 'Material con observación' : 'Confirmar'"
                 tooltipPosition="bottom">
             </button>
-            <button
+            <span
                 *ngIf="objeto.tieneOcurrencia"
-                pButton
-                type="button"
-                class="p-button-rounded p-button-info pulse ml-2"
-                icon="pi pi-exclamation-circle"
                 (click)="irAutorizacion(objeto)"
+                class="text-xs text-blue-500 underline cursor-pointer block mt-1"
                 pTooltip="Autorizar ocurrencia" tooltipPosition="bottom">
-            </button>
+                Ver ocurrencia
+            </span>
 
                                     </td>
                                     <td>

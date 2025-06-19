@@ -13,10 +13,15 @@ import { ModalNuevoOcurencia } from '../laboratorio-computo/modal-nuevo-ocurrenc
 import { ModalDetalleOcurencia } from '../laboratorio-computo/modal-detalle-ocurrencia';
 import { MaterialBibliograficoService } from '../../services/material-bibliografico.service';
 import { OcurrenciaDTO } from '../../interfaces/ocurrenciaDTO';
+import { OcurrenciaEventService } from '../../services/ocurrencia-event.service';
 
 @Component({
     selector: 'app-ocurrencias-biblioteca',
     standalone: true,
+    styles: [
+      `.highlight-row { animation: fadeHighlight 2s ease-in-out forwards; }
+       @keyframes fadeHighlight { from { background-color: #ffe08a; } to { background-color: transparent; } }`
+    ],
     template: ` <div class="card">
         <h5>{{titulo}}</h5>
         <p-toolbar styleClass="mb-6">
@@ -88,7 +93,7 @@ import { OcurrenciaDTO } from '../../interfaces/ocurrenciaDTO';
                                 </tr>
                             </ng-template>
                             <ng-template pTemplate="body" let-objeto>
-                                <tr>
+                                <tr [ngClass]="{ 'highlight-row': objeto.highlight }">
                                     <td>
                                     <div class="flex flex-wrap justify-center gap-2">
                                 <p-button outlined icon="pi pi-pencil" pTooltip="Actualizar" tooltipPosition="bottom" (click)="editar(objeto)"/>
@@ -149,11 +154,16 @@ export class OcurrenciasBiblioteca implements OnInit {
     @ViewChild('filter') filter!: ElementRef;
     @ViewChild('modalNuevoOcurrencia') modalNuevoOcurrencia!: ModalNuevoOcurencia;
     @ViewChild('modalDetalleOcurrencia') modalDetalleOcurrencia!: ModalDetalleOcurencia;
+    @ViewChild('dt1') table!: Table;
+    /** ID del material cuya ocurrencia debe resaltarse */
+    destinoId: number | null = null;
 
     constructor(private ocurrenciasService: OcurrenciasService, private genericoService: GenericoService, private fb: FormBuilder,
     private router: Router, private authService: AuthService, private confirmationService: ConfirmationService, private messageService: MessageService,
-    private materialBsvc: MaterialBibliograficoService) { }
+    private materialBsvc: MaterialBibliograficoService,
+    private ocurrenciaEvents: OcurrenciaEventService) { }
     async ngOnInit() {
+        this.destinoId = this.ocurrenciaEvents.consumeDestino();
         this.buscar();
     }
   buscar() {
@@ -166,9 +176,11 @@ export class OcurrenciasBiblioteca implements OnInit {
         // aseguramos un campo usuarioNombre para filtros o visualización
         this.data = ordered.map((o:any)=> ({
           ...o,
-          usuarioNombre: o.usuario?.nombres
+          usuarioNombre: o.usuario?.nombres,
+          highlight: false
         }));
         this.loading = false;
+        this.aplicarResaltado();
       },
       error: (err: HttpErrorResponse) => {
         this.loading = false;
@@ -203,4 +215,21 @@ export class OcurrenciasBiblioteca implements OnInit {
         // abrimos el modal en modo “costear”
         this.modalDetalleOcurrencia.openModal(obj.id!, true);
       }
+
+  /** Resalta temporalmente la fila relacionada con `destinoId` y navega a su página */
+  private aplicarResaltado(): void {
+    if (!this.destinoId || !this.table) {
+      return;
+    }
+    const index = this.data.findIndex(d => d.idDetalleBiblioteca === this.destinoId);
+    if (index >= 0) {
+      const pageSize = this.table.rows || 10;
+      const page = Math.floor(index / pageSize);
+      this.table.first = page * pageSize;
+      const fila = this.data[index];
+      fila.highlight = true;
+      setTimeout(() => (fila.highlight = false), 2000);
+    }
+    this.destinoId = null;
+  }
 }
