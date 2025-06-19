@@ -493,6 +493,7 @@ export class ModalLibroComponent implements OnInit {
     nuevaEspecialidad: string = '';
     items!: MenuItem[];
     uploadedFiles: any[] = [];
+    selectedFile: File | null = null;
     ciclos = [
         { label: 'I', value: 1, formControl: 'cicloI' },
         { label: 'II', value: 2, formControl: 'cicloII' },
@@ -989,8 +990,8 @@ finalizar(): void {
     this.loading = true;
 
     const req$ = dto.id
-        ? this.materialBibliograficoService.update(dto.id, dto)
-        : this.materialBibliograficoService.create(dto);
+        ? this.materialBibliograficoService.update(dto.id, dto, this.selectedFile ?? undefined)
+        : this.materialBibliograficoService.create(dto, this.selectedFile ?? undefined);
 
     req$.subscribe({
       next: ({status}) => {
@@ -1413,6 +1414,7 @@ idToTipo(id: number|null) {
             onFileSelect(event: any) {
                 const file = event.files[0]; // Obtiene el primer archivo seleccionado
                 if (file) {
+                    this.selectedFile = file;
                     this.formPortada.patchValue({ adjunto: file });
                 }
                 this.messageService.add({ severity: 'info', summary: 'Success', detail: 'Se adjunto archivo' });
@@ -1505,22 +1507,22 @@ this.detalles = (clone.detalles ?? []).map((d: DetalleBibliotecaDTO) => {
   const tipoAdqObj      = this.tipoAdquisicionLista.find(t => t.id === d.tipoAdquisicionId) ?? null;
   const tipoMaterialObj = this.tipoMaterialLista.find(t => t.idTipoMaterial === d.tipoMaterialId) ?? null;
 
-  return {
-    idDetalleBiblioteca : d.idDetalleBiblioteca,
-    codigoSede          : d.codigoSede,
-    tipoAdquisicionId   : d.tipoAdquisicionId,
-    tipoMaterialId      : d.tipoMaterialId,
-    horaInicio          : d.horaInicio ?? null,
-    horaFin             : d.horaFin ?? null,
-    maxHoras            : d.maxHoras ?? null,
-    costo               : d.costo,
-    numeroFactura       : d.numeroFactura,
-    fechaIngreso        : d.fechaIngreso,
-    sede                : sedeObj,
-    tipoAdquisicion     : tipoAdqObj,
-    tipoMaterial        : tipoMaterialObj,
-    idEstado           : d.idEstado
-  } as DetalleDisplay;
+    return {
+        idDetalleBiblioteca : d.idDetalleBiblioteca,
+        codigoSede          : d.codigoSede,
+        tipoAdquisicionId   : d.tipoAdquisicionId,
+        tipoMaterialId      : d.tipoMaterialId,
+        horaInicio          : d.horaInicio ?? null,
+        horaFin             : d.horaFin ?? null,
+        maxHoras            : d.maxHoras ?? null,
+        costo               : d.costo,
+        numeroFactura       : d.numeroFactura,
+        fechaIngreso        : d.fechaIngreso,
+        sede                : sedeObj,
+        tipoAdquisicion     : tipoAdqObj,
+        tipoMaterial        : tipoMaterialObj,
+        idEstado           : d.idEstado
+      } as DetalleDisplay;
 });
   } else {
     this.detalles = [];

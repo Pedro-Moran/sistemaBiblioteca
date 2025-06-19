@@ -180,11 +180,21 @@ registrarEspecialidad(especialidad: any): Observable<any> {
       get(id: number): Observable<BibliotecaDTO> {
         return this.http.get<any>(`${this.apiUrl}/${id}`).pipe(map(r => r.data));
       }
-      create(dto: BibliotecaDTO): Observable<any> {
-        return this.http.post<any>(`${this.apiUrl}/api/biblioteca/register`, dto);
+      create(dto: BibliotecaDTO, file?: File): Observable<any> {
+        const formData = new FormData();
+        formData.append('dto', new Blob([JSON.stringify(dto)], { type: 'application/json' }));
+        if (file) {
+          formData.append('portada', file, file.name);
+        }
+        return this.http.post<any>(`${this.apiUrl}/api/biblioteca/register`, formData);
       }
-      update(id: number, dto: BibliotecaDTO): Observable<any> {
-        return this.http.put<any>(`${this.apiUrl}/api/biblioteca/update/${id}`, dto);
+      update(id: number, dto: BibliotecaDTO, file?: File): Observable<any> {
+        const formData = new FormData();
+        formData.append('dto', new Blob([JSON.stringify(dto)], { type: 'application/json' }));
+        if (file) {
+          formData.append('portada', file, file.name);
+        }
+        return this.http.put<any>(`${this.apiUrl}/api/biblioteca/update/${id}`, formData);
       }
       delete(id: number): Observable<any> {
         return this.http.delete<any>(`${this.apiUrl}/api/biblioteca/delete/${id}`);

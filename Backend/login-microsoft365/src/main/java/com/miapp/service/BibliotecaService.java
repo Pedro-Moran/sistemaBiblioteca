@@ -3,6 +3,7 @@ package com.miapp.service;
 import com.miapp.model.Ciudad;
 import com.miapp.model.dto.BibliotecaDTO;
 import com.miapp.model.Biblioteca;
+import org.springframework.web.multipart.MultipartFile;
 import com.miapp.model.dto.CambioEstadoBibliotecaRequest;
 import com.miapp.model.dto.DetalleBibliotecaDTO;
 import com.miapp.model.dto.ResponseDTO;
@@ -14,8 +15,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface BibliotecaService {
-    Biblioteca register(BibliotecaDTO dto);
-    Biblioteca update(Long id, BibliotecaDTO dto);
+    Biblioteca register(BibliotecaDTO dto, MultipartFile portada);
+    Biblioteca update(Long id, BibliotecaDTO dto, MultipartFile portada);
     void delete(Long id);
     Optional<Biblioteca> findById(Long id);
     List<Biblioteca> listAll();

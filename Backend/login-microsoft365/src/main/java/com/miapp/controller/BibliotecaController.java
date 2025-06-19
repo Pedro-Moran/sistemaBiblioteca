@@ -7,6 +7,7 @@ import com.miapp.model.dto.*;
 import com.miapp.service.CiudadService;
 import com.miapp.service.DetalleBibliotecaService;
 import com.miapp.service.impl.BibliotecaServiceImpl;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,15 +33,18 @@ public class BibliotecaController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody BibliotecaDTO dto) {
-        Biblioteca saved = bibliotecaService.register(dto);
+    public ResponseEntity<?> register(@RequestPart("dto") BibliotecaDTO dto,
+                                      @RequestPart(value = "portada", required = false) MultipartFile portada) {
+        Biblioteca saved = bibliotecaService.register(dto, portada);
         BibliotecaDTO resp = bibliotecaService.mapToDto(saved);
         return ResponseEntity.ok(Map.of("status", 0, "data", resp));
     }
 
     @PutMapping("/update/{id}")
-    public ResponseEntity<?> update(@PathVariable Long id, @RequestBody BibliotecaDTO dto) {
-        Biblioteca updated = bibliotecaService.update(id, dto);
+    public ResponseEntity<?> update(@PathVariable Long id,
+                                    @RequestPart("dto") BibliotecaDTO dto,
+                                    @RequestPart(value = "portada", required = false) MultipartFile portada) {
+        Biblioteca updated = bibliotecaService.update(id, dto, portada);
         BibliotecaDTO resp = bibliotecaService.mapToDto(updated);
         return ResponseEntity.ok(Map.of("status", 0, "data", resp));
     }

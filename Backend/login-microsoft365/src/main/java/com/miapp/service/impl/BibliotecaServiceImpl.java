@@ -7,10 +7,12 @@ import com.miapp.repository.*;
 import com.miapp.service.BibliotecaService;
 import com.miapp.service.EmailService;
 import com.miapp.service.NotificacionService;
+import com.miapp.service.FileStorageService;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -39,6 +41,7 @@ public class BibliotecaServiceImpl implements BibliotecaService {
     private final OcurrenciaBibliotecaRepository ocurrenciaBibliotecaRepository;
     private final NotificacionService notificacionService;
     private final EmailService emailService;
+    private final FileStorageService fileStorageService;
 
     public BibliotecaServiceImpl(BibliotecaRepository bibliotecaRepository,
                                  TipoAdquisicionRepository tipoAdquisicionRepository,
@@ -50,11 +53,12 @@ public class BibliotecaServiceImpl implements BibliotecaService {
                                  SedeRepository sedeRepository,
                                  DetalleBibliotecaRepository detalleBibliotecaRepository,
                                  BibliotecaMapper mapper,
-                                 OcurrenciaUsuarioRepository repoU,
-                                 OcurrenciaMaterialRepository repoM,
-                                 OcurrenciaBibliotecaRepository ocurrenciaBibliotecaRepository,
-                                 NotificacionService notificacionService,
-                                 EmailService emailService) {
+                                OcurrenciaUsuarioRepository repoU,
+                                OcurrenciaMaterialRepository repoM,
+                                OcurrenciaBibliotecaRepository ocurrenciaBibliotecaRepository,
+                                NotificacionService notificacionService,
+                                EmailService emailService,
+                                FileStorageService fileStorageService) {
         this.bibliotecaRepository = bibliotecaRepository;
         this.tipoAdquisicionRepository  = tipoAdquisicionRepository;
         this.especialidadRepository = especialidadRepository;
@@ -70,25 +74,35 @@ public class BibliotecaServiceImpl implements BibliotecaService {
         this.ocurrenciaBibliotecaRepository = ocurrenciaBibliotecaRepository;
         this.notificacionService = notificacionService;
         this.emailService = emailService;
+        this.fileStorageService = fileStorageService;
     }
 
     @Override
-    public Biblioteca register(BibliotecaDTO dto) {
-        // 1) Mapea principal
+    public Biblioteca register(BibliotecaDTO dto, MultipartFile portada) {
         Biblioteca bib = mapToEntity(dto);
-
-        // 2) Persiste (cascade guarda también los detalles)
+        if (portada != null && !portada.isEmpty()) {
+            String filename = fileStorageService.store(portada);
+            bib.setNombreImagen(filename);
+            // solo guardamos el directorio base en rutaImagen
+            bib.setRutaImagen("/uploads/recursos");
+        }
         return bibliotecaRepository.save(bib);
     }
 
     @Override
-    public Biblioteca update(Long id, BibliotecaDTO dto) {
+    public Biblioteca update(Long id, BibliotecaDTO dto, MultipartFile portada) {
         Biblioteca existente = bibliotecaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("No existe Biblioteca " + id));
 
         // Volvemos a mapearlo por completo (incluyendo detalles)
         Biblioteca bib = mapToEntity(dto);
         bib.setId(id);
+        if (portada != null && !portada.isEmpty()) {
+            String filename = fileStorageService.store(portada);
+            bib.setNombreImagen(filename);
+            // solo guardamos el directorio base en rutaImagen
+            bib.setRutaImagen("/uploads/recursos");
+        }
         return bibliotecaRepository.save(bib);
     }
 
@@ -126,6 +140,8 @@ public class BibliotecaServiceImpl implements BibliotecaService {
         b.setReimpresion(dto.getReimpresion());
         b.setIsbn(dto.getIsbn());
         b.setIssn(dto.getIssn());
+        b.setRutaImagen(dto.getRutaImagen());
+        b.setNombreImagen(dto.getNombreImagen());
         b.setIdEstado(dto.getEstadoId());
         b.setExistencias(dto.getExistencias());
         // … asigna aquí todos tus campos de BibliotecaDTO a Biblioteca …

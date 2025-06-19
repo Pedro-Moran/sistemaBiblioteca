@@ -332,6 +332,7 @@ export class ModalOtrosComponent implements OnInit {
     nuevaEspecialidad: string = '';
     items!: MenuItem[];
     uploadedFiles: any[] = [];
+    selectedFile: File | null = null;
     @Input() tipoMaterialId!: number | null;
     @Output() saved = new EventEmitter<void>();
     constructor(private fb: FormBuilder,
@@ -520,9 +521,9 @@ export class ModalOtrosComponent implements OnInit {
             horaFin:    this.timeToString(d.horaFin ?? null),
             maxHoras:   d.maxHoras ?? null,
             costo: d.costo ?? null,
-            numeroFactura: d.numeroFactura ?? null,
-            fechaIngreso: d.fechaIngreso ?? null,
-            idEstado: 1,
+           numeroFactura: d.numeroFactura ?? null,
+           fechaIngreso: d.fechaIngreso ?? null,
+           idEstado: 1,
         }));
 
         return {
@@ -552,7 +553,9 @@ export class ModalOtrosComponent implements OnInit {
         }
         const dto = this.buildDto();
         this.loading = true;
-        const req$ = dto.id ? this.materialBibliograficoService.update(dto.id, dto) : this.materialBibliograficoService.create(dto);
+        const req$ = dto.id
+            ? this.materialBibliograficoService.update(dto.id, dto, this.selectedFile ?? undefined)
+            : this.materialBibliograficoService.create(dto, this.selectedFile ?? undefined);
         req$.subscribe({
             next: ({status}) => {
                 this.loading = false;
@@ -704,13 +707,13 @@ export class ModalOtrosComponent implements OnInit {
                     horaFin:    d.horaFin ?? null,
                     maxHoras:   d.maxHoras ?? null,
                     costo: d.costo ?? null,
-                    numeroFactura: d.numeroFactura ?? null,
-                    fechaIngreso: d.fechaIngreso ?? null,
-                    sede: sedeObj,
-                    tipoMaterial: tipoMatObj,
-                    tipoAdquisicion: tipoAdqObj,
-                    idEstado: d.idEstado
-                } as DetalleDisplay;
+                numeroFactura: d.numeroFactura ?? null,
+                fechaIngreso: d.fechaIngreso ?? null,
+                sede: sedeObj,
+                tipoMaterial: tipoMatObj,
+                tipoAdquisicion: tipoAdqObj,
+                idEstado: d.idEstado
+            } as DetalleDisplay;
             });
         } catch (error) {
             console.log(error);
@@ -878,6 +881,7 @@ export class ModalOtrosComponent implements OnInit {
             onFileSelect(event: any) {
                 const file = event.files[0]; // Obtiene el primer archivo seleccionado
                 if (file) {
+                    this.selectedFile = file;
                     this.formPortada.patchValue({ adjunto: file });
                 }
                 this.messageService.add({ severity: 'info', summary: 'Success', detail: 'Se adjunto archivo' });

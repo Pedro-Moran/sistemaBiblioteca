@@ -22,6 +22,7 @@ import { MaterialBibliograficoService } from '../../../services/material-bibliog
 import { TemplateModule } from '../../../template.module';
 import { ModalTesisComponent } from './modal-tesis';
 import { BibliotecaDTO  } from '../../../interfaces/material-bibliografico/biblioteca.model';
+import { environment } from '../../../../../environments/environment';
 
 interface Column {
   field: string;
@@ -113,7 +114,9 @@ interface Column {
                             </ng-template>
                             <ng-template pTemplate="body" let-objeto>
                                 <tr>
-                                    <td></td>
+                                    <td>
+                                        <img [src]="getImageUrl(objeto)" [alt]="objeto.titulo" width="50" class="shadow-lg" />
+                                    </td>
                                     <td *ngFor="let col of columns">{{ objeto[col.field] }}</td>
                                     <td class="text-center">
                                         <div style="position: relative;">
@@ -642,6 +645,30 @@ async listar() {
   showMenu(event: MouseEvent, selectedItem: any) {
     this.selectedItem = selectedItem;
     this.menu.toggle(event);
+  }
+
+  /** Devuelve la URL de la imagen almacenada si existe */
+  getImageUrl(obj: any): string | undefined {
+    if (obj.material?.url) {
+      const p = obj.material.url as string;
+      return p.startsWith('http') ? p : `${environment.filesUrl}${p}`;
+    }
+    if (obj.rutaImagen) {
+      const base = obj.rutaImagen.startsWith('http')
+        ? obj.rutaImagen
+        : `${environment.filesUrl}${obj.rutaImagen.startsWith('/') ? '' : '/'}${obj.rutaImagen}`;
+
+      if (obj.nombreImagen) {
+        // evita duplicar el nombre si ya viene incluido en rutaImagen
+        if (base.endsWith(obj.nombreImagen)) {
+          return base;
+        }
+        const sep = base.endsWith('/') ? '' : '/';
+        return base + sep + obj.nombreImagen;
+      }
+      return base;
+    }
+    return undefined;
   }
 
   listaFiltros() {
