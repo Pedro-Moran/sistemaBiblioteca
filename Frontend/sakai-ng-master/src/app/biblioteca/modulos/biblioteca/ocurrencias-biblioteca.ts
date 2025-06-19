@@ -67,6 +67,7 @@ import { OcurrenciaEventService } from '../../services/ocurrencia-event.service'
                             <p-tabpanels>
                                 <p-tabpanel value="0">
                                 <p-table #dt1 [value]="data" dataKey="id" [rows]="10"
+                        [first]="firstIndex"
                         [showCurrentPageReport]="true"
                         currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} registros"
                         [rowsPerPageOptions]="[10, 25, 50]" [loading]="loading" [rowHover]="true" styleClass="p-datatable-gridlines" [paginator]="true"
@@ -157,6 +158,8 @@ export class OcurrenciasBiblioteca implements OnInit {
     @ViewChild('dt1') table!: Table;
     /** ID del material cuya ocurrencia debe resaltarse */
     destinoId: number | null = null;
+    /** Posición inicial para el paginador */
+    firstIndex: number = 0;
 
     constructor(private ocurrenciasService: OcurrenciasService, private genericoService: GenericoService, private fb: FormBuilder,
     private router: Router, private authService: AuthService, private confirmationService: ConfirmationService, private messageService: MessageService,
@@ -221,11 +224,15 @@ export class OcurrenciasBiblioteca implements OnInit {
     if (!this.destinoId || !this.table) {
       return;
     }
-    const index = this.data.findIndex(d => d.idDetalleBiblioteca === this.destinoId);
+    const index = this.data.findIndex(d =>
+      d.idDetalleBiblioteca === this.destinoId ||
+      d.id === this.destinoId ||
+      Number(d.idEjemplar) === this.destinoId
+    );
     if (index >= 0) {
       const pageSize = this.table.rows || 10;
       const page = Math.floor(index / pageSize);
-      this.table.first = page * pageSize;
+      this.firstIndex = page * pageSize;
       const fila = this.data[index];
       fila.highlight = true;
       setTimeout(() => (fila.highlight = false), 2000);
