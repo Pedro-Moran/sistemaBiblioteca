@@ -32,6 +32,10 @@ public class OcurrenciaMaterial {
     @Column(name = "id_equipo_laboratorio")
     private Long idEquipoLaboratorio;
 
+    /** Indica si el identificador hace referencia a un material bibliográfico */
+    @Column(name = "ES_BIBLIOTECA")
+    private Boolean esBiblioteca;
+
     @Column
     private Integer cantidad;
 

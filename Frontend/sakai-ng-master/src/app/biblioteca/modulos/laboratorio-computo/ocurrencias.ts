@@ -13,10 +13,15 @@ import { ModalNuevoOcurencia } from './modal-nuevo-ocurrencia';
 import { ModalDetalleOcurencia } from './modal-detalle-ocurrencia';
 import { OcurrenciaDTO } from '../../interfaces/ocurrenciaDTO';
 import { MaterialBibliograficoService } from '../../services/material-bibliografico.service';
+import { OcurrenciaEventService } from '../../services/ocurrencia-event.service';
 
 @Component({
     selector: 'app-ocurrencias-laboratorio',
     standalone: true,
+    styles: [
+      `.highlight-row { animation: fadeHighlight 2s ease-in-out forwards; }
+       @keyframes fadeHighlight { from { background-color: #ffe08a; } to { background-color: transparent; } }`
+    ],
     template: ` <div class="card">
         <h5>{{titulo}}</h5>
         <p-toolbar styleClass="mb-6">
@@ -164,19 +169,25 @@ export class OcurrenciasLaboratorio {
     @ViewChild('filter') filter!: ElementRef;
     @ViewChild('modalNuevoOcurrencia') modalNuevoOcurrencia!: ModalNuevoOcurencia;
     @ViewChild('modalDetalleOcurrencia') modalDetalleOcurrencia!: ModalDetalleOcurencia;
+    /** ID de equipo cuyo registro debe resaltarse */
+    destinoId: number | null = null;
 
     constructor(private ocurrenciasService: OcurrenciasService, private genericoService: GenericoService, private fb: FormBuilder,
     private router: Router, private authService: AuthService, private confirmationService: ConfirmationService, private messageService: MessageService,
-    private materialBsvc:MaterialBibliograficoService ) { }
+    private materialBsvc:MaterialBibliograficoService,
+    private ocurrenciaEvents: OcurrenciaEventService ) { }
     async ngOnInit() {
+        this.destinoId = this.ocurrenciaEvents.consumeDestino();
         this.buscar();
     }
   buscar() {
     this.loading = true;
     this.materialBsvc.api_ocurrencias_laboratorio().subscribe({
       next: (lista) => {
-        this.data = lista;
+        // Solo consideramos ocurrencias marcadas como de laboratorio
+        this.data = lista.filter(o => o.esBiblioteca === false);
         this.loading = false;
+        this.aplicarResaltado();
       },
       error: (err: HttpErrorResponse) => {
         this.loading = false;
@@ -207,8 +218,21 @@ export class OcurrenciasLaboratorio {
       nuevoRegistro(){
 //         this.modalNuevoOcurrencia.openModal();
       }
-      costear(obj: OcurrenciaDTO) {
-        // abrimos el modal en modo “costear”
-        this.modalDetalleOcurrencia.openModal(obj.id!, true);
-      }
+  costear(obj: OcurrenciaDTO) {
+    // abrimos el modal en modo “costear”
+    this.modalDetalleOcurrencia.openModal(obj.id!, true);
+  }
+
+  /** Resalta temporalmente la fila relacionada con `destinoId` */
+  private aplicarResaltado(): void {
+    if (!this.destinoId) {
+      return;
+    }
+    const fila = this.data.find(d => (d.idEquipo || d.equipoNumero) === this.destinoId);
+    if (fila) {
+      fila.highlight = true;
+      setTimeout(() => fila.highlight = false, 2000);
+    }
+    this.destinoId = null;
+  }
 }

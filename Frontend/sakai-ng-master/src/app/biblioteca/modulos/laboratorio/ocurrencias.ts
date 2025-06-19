@@ -7,8 +7,8 @@ import { BibliotecaVirtualService } from '../../services/biblioteca-virtual.serv
 import { GenericoService } from '../../services/generico.service';
 import { TemplateModule } from '../../template.module';
 import { Table } from 'primeng/table';
-import { OcurrenciasService } from '../../services/ocurrencias.service';
 import { HttpErrorResponse } from '@angular/common/http';
+import { MaterialBibliograficoService } from '../../services/material-bibliografico.service';
 import { ModalNuevoOcurencia } from './modal-nuevo-ocurrencia';
 import { ModalDetalleOcurencia } from './modal-detalle-ocurrencia';
 
@@ -163,24 +163,24 @@ export class OcurrenciasLaboratorio {
     @ViewChild('modalNuevoOcurrencia') modalNuevoOcurrencia!: ModalNuevoOcurencia;
     @ViewChild('modalDetalleOcurrencia') modalDetalleOcurrencia!: ModalDetalleOcurencia;
 
-    constructor(private ocurrenciasService: OcurrenciasService, private genericoService: GenericoService, private fb: FormBuilder,
-    private router: Router, private authService: AuthService, private confirmationService: ConfirmationService, private messageService: MessageService) { }
+    constructor(private genericoService: GenericoService, private fb: FormBuilder,
+    private router: Router, private authService: AuthService, private confirmationService: ConfirmationService, private messageService: MessageService,
+    private materialBsvc: MaterialBibliograficoService) { }
     async ngOnInit() {
         this.buscar();
     }
     buscar(){
-        this.ocurrenciasService.api_ocurrencias_laboratorio('')
-              .subscribe(
-                (result: any) => {
-                  this.loading = false;
-                  if (result.status == "0") {
-                    this.data = result.data;
-                  }
-                }
-                , (error: HttpErrorResponse) => {
-                  this.loading = false;
-                }
-              );
+        this.loading = true;
+        this.materialBsvc.api_ocurrencias_laboratorio().subscribe({
+          next: (lista) => {
+            // Solo listamos ocurrencias marcadas como de laboratorio
+            this.data = lista.filter(o => o.esBiblioteca === false);
+            this.loading = false;
+          },
+          error: (error: HttpErrorResponse) => {
+            this.loading = false;
+          }
+        });
     }
     
       onGlobalFilter(table: Table, event: Event) {
