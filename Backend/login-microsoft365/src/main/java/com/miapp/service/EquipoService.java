@@ -37,6 +37,10 @@ public class EquipoService {
             equipoExistente.setEquipoDiscapacidad(equipo.getEquipoDiscapacidad());
             equipoExistente.setSede(equipo.getSede());
             equipoExistente.setEstado(equipo.getEstado());
+            // Actualizar campos de horario
+            equipoExistente.setHoraInicio(equipo.getHoraInicio());
+            equipoExistente.setHoraFin(equipo.getHoraFin());
+            equipoExistente.setMaxHoras(equipo.getMaxHoras());
             return equipoRepository.save(equipoExistente);
         }
         throw new RuntimeException("Equipo no encontrado con id: " + id);
