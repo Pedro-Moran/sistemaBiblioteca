@@ -78,6 +78,20 @@ public class DetallePrestamoSpecs {
                         : cb.equal(root.get("codigoCiclo"), codigoCiclo);
     }
 
+    /**
+     * Excluye los préstamos cuyo estado tenga la descripción indicada.
+     * Útil para ignorar registros en estado pendiente de aprobación
+     * como "RESERVADO".
+     */
+    public static Specification<DetallePrestamo> excluirEstadoDescripcion(String descripcion) {
+        return (root, cq, cb) ->
+                descripcion == null
+                        ? cb.conjunction()
+                        : cb.notEqual(
+                                cb.upper(root.get("estado").get("descripcion")),
+                                descripcion.toUpperCase());
+    }
+
     public static Specification<DetallePrestamo> entreFechas(LocalDateTime inicio, LocalDateTime fin) {
         System.out.println(">> entreFechas: " + inicio + " - " + fin);
         return (root, cq, cb) ->

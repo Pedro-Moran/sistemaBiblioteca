@@ -275,6 +275,8 @@ public class PrestamoService {
         List<DetallePrestamo> prestamos = detallePrestamoRepository.findAll(
                 Specification.where(conFetchEquipoYSede())
                         .and(DetallePrestamoSpecs.entreFechas(fechaInicio, fechaFin))
+                        // se ignoran los préstamos en estado "RESERVADO"
+                        .and(DetallePrestamoSpecs.excluirEstadoDescripcion("RESERVADO"))
         );
 
         Map<Equipo, List<DetallePrestamo>> agrupado = prestamos.stream()
