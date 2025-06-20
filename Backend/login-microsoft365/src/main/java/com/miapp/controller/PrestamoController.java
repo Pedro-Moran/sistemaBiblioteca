@@ -169,6 +169,19 @@ public class PrestamoController {
         return ResponseEntity.ok(Map.of("status","0","data", lista));
     }
 
+    /** Reporte de uso de tiempo de biblioteca virtual */
+    @GetMapping("/reporte/uso-tiempo-biblioteca")
+    public ResponseEntity<?> reporteUsoTiempoBiblioteca(
+            @RequestParam(required = false) String fechaInicio,
+            @RequestParam(required = false) String fechaFin
+    ) {
+        LocalDateTime inicio = fechaInicio != null ? LocalDate.parse(fechaInicio).atStartOfDay() : LocalDateTime.now().minusMonths(1);
+        LocalDateTime fin    = fechaFin != null ? LocalDate.parse(fechaFin).atTime(23,59,59) : LocalDateTime.now();
+
+        List<com.miapp.model.dto.EquipoUsoTiempoDTO> lista = prestamoService.reporteUsoTiempoBiblioteca(inicio, fin);
+        return ResponseEntity.ok(Map.of("status","0","data", lista));
+    }
+
     @GetMapping("/usuarios")
     public ResponseEntity<?> listarUsuarios(
             @RequestParam(required = false) String search) {

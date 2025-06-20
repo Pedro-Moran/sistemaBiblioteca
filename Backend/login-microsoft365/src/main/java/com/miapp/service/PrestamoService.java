@@ -22,6 +22,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.Map;
+import java.util.ArrayList;
 
 import static com.miapp.spec.DetallePrestamoSpecs.conFetchEquipoYSede;
 
@@ -259,6 +261,50 @@ public class PrestamoService {
      */
     public List<com.miapp.model.dto.UsuarioPrestamosDTO> reporteEstudiantesAtendidos() {
         return detallePrestamoRepository.contarPrestamosPorUsuario();
+    }
+
+    /**
+     * Reporte del tiempo de uso de los equipos de biblioteca virtual.
+     * Agrupa los préstamos por equipo y calcula la cantidad de préstamos y las
+     * horas totales prestadas en el rango indicado.
+     */
+    public List<com.miapp.model.dto.EquipoUsoTiempoDTO> reporteUsoTiempoBiblioteca(
+            LocalDateTime fechaInicio,
+            LocalDateTime fechaFin
+    ) {
+        List<DetallePrestamo> prestamos = detallePrestamoRepository.findAll(
+                Specification.where(conFetchEquipoYSede())
+                        .and(DetallePrestamoSpecs.entreFechas(fechaInicio, fechaFin))
+        );
+
+        Map<Equipo, List<DetallePrestamo>> agrupado = prestamos.stream()
+                .collect(Collectors.groupingBy(DetallePrestamo::getEquipo));
+
+        List<com.miapp.model.dto.EquipoUsoTiempoDTO> lista = new ArrayList<>();
+        for (Map.Entry<Equipo, List<DetallePrestamo>> entry : agrupado.entrySet()) {
+            Equipo eq = entry.getKey();
+            List<DetallePrestamo> dps = entry.getValue();
+
+            long cantidad = dps.size();
+            double horas = dps.stream()
+                    .mapToDouble(dp -> {
+                        LocalDateTime ini = dp.getFechaInicio();
+                        LocalDateTime fin = dp.getFechaFin() != null ? dp.getFechaFin() : LocalDateTime.now();
+                        return java.time.Duration.between(ini, fin).toMinutes() / 60d;
+                    })
+                    .sum();
+
+            String sedeDesc = eq.getSede() != null ? eq.getSede().getDescripcion() : null;
+            lista.add(new com.miapp.model.dto.EquipoUsoTiempoDTO(
+                    sedeDesc,
+                    eq.getNombreEquipo(),
+                    eq.getNumeroEquipo() != null ? eq.getNumeroEquipo().toString() : null,
+                    cantidad,
+                    horas
+            ));
+        }
+
+        return lista;
     }
 
 }
