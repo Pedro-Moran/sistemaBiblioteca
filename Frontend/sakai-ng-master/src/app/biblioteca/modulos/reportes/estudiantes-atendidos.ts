@@ -7,6 +7,11 @@ import { ClaseGeneral } from '../../interfaces/clase-general';
 import { PrestamosService } from '../../services/prestamos.service';
 import { UsuarioPrestamosDTO } from '../../interfaces/reportes/usuario-prestamos';
 import { firstValueFrom } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import * as ExcelJS from 'exceljs';
+import { saveAs } from 'file-saver';
 
 @Component({
     selector: 'app-reporte-estudiantes-atendidos',
@@ -66,20 +71,22 @@ import { firstValueFrom } from 'rxjs';
                         </p-datepicker>
                     </div>
                     <div class="flex items-end">
-            <button 
-                pButton 
-                type="button" 
-                class="p-button-rounded p-button-danger" 
+            <button
+                pButton
+                type="button"
+                class="p-button-rounded p-button-danger"
                 icon="pi pi-search"(click)="reporte()" [disabled]="loading"  pTooltip="Ver reporte" tooltipPosition="bottom">
             </button>
         </div>
-                    <div class="flex col-span-1 md:col-span-2 lg:col-span-2">
-                    
-                    </div>
                 </div>
-               
+
+                <div class="formgroup-inline">
+                    <button pButton icon="pi pi-file-excel" label="XLS" class="mr-2 p-button-danger" (click)="exportExcel()" tooltip="Exportar a Excel"></button>
+                    <button pButton icon="pi pi-file-pdf" label="PDF" class="mr-2 p-button-danger" (click)="exportPdf()" tooltip="Exportar a PDF"></button>
+                </div>
+
             </div>
-       
+
     </p-toolbar>
     <p-table
         [value]="resultados"
@@ -140,7 +147,11 @@ export class ReporteEstudiantesAtendidos implements OnInit {
     loading: boolean = true;
     resultados: UsuarioPrestamosDTO[] = [];
 
-    constructor(private prestamosService: PrestamosService) {}
+    constructor(
+        private prestamosService: PrestamosService,
+        private messageService: MessageService,
+        private http: HttpClient
+    ) {}
 
     async ngOnInit() {
         await this.reporte();
@@ -155,5 +166,56 @@ export class ReporteEstudiantesAtendidos implements OnInit {
         } finally {
             this.loading = false;
         }
+    }
+
+    async exportExcel() {
+        if (!this.resultados.length) {
+            this.messageService.add({ severity: 'warn', detail: 'No hay datos para exportar.' });
+            return;
+        }
+        const wb = new ExcelJS.Workbook();
+        const ws = wb.addWorksheet('Reporte');
+        const buffer = await this.http.get('/assets/logo.png', { responseType: 'arraybuffer' }).toPromise();
+        const logoId = wb.addImage({ buffer, extension: 'png' });
+        ws.addImage(logoId, { tl: { col: 0.2, row: 0.2 }, ext: { width: 220, height: 80 } });
+        ws.mergeCells('C1', 'E2');
+        const title = ws.getCell('C1');
+        title.value = 'Estudiantes atendidos';
+        title.alignment = { vertical: 'middle', horizontal: 'center' };
+        title.font = { size: 16, bold: true };
+        ws.addRow([]);
+        const headerRow = ws.addRow(['Usuario', 'Sede', 'Préstamos']);
+        headerRow.font = { bold: true };
+        headerRow.alignment = { horizontal: 'center' };
+        this.resultados.forEach(r => ws.addRow([r.usuario, r.sede || '-', r.totalPrestamos]));
+        ws.columns.forEach(col => (col.width = 25));
+        const buf = await wb.xlsx.writeBuffer();
+        saveAs(new Blob([buf]), 'estudiantes_atendidos.xlsx');
+    }
+
+    exportPdf() {
+        if (!this.resultados.length) {
+            this.messageService.add({ severity: 'warn', detail: 'No hay datos para exportar.' });
+            return;
+        }
+        const doc = new jsPDF({ orientation: 'landscape' });
+        const img = new Image();
+        img.src = '/assets/logo.png';
+        img.onload = () => {
+            doc.addImage(img, 'PNG', 10, 10, 60, 25);
+            doc.setFontSize(16);
+            doc.text('Estudiantes atendidos', 80, 20);
+            doc.setFontSize(10);
+            const hoy = new Date();
+            doc.text(`Fecha de emisión: ${hoy.toLocaleDateString()}`, 80, 25);
+            autoTable(doc, {
+                head: [['Usuario', 'Sede', 'Préstamos']],
+                body: this.resultados.map(r => [r.usuario, r.sede || '-', r.totalPrestamos]),
+                startY: 35,
+                styles: { fontSize: 8 },
+                headStyles: { fillColor: [41, 128, 185] }
+            });
+            doc.save('estudiantes_atendidos.pdf');
+        };
     }
 }
