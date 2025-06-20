@@ -50,9 +50,9 @@ import { saveAs } from 'file-saver';
                     <div class="grid grid-cols-7 gap-4">
                     <div class="flex flex-col gap-2 col-span-3 md:col-span-2 lg:col-span-2">
                     <label for="tipoPrestamo" class="block text-sm font-medium">Fecha inicio</label>
-                        <p-datepicker 
+                        <p-datepicker
                             appendTo="body"
-                            formControlName="fechaInicio"
+                            [(ngModel)]="fechaInicio"
                             [ngClass]="'w-full'"
                             [style]="{ width: '100%' }"
                             [readonlyInput]="true"
@@ -61,9 +61,9 @@ import { saveAs } from 'file-saver';
                     </div>
                     <div class="flex flex-col gap-2 col-span-3 md:col-span-2 lg:col-span-2">
                     <label for="tipoPrestamo" class="block text-sm font-medium">Fecha fin</label>
-                    <p-datepicker 
+                    <p-datepicker
                             appendTo="body"
-                            formControlName="fechaFin"
+                            [(ngModel)]="fechaFin"
                             [ngClass]="'w-full'"
                             [style]="{ width: '100%' }"
                             [readonlyInput]="true"
@@ -142,6 +142,8 @@ export class ReporteEstudiantesAtendidos implements OnInit {
     tipoPrestamoFiltro: ClaseGeneral = new ClaseGeneral();
     dataEspecialidad: ClaseGeneral[] = [];
     especialidadFiltro: ClaseGeneral = new ClaseGeneral();
+    fechaInicio?: Date;
+    fechaFin?: Date;
     nroIngreso:string='';
     tipo:number=1;
     loading: boolean = true;
