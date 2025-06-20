@@ -67,7 +67,7 @@ import { EquipoUsoTiempoDTO } from '../../interfaces/reportes/equipo-uso-tiempo'
                         <td>{{ row.nombreEquipo }}</td>
                         <td>{{ row.numeroEquipo }}</td>
                         <td>{{ row.cantidadPrestamos }}</td>
-                        <td>{{ row.horasPrestado }}</td>
+                        <td>{{ row.horasPrestado | number:'1.2-2' }}</td>
                     </tr>
                 </ng-template>
             </p-table>
