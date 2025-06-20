@@ -6,6 +6,7 @@ import { environment } from '../../../environments/environment';
 import { Notificacion } from '../interfaces/notificacion';
 import { DetallePrestamo } from '../interfaces/detalle-prestamo';
 import { map } from 'rxjs/operators';
+import { UsuarioPrestamosDTO } from '../interfaces/reportes/usuario-prestamos';
 
 @Injectable({
   providedIn: 'root'
@@ -113,5 +114,14 @@ procesarPrestamo(id: number, aprobar: boolean): Observable<any> {
   listarEstados(): Observable<any> {
       return this.http.get<any>(`${this.apiUrl}/api/equipos/estados`);
       }
+
+  /** Obtiene el total de préstamos por usuario */
+  reporteEstudiantesAtendidos(): Observable<UsuarioPrestamosDTO[]> {
+      return this.http
+        .get<{status:string, data: UsuarioPrestamosDTO[]}>(
+          `${this.apiUrl}/api/prestamos/reporte/estudiantes-atendidos`
+        )
+        .pipe(map(r => r.data ?? []));
+  }
 
 }

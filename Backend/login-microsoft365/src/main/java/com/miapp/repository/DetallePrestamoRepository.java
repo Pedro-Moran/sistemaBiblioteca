@@ -38,4 +38,22 @@ public interface DetallePrestamoRepository
 
     List<DetallePrestamo> findByFechaFinBetweenAndReminder48SentFalse(
             LocalDateTime start, LocalDateTime end);
+
+    /**
+     * Devuelve la cantidad de préstamos realizados por cada usuario.
+     * Se incluye la descripción de la sede a la que pertenece el usuario si está disponible.
+     */
+    @org.springframework.data.jpa.repository.Query(
+            "SELECT new com.miapp.model.dto.UsuarioPrestamosDTO(" +
+            " MAX(dp.id)," +
+            " dp.codigoUsuario," +
+            " COALESCE(s.descripcion, s2.descripcion)," +
+            " COUNT(dp)) " +
+            "FROM DetallePrestamo dp " +
+            "LEFT JOIN Usuario u ON upper(u.login) = upper(dp.codigoUsuario) " +
+            "LEFT JOIN Sede s ON u.idSede = s.id " +
+            "LEFT JOIN Sede s2 ON dp.codigoSede = str(s2.id) " +
+            "GROUP BY dp.codigoUsuario, COALESCE(s.descripcion, s2.descripcion) " +
+            "ORDER BY MAX(dp.id) DESC" )
+    List<com.miapp.model.dto.UsuarioPrestamosDTO> contarPrestamosPorUsuario();
 }

@@ -1,5 +1,7 @@
 import { Equipo } from './biblioteca-virtual/equipo';
 export interface DetallePrestamo {
+  /** Identificador del detalle de préstamo */
+  id: number;
   alcance: string;
   usuario: string;
   especialidad: string;

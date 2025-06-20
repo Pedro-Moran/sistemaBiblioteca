@@ -11,6 +11,7 @@ import com.miapp.spec.DetallePrestamoSpecs;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Service;
 
@@ -243,13 +244,21 @@ public class PrestamoService {
                         .and(DetallePrestamoSpecs.porEscuela(escuela))
                         .and(DetallePrestamoSpecs.porPrograma(programa))
                         .and(DetallePrestamoSpecs.porCiclo(ciclo))
-                        .and(DetallePrestamoSpecs.entreFechas(fechaInicio, fechaFin))
+                        .and(DetallePrestamoSpecs.entreFechas(fechaInicio, fechaFin)),
+                Sort.by(Sort.Direction.DESC, "id")
         );
     }
 
     public DetallePrestamo buscarPorId(Long id) {
         return detallePrestamoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("DetallePrestamo no encontrado: " + id));
+    }
+
+    /**
+     * Reporte de cantidad de préstamos por usuario.
+     */
+    public List<com.miapp.model.dto.UsuarioPrestamosDTO> reporteEstudiantesAtendidos() {
+        return detallePrestamoRepository.contarPrestamosPorUsuario();
     }
 
 }
