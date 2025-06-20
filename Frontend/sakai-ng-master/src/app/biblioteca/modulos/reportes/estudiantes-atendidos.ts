@@ -1,9 +1,12 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { TooltipModule } from 'primeng/tooltip';
 import { TemplateModule } from '../../template.module';
 import { Sedes } from '../../interfaces/sedes';
 import { ClaseGeneral } from '../../interfaces/clase-general';
+import { PrestamosService } from '../../services/prestamos.service';
+import { UsuarioPrestamosDTO } from '../../interfaces/reportes/usuario-prestamos';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
     selector: 'app-reporte-estudiantes-atendidos',
@@ -78,12 +81,37 @@ import { ClaseGeneral } from '../../interfaces/clase-general';
             </div>
        
     </p-toolbar>
+    <p-table
+        [value]="resultados"
+        [loading]="loading"
+        [paginator]="true"
+        [rows]="10"
+        [rowsPerPageOptions]="[10, 25, 50]"
+        [showCurrentPageReport]="true"
+        currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} registros"
+        sortField="id"
+        [sortOrder]="-1">
+        <ng-template pTemplate="header">
+            <tr>
+                <th>Usuario</th>
+                <th>Sede</th>
+                <th>Préstamos</th>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-row>
+            <tr>
+                <td>{{ row.usuario }}</td>
+                <td>{{ row.sede || '-' }}</td>
+                <td>{{ row.totalPrestamos }}</td>
+            </tr>
+        </ng-template>
+    </p-table>
 </div>
 `,
             imports: [TemplateModule, TooltipModule],
             providers: [MessageService, ConfirmationService]
 })
-export class ReporteEstudiantesAtendidos {
+export class ReporteEstudiantesAtendidos implements OnInit {
     titulo: string = "Estudiantes atendidos material bibliográfico";
     dataSede: Sedes[] = [];
     sedeFiltro: Sedes = new Sedes();
@@ -110,9 +138,22 @@ export class ReporteEstudiantesAtendidos {
     nroIngreso:string='';
     tipo:number=1;
     loading: boolean = true;
+    resultados: UsuarioPrestamosDTO[] = [];
+
+    constructor(private prestamosService: PrestamosService) {}
 
     async ngOnInit() {
         await this.reporte();
     }
-    reporte(){}
+
+    async reporte() {
+        this.loading = true;
+        try {
+            this.resultados = await firstValueFrom(
+                this.prestamosService.reporteEstudiantesAtendidos()
+            );
+        } finally {
+            this.loading = false;
+        }
+    }
 }

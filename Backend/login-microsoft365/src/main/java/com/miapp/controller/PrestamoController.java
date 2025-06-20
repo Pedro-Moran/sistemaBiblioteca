@@ -162,6 +162,13 @@ public class PrestamoController {
         return ResponseEntity.ok(Map.of("status","0","data", dp));
     }
 
+    /** Reporte de estudiantes atendidos */
+    @GetMapping("/reporte/estudiantes-atendidos")
+    public ResponseEntity<?> reporteEstudiantesAtendidos() {
+        List<com.miapp.model.dto.UsuarioPrestamosDTO> lista = prestamoService.reporteEstudiantesAtendidos();
+        return ResponseEntity.ok(Map.of("status","0","data", lista));
+    }
+
     @GetMapping("/usuarios")
     public ResponseEntity<?> listarUsuarios(
             @RequestParam(required = false) String search) {
