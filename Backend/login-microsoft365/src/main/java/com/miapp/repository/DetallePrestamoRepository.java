@@ -56,4 +56,24 @@ public interface DetallePrestamoRepository
             "GROUP BY dp.codigoUsuario, COALESCE(s.descripcion, s2.descripcion) " +
             "ORDER BY MAX(dp.id) DESC" )
     List<com.miapp.model.dto.UsuarioPrestamosDTO> contarPrestamosPorUsuario();
+
+    /**
+     * Devuelve la cantidad de préstamos aprobados por usuario.
+     * Se concatena el nombre completo del usuario en un solo campo y se muestra la sede del usuario.
+     */
+    @org.springframework.data.jpa.repository.Query(
+            "SELECT new com.miapp.model.dto.UsuarioPrestamosDTO(" +
+            " MAX(dp.id)," +
+            " CONCAT(COALESCE(u.nombreUsuario, ''),' '," +
+            "        COALESCE(u.apellidoPaterno, ''),' '," +
+            "        COALESCE(u.apellidoMaterno, ''))," +
+            " s.descripcion," +
+            " COUNT(dp)) " +
+            "FROM DetallePrestamo dp " +
+            "LEFT JOIN Usuario u ON upper(u.login) = upper(dp.codigoUsuario) " +
+            "LEFT JOIN Sede s ON u.idSede = s.id " +
+            "WHERE upper(dp.estado.descripcion) IN ('PRESTADO EN SALA', 'PRESTAMO A DOMICILIO', 'PRESTADO EN SALA Y DOMICILIO') " +
+            "GROUP BY u.nombreUsuario, u.apellidoPaterno, u.apellidoMaterno, s.descripcion " +
+            "ORDER BY MAX(dp.id) DESC" )
+    List<com.miapp.model.dto.UsuarioPrestamosDTO> contarPrestamosAprobadosPorUsuario();
 }

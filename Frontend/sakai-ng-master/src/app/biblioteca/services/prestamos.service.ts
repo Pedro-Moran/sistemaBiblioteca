@@ -8,6 +8,7 @@ import { DetallePrestamo } from '../interfaces/detalle-prestamo';
 import { map } from 'rxjs/operators';
 import { UsuarioPrestamosDTO } from '../interfaces/reportes/usuario-prestamos';
 import { EquipoUsoTiempoDTO } from '../interfaces/reportes/equipo-uso-tiempo';
+import { UsuarioPrestamosDTO } from '../interfaces/reportes/usuario-prestamos';
 
 @Injectable({
     providedIn: 'root'
@@ -94,6 +95,15 @@ export class PrestamosService {
     /** Obtiene el total de préstamos por usuario */
     reporteEstudiantesAtendidos(): Observable<UsuarioPrestamosDTO[]> {
         return this.http.get<{ status: string; data: UsuarioPrestamosDTO[] }>(`${this.apiUrl}/api/prestamos/reporte/estudiantes-atendidos`).pipe(map((r) => r.data ?? []));
+    }
+
+    /** Obtiene los usuarios atendidos de biblioteca virtual */
+    reporteUsuariosAtendidosBiblioteca(): Observable<UsuarioPrestamosDTO[]> {
+        return this.http
+            .get<{ status: string; data: UsuarioPrestamosDTO[] }>(
+                `${this.apiUrl}/api/prestamos/reporte/usuarios-atendidos-biblioteca`
+            )
+            .pipe(map((r) => r.data ?? []));
     }
 
     /** Obtiene el uso de tiempo de los equipos de biblioteca virtual */

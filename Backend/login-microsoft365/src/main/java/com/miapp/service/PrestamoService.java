@@ -264,6 +264,14 @@ public class PrestamoService {
     }
 
     /**
+     * Reporte de usuarios atendidos en biblioteca virtual.
+     * Considera únicamente los préstamos aprobados.
+     */
+    public List<com.miapp.model.dto.UsuarioPrestamosDTO> reporteUsuariosAtendidosBiblioteca() {
+        return detallePrestamoRepository.contarPrestamosAprobadosPorUsuario();
+    }
+
+    /**
      * Reporte del tiempo de uso de los equipos de biblioteca virtual.
      * Agrupa los préstamos por equipo y calcula la cantidad de préstamos y las
      * horas totales prestadas en el rango indicado.

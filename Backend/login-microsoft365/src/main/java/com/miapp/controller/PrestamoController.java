@@ -169,6 +169,16 @@ public class PrestamoController {
         return ResponseEntity.ok(Map.of("status","0","data", lista));
     }
 
+    /**
+     * Reporte de usuarios atendidos de biblioteca virtual.
+     * Devuelve la cantidad de préstamos aprobados por usuario.
+     */
+    @GetMapping("/reporte/usuarios-atendidos-biblioteca")
+    public ResponseEntity<?> reporteUsuariosAtendidosBiblioteca() {
+        List<com.miapp.model.dto.UsuarioPrestamosDTO> lista = prestamoService.reporteUsuariosAtendidosBiblioteca();
+        return ResponseEntity.ok(Map.of("status","0","data", lista));
+    }
+
     /** Reporte de uso de tiempo de biblioteca virtual */
     @GetMapping("/reporte/uso-tiempo-biblioteca")
     public ResponseEntity<?> reporteUsoTiempoBiblioteca(
