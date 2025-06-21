@@ -674,10 +674,15 @@ public class BibliotecaServiceImpl implements BibliotecaService {
                 })
                 .filter(b -> sedeId == null || sedeId == 0
                         || Objects.equals(b.getSede().getId(), sedeId))
-                .filter(b -> tipoMaterialId == null || tipoMaterialId == 0
-                        || Objects.equals(
-                        b.getTipoMaterial().getIdTipoMaterial(),
-                        tipoMaterialId))
+                .filter(b -> {
+                    if (tipoMaterialId == null || tipoMaterialId == 0) {
+                        return true;
+                    }
+                    return b.getTipoMaterial() != null
+                            && Objects.equals(
+                                    b.getTipoMaterial().getIdTipoMaterial(),
+                                    tipoMaterialId);
+                })
                 .filter(b -> {
                     if (opcion == null || opcion.isBlank()) {
                         return true;

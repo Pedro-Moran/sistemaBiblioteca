@@ -1,4 +1,5 @@
 import { Especialidad } from "./especialidad";
+import { Detalle } from "./detalle";
 
 export class Tesis {
     id: number;
@@ -19,6 +20,7 @@ export class Tesis {
     notasTesis:string;
     notasGeneral:string;
     portada:boolean;
+    detalle: Detalle[];
     constructor(init?: Partial<Tesis>) {
         this.id = 0;
         this.codigo='';
@@ -37,6 +39,7 @@ export class Tesis {
         this.notasTesis='';
         this.notasGeneral='';
         this.portada=false;
+        this.detalle=[];
         // Inicialización opcional si se pasa un objeto
         Object.assign(this, init);
     }
