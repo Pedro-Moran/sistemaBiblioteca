@@ -36,6 +36,7 @@ public class DetalleBiblioteca {
     // FK a tipoAdquisicion
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "TIPOADQUISICION")
+    @NotFound(action = NotFoundAction.IGNORE)
     private TipoAdquisicion tipoAdquisicion;
 
     @Column(name = "COSTO")
