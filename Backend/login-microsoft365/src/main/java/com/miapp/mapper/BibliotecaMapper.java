@@ -3,14 +3,19 @@ package com.miapp.mapper;
 
 import com.miapp.model.dto.BibliotecaResumenDTO;
 import com.miapp.model.dto.DetalleBibliotecaDTO;
+import com.miapp.model.dto.EstadoDTO;
 import org.springframework.stereotype.Component;
 import com.miapp.model.dto.BibliotecaDTO;
 import com.miapp.model.*;
+import com.miapp.repository.EstadoRepository;
+import lombok.RequiredArgsConstructor;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
+@RequiredArgsConstructor
 public class BibliotecaMapper {
+    private final EstadoRepository estadoRepository;
 
     // DTO -> Entidad
     public Biblioteca toEntity(BibliotecaDTO dto) {
@@ -163,12 +168,46 @@ public class BibliotecaMapper {
 
         if (b.getTipoBiblioteca() != null) dto.setTipoBibliotecaId(b.getTipoBiblioteca().getId());
         if (b.getIdioma()         != null) dto.setIdiomaId(b.getIdioma().getId());
-        if (b.getPais()           != null) dto.setPaisId(b.getPais().getCodigoPais());
-        if (b.getCiudad()         != null) dto.setCiudadCodigo(b.getCiudad().getCodigoCiudad());
+        if (b.getPais() != null) {
+            dto.setPaisId(b.getPais().getCodigoPais());
+            dto.setPais(new com.miapp.model.dto.PaisDTO(
+                    b.getPais().getCodigoPais(),
+                    b.getPais().getNombrePais()
+            ));
+        }
+        if (b.getCiudad() != null) {
+            dto.setCiudadCodigo(b.getCiudad().getCodigoCiudad());
+            dto.setCiudad(new com.miapp.model.dto.CiudadDTO(
+                    b.getCiudad().getCodigoCiudad(),
+                    b.getCiudad().getNombreCiudad(),
+                    b.getCiudad().getPais().getCodigoPais()
+            ));
+        }
         if (b.getPeriodicidad()   != null) dto.setPeriodicidadId(b.getPeriodicidad().getId());
-        if (b.getSede()           != null) dto.setSedeId(b.getSede().getId());
-        if (b.getTipoAdquisicion()!= null) dto.setTipoAdquisicionId(b.getTipoAdquisicion().getId());
+        if (b.getSede() != null) {
+            dto.setSedeId(b.getSede().getId());
+            dto.setSede(new com.miapp.model.SedeDTO(
+                    b.getSede().getId(),
+                    b.getSede().getDescripcion(),
+                    b.getSede().getActivo()
+            ));
+        }
+        if (b.getTipoAdquisicion() != null) {
+            dto.setTipoAdquisicionId(b.getTipoAdquisicion().getId());
+            dto.setTipoAdquisicion(new com.miapp.model.TipoAdquisicionDTO(
+                    b.getTipoAdquisicion().getId(),
+                    b.getTipoAdquisicion().getDescripcion(),
+                    null
+            ));
+        }
         if (b.getTipoMaterial()   != null) dto.setTipoMaterialId(b.getTipoMaterial().getIdTipoMaterial());
+        if (b.getEspecialidad() != null) {
+            dto.setIdEspecialidad(b.getEspecialidad().getIdEspecialidad());
+            dto.setEspecialidad(new com.miapp.model.dto.EspecialidadDTO(
+                    b.getEspecialidad().getIdEspecialidad(),
+                    b.getEspecialidad().getDescripcion()
+            ));
+        }
 
         return dto;
     }
@@ -290,6 +329,15 @@ public class BibliotecaMapper {
         tmp.setTipoAdquisicionId(
                 d.getTipoAdquisicion() != null ? d.getTipoAdquisicion().getId() : null
         );
+        if (d.getTipoAdquisicion() != null) {
+            tmp.setTipoAdquisicion(new com.miapp.model.TipoAdquisicionDTO(
+                    d.getTipoAdquisicion().getId(),
+                    d.getTipoAdquisicion().getDescripcion(),
+                    null
+            ));
+        } else {
+            tmp.setTipoAdquisicion(null);
+        }
         tmp.setTipoMaterialId(
                 d.getTipoMaterial() != null ? d.getTipoMaterial().getIdTipoMaterial() : null
         );
@@ -321,6 +369,10 @@ public class BibliotecaMapper {
         tmp.setUsuarioModificacion(d.getUsuarioModificacion());
         tmp.setFechaModificacion(d.getFechaModificacion());
         tmp.setIdEstado(d.getIdEstado());
+        if (d.getIdEstado() != null) {
+            estadoRepository.findById(d.getIdEstado())
+                    .ifPresent(e -> tmp.setEstadoDescripcion(e.getDescripcion()));
+        }
         tmp.setCantidadPrestamos(d.getCantidadPrestamos());
         tmp.setFechaReserva(d.getFechaSolicitud());
 

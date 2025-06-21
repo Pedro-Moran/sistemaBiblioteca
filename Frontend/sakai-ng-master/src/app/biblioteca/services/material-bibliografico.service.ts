@@ -15,6 +15,11 @@ import { Equipo } from '../interfaces/biblioteca-virtual/equipo';
 import { OcurrenciaUsuario } from '../interfaces/OcurrenciaUsuario';
 import { OcurrenciaMaterialDTO } from '../interfaces/OcurrenciaMaterialDTO';
 import { DetalleBibliotecaDTO } from '../interfaces/material-bibliografico/biblioteca.model';
+import { Tesis } from '../../biblioteca/interfaces/material-bibliografico/tesis';
+import { Libro } from '../../biblioteca/interfaces/material-bibliografico/libro';
+import { Revista } from '../../biblioteca/interfaces/material-bibliografico/revista';
+import { Otro } from '../../biblioteca/interfaces/material-bibliografico/otro';
+import { Detalle } from '../../biblioteca/interfaces/material-bibliografico/detalle';
 @Injectable({
   providedIn: 'root'
 })
@@ -219,6 +224,191 @@ registrarEspecialidad(especialidad: any): Observable<any> {
           map(resp => resp.data)    // extrae SOLO el array
         );
     }
+
+    /**
+     * Lista los materiales de tipo Tesis.
+     * Se filtra por el identificador del tipo de material correspondiente a las
+     * tesis (actualmente 3).
+     */
+    listarTesis(sedeId?: number): Observable<Tesis[]> {
+      return this.catalogo(undefined, sedeId, 3, 'disponibles')
+        .pipe(
+          map(lista => lista.map(b => new Tesis({
+            id: b.id ?? 0,
+            codigo: b.codigoLocalizacion ?? '',
+            titulo: b.titulo ?? '',
+            autorPrincipal: b.autorPersonal ?? '',
+            pais: (b as any).pais ?? (b.paisId ? { descripcion: b.paisId } as any : null),
+            ciudad: (b as any).ciudad ?? (b.ciudadCodigo ? { descripcion: b.ciudadCodigo } as any : null),
+            numeroPaginas: b.numeroPaginas ?? null,
+            cantidad: b.existencias ?? 0,
+            anioPublicacion: b.anioPublicacion ?? null,
+            anio: b.anioPublicacion?.toString() ?? '',
+            especialidad: (b as any).especialidad ?? (b.idEspecialidad ? { idEspecialidad: b.idEspecialidad, descripcion: String(b.idEspecialidad) } as any : null),
+            formatoDigital: b.fladigitalizado ?? false,
+            urlPublicacion: b.linkPublicacion ?? '',
+            descriptores: b.descriptor ?? '',
+            notasTesis: b.notaContenido ?? '',
+            notasGeneral: b.notaGeneral ?? '',
+            detalle: (b as any).detalles?.map((d: any) => this.mapDetalle(d)) ?? []
+        })))
+      );
+    }
+
+    /**
+     * Lista los materiales disponibles filtrando por el tipo de material.
+     * Si no se especifica un tipo, devuelve todos los registros disponibles.
+     */
+    listarPorTipoMaterial(tipo?: number, sedeId?: number): Observable<BibliotecaDTO[]> {
+      return this.catalogo(undefined, sedeId, tipo, 'disponibles');
+    }
+
+    /** Devuelve la lista de materiales ya mapeados según el tipo especificado */
+    listarColeccionDetalle(tipo: number, sedeId?: number): Observable<(Libro|Revista|Tesis|Otro)[]> {
+      return this.listarPorTipoMaterial(tipo, sedeId).pipe(
+        map(lista => lista.map(b => {
+          switch (tipo) {
+            case 1: return this.mapToLibro(b);
+            case 2: return this.mapToRevista(b);
+            case 3: return new Tesis({
+              id: b.id ?? 0,
+              codigo: b.codigoLocalizacion ?? '',
+              titulo: b.titulo ?? '',
+              autorPrincipal: b.autorPersonal ?? '',
+              pais: (b as any).pais ?? (b.paisId ? { descripcion: b.paisId } as any : null),
+              ciudad: (b as any).ciudad ?? (b.ciudadCodigo ? { descripcion: b.ciudadCodigo } as any : null),
+              descripcionFisica: (b as any).descripcionFisica ?? null,
+              numeroPaginas: b.numeroPaginas ?? null,
+              cantidad: b.existencias ?? 0,
+              anioPublicacion: b.anioPublicacion ?? null,
+              anio: b.anioPublicacion?.toString() ?? '',
+              especialidad: (b as any).especialidad ?? (b.idEspecialidad ? { idEspecialidad: b.idEspecialidad, descripcion: String(b.idEspecialidad) } as any : null),
+              formatoDigital: b.fladigitalizado ?? false,
+              urlPublicacion: b.linkPublicacion ?? '',
+              descriptores: b.descriptor ?? '',
+              notasTesis: b.notaContenido ?? '',
+              notasGeneral: b.notaGeneral ?? '',
+              portada: b.nombreImagen ? true : false,
+              detalle: (b as any).detalles?.map((d: any) => this.mapDetalle(d)) ?? []
+            });
+            default: return this.mapToOtro(b);
+          }
+        }))
+      );
+    }
+
+    private mapToLibro(b: BibliotecaDTO): Libro {
+      return new Libro({
+        id: b.id ?? 0,
+        codigo: b.codigoLocalizacion ?? '',
+        titulo: b.titulo ?? '',
+        autorPrincipal: b.autorPersonal ?? '',
+        autorSecundario: b.autorSecundario ?? '',
+        autorInstitucional: b.autorInstitucional ?? '',
+        coordinador: b.coordinador ?? '',
+        director: b.director ?? '',
+        editorialPublicacion: b.editorialPublicacion ?? '',
+        pais: (b as any).pais ?? null,
+        ciudad: (b as any).ciudad ?? null,
+        numeroPaginas: b.numeroPaginas ?? null,
+        edicion: b.edicion ?? null,
+        reimpresion: b.reimpresion ?? null,
+        anioPublicacion: b.anioPublicacion ?? null,
+        serie: b.serie ?? '',
+        isbn: b.isbn ?? null,
+        idioma: (b as any).idioma ?? null,
+        numeroDeIngreso: b.numeroDeIngreso ?? null,
+        rutaImagen: b.rutaImagen ?? undefined,
+        nombreImagen: b.nombreImagen ?? undefined,
+        especialidad: (b as any).especialidad ?? null,
+        enSilabo: b.flasyllabus ?? false,
+        cicloI: (b as any).cicloI ?? null,
+        cicloII: (b as any).cicloII ?? null,
+        cicloIII: (b as any).cicloIII ?? null,
+        cicloIV: (b as any).cicloIV ?? null,
+        cicloV: (b as any).cicloV ?? null,
+        cicloVI: (b as any).cicloVI ?? null,
+        cicloVII: (b as any).cicloVII ?? null,
+        cicloVIII: (b as any).cicloVIII ?? null,
+        cicloIX: (b as any).cicloIX ?? null,
+        cicloX: (b as any).cicloX ?? null,
+        cicloXI: (b as any).cicloXI ?? null,
+        cicloXII: (b as any).cicloXII ?? null,
+        cicloXIII: (b as any).cicloXIII ?? null,
+        cicloXIV: (b as any).cicloXIV ?? null,
+        formatoDigital: b.fladigitalizado ?? false,
+        urlPublicacion: b.linkPublicacion ?? '',
+        descriptores: b.descriptor ?? '',
+        notasContenido: b.notaContenido ?? '',
+        notasGeneral: b.notaGeneral ?? '',
+        editorial: (b as any).editorial ?? null,
+        detalle: (b as any).detalles?.map((d: any) => new Detalle(d)) ?? []
+      });
+    }
+
+    private mapToRevista(b: BibliotecaDTO): Revista {
+      return new Revista({
+        id: b.id ?? 0,
+        codigo: b.codigoLocalizacion ?? '',
+        director: b.director ?? '',
+        institucion: b.autorInstitucional ?? '',
+        especialidad: (b as any).especialidad ?? null,
+        titulo: b.titulo ?? '',
+        tituloAnterior: b.tituloAnterior ?? '',
+        editorialPublicacion: b.editorialPublicacion ?? '',
+        periodicidad: (b as any).periodicidad ?? null,
+        pais: (b as any).pais ?? null,
+        ciudad: (b as any).ciudad ?? null,
+        descripcionFisica: (b as any).descripcionFisica ?? null,
+        cantidad: b.existencias ?? 0,
+        anioPublicacion: b.anioPublicacion ?? null,
+        anio: b.anioPublicacion?.toString() ?? '',
+        isbn: b.isbn ?? null,
+        formatoDigital: b.fladigitalizado ?? false,
+        urlPublicacion: b.linkPublicacion ?? '',
+        descriptores: b.descriptor ?? '',
+        portada: b.nombreImagen ? true : false,
+        detalle: (b as any).detalles?.map((d: any) => new Detalle(d)) ?? []
+      });
+    }
+
+  private mapToOtro(b: BibliotecaDTO): Otro {
+    return new Otro({
+      id: b.id ?? 0,
+        tituloArticulo: b.titulo ?? '',
+        tituloRevista: b.editorialPublicacion ?? '',
+        autorPrincipal: b.autorPersonal ?? '',
+        descripcionRevista: b.tituloAnterior ?? '',
+        descripcionFisica: (b as any).descripcionFisica ?? null,
+        cantidad: b.existencias ?? 0,
+        formatoDigital: b.fladigitalizado ?? false,
+        urlPublicacion: b.linkPublicacion ?? '',
+        descriptores: b.descriptor ?? '',
+        notasGeneral: b.notaGeneral ?? '',
+        portada: b.nombreImagen ? true : false,
+      detalle: (b as any).detalles?.map((d: any) => new Detalle(d)) ?? []
+    });
+  }
+
+  /**
+   * Crea un objeto Detalle asegurando que existan subobjetos
+   * para sede y tipo de adquisición a partir de los códigos
+   * recibidos desde el backend.
+   */
+  private mapDetalle(d: any): Detalle {
+    const det = new Detalle(d);
+    if (!det.sede && det.codigoSede != null) {
+      det.sede = { id: Number(det.codigoSede), descripcion: String(det.codigoSede), activo: true } as any;
+    }
+    if (!det.tipoAdquisicion && det.tipoAdquisicionId != null) {
+      const id = typeof det.tipoAdquisicionId === 'number' ? det.tipoAdquisicionId : (det.tipoAdquisicionId as any).id;
+      det.tipoAdquisicion = { id, descripcion: String(id), activo: true } as any;
+    }
+    if (d.estadoDescripcion && !det.estadoDescripcion) {
+      det.estadoDescripcion = d.estadoDescripcion;
+    }
+    return det;
+  }
 
 catalogo(
     valor?: string,

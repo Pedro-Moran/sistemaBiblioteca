@@ -1,6 +1,13 @@
 package com.miapp.model.dto;
 
 import lombok.*;
+
+/** Objetos descriptivos para catálogos relacionados */
+import com.miapp.model.dto.PaisDTO;
+import com.miapp.model.dto.CiudadDTO;
+import com.miapp.model.dto.EspecialidadDTO;
+import com.miapp.model.SedeDTO;
+import com.miapp.model.TipoAdquisicionDTO;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -72,5 +79,11 @@ public class BibliotecaDTO {
     private LocalDateTime fechaCreacion;
     private String usuarioModificacion;
     private LocalDateTime fechaModificacion;
+    // Objetos relacionados para enviar la descripción directamente
+    private PaisDTO pais;
+    private CiudadDTO ciudad;
+    private EspecialidadDTO especialidad;
+    private SedeDTO sede;
+    private TipoAdquisicionDTO tipoAdquisicion;
     private List<DetalleBibliotecaDTO> detalles = new ArrayList<>();
 }

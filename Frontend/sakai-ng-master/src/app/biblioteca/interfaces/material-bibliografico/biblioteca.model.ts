@@ -1,6 +1,9 @@
 import type { Sedes } from '../sedes';
 import type { TipoAdquisicion } from './tipo-adquisicion';
 import type { TipoMaterial } from './tipo-material';
+import type { Pais } from './pais';
+import type { Ciudad } from './ciudad';
+import type { Especialidad } from './especialidad';
 
 export interface BibliotecaDTO {
     id?: number;
@@ -67,6 +70,11 @@ export interface BibliotecaDTO {
     fechaCreacion?: string | null;
     usuarioModificacion?: string | null;
     fechaModificacion?: string | null;
+    pais?: Pais | null;
+    ciudad?: Ciudad | null;
+    especialidad?: Especialidad | null;
+    sede?: Sedes | null;
+    tipoAdquisicion?: TipoAdquisicion | null;
     detalles?: DetalleBibliotecaDTO[];
 }
 
@@ -94,6 +102,7 @@ export interface DetalleBibliotecaDTO {
     usuarioModificacion?: string;
     fechaModificacion?: string;
     idEstado?: number;
+    estadoDescripcion?: string | null;
     /** Número de veces que se prestó el ejemplar */
     cantidadPrestamos?: number;
     /** Usuario que reservó el material */

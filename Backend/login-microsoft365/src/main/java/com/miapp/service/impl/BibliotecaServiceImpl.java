@@ -269,248 +269,14 @@ public class BibliotecaServiceImpl implements BibliotecaService {
     /*** Si quieres devolver DTOs desde el servicio, mapea también Entidad → DTO ***/
     @Override
     public BibliotecaDTO mapToDto(Biblioteca b) {
-        BibliotecaDTO dto = new BibliotecaDTO();
+        // Delegamos el mapeo de la mayoría de campos al mapper
+        BibliotecaDTO dto = mapper.toDto(b);
+        // El mapper no asigna el ID ni los detalles, lo hacemos aquí
         dto.setId(b.getId());
-        dto.setCodigoLocalizacion(b.getCodigoLocalizacion());
-        dto.setTipoBibliotecaId(
-                b.getTipoBiblioteca() != null ? b.getTipoBiblioteca().getId() : null
-        );
-        dto.setAutorPersonal(b.getAutorPersonal());
-        dto.setAutorInstitucional(b.getAutorInstitucional());
-        dto.setAutorSecundario(b.getAutorSecundario());
-        dto.setTraductor(b.getTraductor());
-        dto.setDirector(b.getDirector());
-        dto.setCompilador(b.getCompilador());
-        dto.setCoordinador(b.getCoordinador());
-        dto.setProductor(b.getProductor());
-        dto.setTitulo(b.getTitulo());
-        dto.setTituloAnterior(b.getTituloAnterior());
-        dto.setEditorialPublicacion(b.getEditorialPublicacion());
-        dto.setTipoAnioPublicacion(b.getTipoAnioPublicacion());
-        dto.setAnioPublicacion(b.getAnioPublicacion());
-        dto.setIsbn(b.getIsbn());
-        dto.setIssn(b.getIssn());
-        dto.setSerie(b.getSerie());
-        dto.setTipoReproduccion(b.getTipoReproduccion());
-        dto.setTipoConteo(b.getTipoConteo());
-        dto.setNumeroConteo(b.getNumeroConteo());
-        dto.setNumeroConteo2(b.getNumeroConteo2());
-        dto.setEdicion(b.getEdicion());
-        dto.setReimpresion(b.getReimpresion());
-        dto.setDescriptor(b.getDescriptor());
-        dto.setDescripcionRevista(b.getDescripcionRevista());
-        dto.setNotaContenido(b.getNotaContenido());
-        dto.setNotaGeneral(b.getNotaGeneral());
-        dto.setNotaResumen(b.getNotaResumen());
-        dto.setIdiomaId(b.getIdioma() != null ? b.getIdioma().getId() : null);
-        dto.setPaisId(
-                b.getPais() != null
-                        ? b.getPais().getPaisId()
-                        : null
-        );
-        dto.setCiudadCodigo(
-                b.getCiudad() != null
-                        ? b.getCiudad().getCodigoCiudad()
-                        : null
-        );
-        dto.setPeriodicidadId(
-                b.getPeriodicidad() != null ? b.getPeriodicidad().getId() : null
-        );
-        dto.setNumeroExpediente(b.getNumeroExpediente());
-        dto.setJuzgado(b.getJuzgado());
-        dto.setFechaInicioExpediente(b.getFechaInicioExpediente());
-        dto.setMotivo(b.getMotivo());
-        dto.setProceso(b.getProceso());
-        dto.setMateria(b.getMateria());
-        dto.setObservacion(b.getObservacion());
-        dto.setIdEspecialidad(
-                b.getEspecialidad() != null ? b.getEspecialidad().getIdEspecialidad() : null
-        );
-        dto.setDemandado(b.getDemandado());
-        dto.setDemandante(b.getDemandante());
-        dto.setRutaImagen(b.getRutaImagen());
-        dto.setNombreImagen(b.getNombreImagen());
-        dto.setEstadoId(b.getIdEstado());
-        dto.setFlasyllabus(b.getFlasyllabus());
-        dto.setFladigitalizado(b.getFladigitalizado());
-        dto.setLinkPublicacion(b.getLinkPublicacion());
-        dto.setNumeroPaginas(b.getNumeroPaginas());
-        dto.setSedeId(b.getSede() != null ? b.getSede().getId() : null);
-        dto.setTipoAdquisicionId(
-                b.getTipoAdquisicion() != null ? b.getTipoAdquisicion().getId() : null
-        );
-        dto.setFechaIngreso(b.getFechaIngreso());
-        dto.setCosto(b.getCosto());
-        dto.setNumeroFactura(b.getNumeroFactura());
-        dto.setExistencias(b.getExistencias());
-        dto.setUsuarioCreacion(b.getUsuarioCreacion());
-        dto.setFechaCreacion(b.getFechaCreacion());
-        dto.setUsuarioModificacion(b.getUsuarioModificacion());
-        dto.setFechaModificacion(b.getFechaModificacion());
-        dto.setTipoMaterialId(
-                b.getTipoMaterial() != null ? b.getTipoMaterial().getIdTipoMaterial() : null
-        );
 
-        List<DetalleBibliotecaDTO> detallesDto =
-                b.getDetalles().stream().map(d -> {
-                    DetalleBibliotecaDTO tmp = new DetalleBibliotecaDTO();
-
-                    // ———————— PASO 3 y 4 ————————
-                    // (3) Creo el resumen de la cabecera y (4) lo asigno al DTO de detalle
-                    Biblioteca padre = d.getBiblioteca();
-                    if (padre != null) {
-                        BibliotecaResumenDTO resumen = new BibliotecaResumenDTO();
-                        resumen.setId(padre.getId());
-                        resumen.setCodigoLocalizacion(padre.getCodigoLocalizacion());
-                        resumen.setTipoBibliotecaId(
-                                padre.getTipoBiblioteca() != null ? padre.getTipoBiblioteca().getId() : null
-                        );
-                        resumen.setAutorPersonal(padre.getAutorPersonal());
-                        resumen.setAutorInstitucional(padre.getAutorInstitucional());
-                        resumen.setAutorSecundario(padre.getAutorSecundario());
-                        resumen.setTraductor(padre.getTraductor());
-                        resumen.setDirector(padre.getDirector());
-                        resumen.setCoordinador(padre.getCoordinador());
-                        resumen.setCompilador(padre.getCompilador());
-                        resumen.setProductor(padre.getProductor());
-                        resumen.setTitulo(padre.getTitulo());
-                        resumen.setTituloAnterior(padre.getTituloAnterior());
-                        resumen.setEditorialPublicacion(padre.getEditorialPublicacion());
-                        resumen.setTipoAnioPublicacion(padre.getTipoAnioPublicacion());
-                        resumen.setAnioPublicacion(padre.getAnioPublicacion());
-                        resumen.setIdEspecialidad(
-                                padre.getEspecialidad() != null ? padre.getEspecialidad().getIdEspecialidad() : null
-                        );
-                        resumen.setIsbn(padre.getIsbn());
-                        resumen.setIssn(padre.getIssn());
-                        resumen.setSerie(padre.getSerie());
-                        resumen.setTipoReproduccion(padre.getTipoReproduccion());
-                        resumen.setTipoConteo(padre.getTipoConteo());
-                        resumen.setNumeroConteo(padre.getNumeroConteo());
-                        resumen.setNumeroConteo2(padre.getNumeroConteo2());
-                        resumen.setEdicion(padre.getEdicion());
-                        resumen.setReimpresion(padre.getReimpresion());
-                        resumen.setDescriptor(padre.getDescriptor());
-                        resumen.setDescripcionRevista(padre.getDescripcionRevista());
-                        resumen.setNotaContenido(padre.getNotaContenido());
-                        resumen.setNotaGeneral(padre.getNotaGeneral());
-                        resumen.setNotaResumen(padre.getNotaResumen());
-                        resumen.setIdiomaId(padre.getIdioma() != null ? padre.getIdioma().getId() : null);
-                        resumen.setPaisId(
-                                padre.getPais() != null ? padre.getPais().getPaisId() : null
-                        );
-                        resumen.setCiudadCodigo(
-                                padre.getCiudad() != null ? padre.getCiudad().getCodigoCiudad() : null
-                        );
-                        resumen.setPeriodicidadId(
-                                padre.getPeriodicidad() != null ? padre.getPeriodicidad().getId() : null
-                        );
-                        resumen.setNumeroExpediente(padre.getNumeroExpediente());
-                        resumen.setJuzgado(padre.getJuzgado());
-                        resumen.setFechaInicioExpediente(padre.getFechaInicioExpediente());
-                        resumen.setMotivo(padre.getMotivo());
-                        resumen.setProceso(padre.getProceso());
-                        resumen.setMateria(padre.getMateria());
-                        resumen.setObservacion(padre.getObservacion());
-                        resumen.setDemandado(padre.getDemandado());
-                        resumen.setDemandante(padre.getDemandante());
-                        resumen.setRutaImagen(padre.getRutaImagen());
-                        resumen.setNombreImagen(padre.getNombreImagen());
-                        resumen.setEstadoId(padre.getIdEstado());
-                        resumen.setFlasyllabus(padre.getFlasyllabus());
-                        resumen.setFladigitalizado(padre.getFladigitalizado());
-                        resumen.setLinkPublicacion(padre.getLinkPublicacion());
-                        resumen.setNumeroPaginas(padre.getNumeroPaginas());
-                        resumen.setNumeroDeIngreso(padre.getNumeroDeIngreso());
-                        resumen.setSedeId(padre.getSede() != null ? padre.getSede().getId() : null);
-                        resumen.setTipoAdquisicionId(
-                                padre.getTipoAdquisicion() != null ? padre.getTipoAdquisicion().getId() : null
-                        );
-                        resumen.setFechaIngreso(padre.getFechaIngreso());
-                        resumen.setCosto(padre.getCosto());
-                        resumen.setNumeroFactura(padre.getNumeroFactura());
-                        resumen.setExistencias(padre.getExistencias());
-                        resumen.setUsuarioCreacion(padre.getUsuarioCreacion());
-                        resumen.setFechaCreacion(padre.getFechaCreacion());
-                        resumen.setUsuarioModificacion(padre.getUsuarioModificacion());
-                        resumen.setFechaModificacion(padre.getFechaModificacion());
-                        resumen.setTipoMaterialId(
-                                padre.getTipoMaterial() != null
-                                        ? padre.getTipoMaterial().getIdTipoMaterial()
-                                        : null
-                        );
-                        // (¡Aquí están TODOS los campos del DTO de resumen!
-                        //  Comenta los que no quieras enviar en JSON.)
-                        tmp.setBiblioteca(resumen);
-                        tmp.setBibliotecaId(padre.getId());
-                    }
-                    // —————— FIN Paso 3 y 4 ——————
-
-                    // 1) ID del detalle:
-                    tmp.setIdDetalleBiblioteca(d.getIdDetalle());
-
-                    // 2) Código de sede
-                    tmp.setCodigoSede(
-                            d.getSede() != null ? d.getSede().getId() : null
-                    );
-
-                    // 3) Tipo de Adquisición
-                    tmp.setTipoAdquisicionId(
-                            d.getTipoAdquisicion() != null
-                                    ? d.getTipoAdquisicion().getId()
-                                    : null
-                    );
-
-                    // 4) Tipo de Material
-                    tmp.setTipoMaterialId(
-                            d.getTipoMaterial() != null
-                                    ? d.getTipoMaterial().getIdTipoMaterial()
-                                    : null
-                    );
-
-                    // 5) Costo y Nº Factura
-                    tmp.setCosto(d.getCosto());
-                    tmp.setCodigoUsuario(d.getCodigoUsuario());
-                    tmp.setTipoPrestamo(d.getTipoPrestamo());
-                    tmp.setNumeroFactura(d.getNumeroFactura());
-
-                    // 6) Fecha de Ingreso
-                    tmp.setFechaIngreso(d.getFechaIngreso());
-                    tmp.setHoraInicio(d.getHoraInicio());
-                    tmp.setHoraFin(d.getHoraFin());
-                    tmp.setMaxHoras(d.getMaxHoras());
-
-                    // 7) Código de Barra (insertable=false en BD)
-                    tmp.setCodigoBarra(d.getCodigoBarra());
-
-                    // 8) Número de Ingreso (insertable=false en BD)
-                    tmp.setNumeroIngreso(d.getNumeroIngreso());
-
-                    // 9) Número de Existencia (insertable=false en BD)
-                    tmp.setNroExistencia(d.getNroExistencia());
-
-                    // 10) Usuario ingreso
-                    tmp.setUsuarioIngreso(d.getUsuarioIngreso());
-
-                    // 11) Usuario aceptación
-                    tmp.setUsuarioAceptacion(d.getUsuarioAceptacion());
-
-                    // 12) Fecha de Aceptación (insertable=false en BD)
-                    tmp.setFechaAceptacion(d.getFechaAceptacion());
-
-                    // 13) Usuario/Fecha creación y modificación (insertable=false en BD)
-                    tmp.setUsuarioCreacion(d.getUsuarioCreacion());
-                    tmp.setFechaCreacion(d.getFechaCreacion());
-                    tmp.setUsuarioModificacion(d.getUsuarioModificacion());
-                    tmp.setFechaModificacion(d.getFechaModificacion());
-
-                    // 14) Estado
-                    tmp.setIdEstado(d.getIdEstado());
-                    tmp.setCantidadPrestamos(d.getCantidadPrestamos());
-
-                    return tmp;
-                }).toList();
-
+        List<DetalleBibliotecaDTO> detallesDto = b.getDetalles().stream()
+                .map(mapper::toDetalleDto)
+                .toList();
         dto.setDetalles(detallesDto);
         return dto;
     }
@@ -674,10 +440,15 @@ public class BibliotecaServiceImpl implements BibliotecaService {
                 })
                 .filter(b -> sedeId == null || sedeId == 0
                         || Objects.equals(b.getSede().getId(), sedeId))
-                .filter(b -> tipoMaterialId == null || tipoMaterialId == 0
-                        || Objects.equals(
-                        b.getTipoMaterial().getIdTipoMaterial(),
-                        tipoMaterialId))
+                .filter(b -> {
+                    if (tipoMaterialId == null || tipoMaterialId == 0) {
+                        return true;
+                    }
+                    return b.getTipoMaterial() != null
+                            && Objects.equals(
+                                    b.getTipoMaterial().getIdTipoMaterial(),
+                                    tipoMaterialId);
+                })
                 .filter(b -> {
                     if (opcion == null || opcion.isBlank()) {
                         return true;
