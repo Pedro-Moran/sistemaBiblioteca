@@ -123,6 +123,7 @@ public class AuthController {
         String rolDescripcion = usuario.getRoles().isEmpty()
                 ? "Sin Rol"
                 : usuario.getRoles().iterator().next().getDescripcion();
+        usuarioService.incrementarContadorLogins(usuario.getLogin());
         String jwt = jwtUtil.generateToken(usuario.getEmail(), rolDescripcion);
 
         return ResponseEntity.ok(new LoginResponse("Login exitoso", jwt));
@@ -136,6 +137,7 @@ public class AuthController {
             String rolDescripcion = usuario.getRoles().isEmpty()
                     ? "Sin Rol"
                     : usuario.getRoles().iterator().next().getDescripcion();
+            usuarioService.incrementarContadorLogins(usuario.getLogin());
             String jwt = jwtUtil.generateToken(usuario.getEmail(), rolDescripcion);
             System.out.println(jwt);
             return ResponseEntity.ok(new LoginResponse("Login exitoso", jwt));

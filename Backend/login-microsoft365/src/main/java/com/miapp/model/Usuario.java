@@ -88,5 +88,10 @@ public class Usuario {
     @Column(name = "DIRECCION")
     private String direccion;
 
+    /** Contador de logeos acumulados */
+    @Column(name = "LOGIN_COUNT")
+    private Long loginCount = 0L;
+
+
 
 }

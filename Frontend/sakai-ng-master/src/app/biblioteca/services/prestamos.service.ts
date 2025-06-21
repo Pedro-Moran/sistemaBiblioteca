@@ -9,6 +9,7 @@ import { map } from 'rxjs/operators';
 import { UsuarioPrestamosDTO } from '../interfaces/reportes/usuario-prestamos';
 import { EquipoUsoTiempoDTO } from '../interfaces/reportes/equipo-uso-tiempo';
 import { UsuarioPrestamosDTO } from '../interfaces/reportes/usuario-prestamos';
+import { VisitanteBibliotecaVirtualDTO } from '../interfaces/reportes/visitante-biblioteca-virtual';
 
 @Injectable({
     providedIn: 'root'
@@ -117,6 +118,15 @@ export class PrestamosService {
                 headers: new HttpHeaders().set('Authorization', `Bearer ${this.authService.getToken()}`),
                 params
             })
+            .pipe(map((resp) => resp.data ?? []));
+    }
+
+    /** Obtiene los visitantes de biblioteca virtual */
+    reporteVisitantesBibliotecaVirtual(): Observable<VisitanteBibliotecaVirtualDTO[]> {
+        return this.http
+            .get<{ status: string; data: VisitanteBibliotecaVirtualDTO[] }>(
+                `${this.apiUrl}/api/prestamos/reporte/visitantes-biblioteca-virtual`
+            )
             .pipe(map((resp) => resp.data ?? []));
     }
 }

@@ -179,6 +179,13 @@ public class PrestamoController {
         return ResponseEntity.ok(Map.of("status","0","data", lista));
     }
 
+    /** Reporte de visitantes de biblioteca virtual */
+    @GetMapping("/reporte/visitantes-biblioteca-virtual")
+    public ResponseEntity<?> reporteVisitantesBibliotecaVirtual() {
+        List<com.miapp.model.dto.VisitanteBibliotecaVirtualDTO> lista = prestamoService.reporteVisitantesBibliotecaVirtual();
+        return ResponseEntity.ok(Map.of("status","0","data", lista));
+    }
+
     /** Reporte de uso de tiempo de biblioteca virtual */
     @GetMapping("/reporte/uso-tiempo-biblioteca")
     public ResponseEntity<?> reporteUsoTiempoBiblioteca(

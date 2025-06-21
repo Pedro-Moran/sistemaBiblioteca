@@ -4,6 +4,7 @@ import com.miapp.model.OcurrenciaBiblioteca;
 import org.springframework.data.jpa.repository.JpaRepository;
 import com.miapp.model.dto.EjemplarPrestadoDTO;
 import com.miapp.model.dto.EjemplarNoPrestadoDTO;
+import com.miapp.model.dto.VisitanteBibliotecaVirtualDTO;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import java.util.List;
@@ -76,4 +77,5 @@ public interface OcurrenciaBibliotecaRepository
             "JOIN d.biblioteca b " +
             "WHERE coalesce(d.cantidadPrestamos,0) = 0")
     List<EjemplarNoPrestadoDTO> reporteEjemplarNoPrestado();
+
 }
