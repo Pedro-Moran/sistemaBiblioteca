@@ -290,6 +290,15 @@ public class BibliotecaMapper {
         tmp.setTipoAdquisicionId(
                 d.getTipoAdquisicion() != null ? d.getTipoAdquisicion().getId() : null
         );
+        if (d.getTipoAdquisicion() != null) {
+            tmp.setTipoAdquisicion(new com.miapp.model.TipoAdquisicionDTO(
+                    d.getTipoAdquisicion().getId(),
+                    d.getTipoAdquisicion().getDescripcion(),
+                    null
+            ));
+        } else {
+            tmp.setTipoAdquisicion(null);
+        }
         tmp.setTipoMaterialId(
                 d.getTipoMaterial() != null ? d.getTipoMaterial().getIdTipoMaterial() : null
         );

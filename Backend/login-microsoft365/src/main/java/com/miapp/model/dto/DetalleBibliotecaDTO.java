@@ -48,6 +48,9 @@ public class DetalleBibliotecaDTO {
     /** 6) ID de tipo de adquisición (FK a TipoAdquisicion) */
     private Long tipoAdquisicionId;
 
+    /** Objeto tipoAdquisicion con descripción opcional */
+    private com.miapp.model.TipoAdquisicionDTO tipoAdquisicion;
+
     /** 7) Número de ingreso (Long, generado por BD) */
     private Long numeroIngreso;
 

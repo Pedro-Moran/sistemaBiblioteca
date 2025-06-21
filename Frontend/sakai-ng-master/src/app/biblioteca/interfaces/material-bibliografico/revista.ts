@@ -1,4 +1,5 @@
 import { Especialidad } from "./especialidad";
+import { Detalle } from "./detalle";
 
 export class Revista {
     id: number;
@@ -22,6 +23,7 @@ export class Revista {
     urlPublicacion:string;
     descriptores:string;
     portada:boolean;
+    detalle: Detalle[];
     constructor(init?: Partial<Revista>) {
         this.id = 0;
         this.codigo='';
@@ -43,6 +45,7 @@ export class Revista {
         this.urlPublicacion='';
         this.descriptores='';
         this.portada=false;
+        this.detalle=[];
         // Inicialización opcional si se pasa un objeto
         Object.assign(this, init);
     }
