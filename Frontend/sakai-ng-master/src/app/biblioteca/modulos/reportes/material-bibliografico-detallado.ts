@@ -98,6 +98,7 @@ export class ReporteMaterialBibliograficoDetallado {
     loading: boolean = true;
     data:(Libro|Revista|Tesis|Otro)[] = [];
     columns: {field:string; header:string}[] = [];
+
     // Catálogos para traducir códigos a descripciones
     private paisMap = new Map<string,string>();
     private ciudadMap = new Map<string,string>();
@@ -169,6 +170,7 @@ export class ReporteMaterialBibliograficoDetallado {
 
     reporte() {
         this.loading = true;
+
         const tipo = this.coleccionFiltro?.id ?? 1;
         const sedeId = this.sedeFiltro?.id && this.sedeFiltro.id !== 0 ? this.sedeFiltro.id : undefined;
         this.setColumns(tipo);

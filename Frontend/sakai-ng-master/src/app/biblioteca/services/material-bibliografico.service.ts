@@ -275,6 +275,7 @@ registrarEspecialidad(especialidad: any): Observable<any> {
               codigo: b.codigoLocalizacion ?? '',
               titulo: b.titulo ?? '',
               autorPrincipal: b.autorPersonal ?? '',
+
               pais: (b as any).pais ?? (b.paisId ? { descripcion: b.paisId } as any : null),
               ciudad: (b as any).ciudad ?? (b.ciudadCodigo ? { descripcion: b.ciudadCodigo } as any : null),
               descripcionFisica: (b as any).descripcionFisica ?? null,
@@ -290,6 +291,7 @@ registrarEspecialidad(especialidad: any): Observable<any> {
               notasGeneral: b.notaGeneral ?? '',
               portada: b.nombreImagen ? true : false,
               detalle: (b as any).detalles?.map((d: any) => this.mapDetalle(d)) ?? []
+
             });
             default: return this.mapToOtro(b);
           }
@@ -372,6 +374,7 @@ registrarEspecialidad(especialidad: any): Observable<any> {
       });
     }
 
+
   private mapToOtro(b: BibliotecaDTO): Otro {
     return new Otro({
       id: b.id ?? 0,
@@ -386,6 +389,7 @@ registrarEspecialidad(especialidad: any): Observable<any> {
         descriptores: b.descriptor ?? '',
         notasGeneral: b.notaGeneral ?? '',
         portada: b.nombreImagen ? true : false,
+
       detalle: (b as any).detalles?.map((d: any) => new Detalle(d)) ?? []
     });
   }
