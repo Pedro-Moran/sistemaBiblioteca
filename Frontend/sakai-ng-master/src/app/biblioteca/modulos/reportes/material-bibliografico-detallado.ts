@@ -98,6 +98,21 @@ export class ReporteMaterialBibliograficoDetallado {
     loading: boolean = true;
     data:(Libro|Revista|Tesis|Otro)[] = [];
     columns: {field:string; header:string}[] = [];
+
+    // Catálogos para traducir códigos a descripciones
+    private paisMap = new Map<string,string>();
+    private ciudadMap = new Map<string,string>();
+    private especialidadMap = new Map<number,string>();
+    private sedeMap = new Map<number,string>();
+    private tipoAdqMap = new Map<number,string>();
+    private lookup<K,V>(map: Map<K,V>, ...keys: (K|undefined|null)[]): V | undefined {
+        for (const k of keys) {
+            if (k != null && map.has(k as K)) {
+                return map.get(k as K);
+            }
+        }
+        return undefined;
+    }
     get columnFields(): string[] {
         return this.columns.map(c => c.field);
     }
@@ -113,9 +128,27 @@ export class ReporteMaterialBibliograficoDetallado {
             if (res.status === "0") {
                 this.dataSede = [{ id: 0, descripcion: 'TODAS LAS SEDES', activo: true, estado: 1 }, ...res.data];
                 this.sedeFiltro = this.dataSede[0];
+                this.sedeMap = new Map(this.dataSede.map(s => [s.id, s.descripcion]));
             }
         } catch (err) {
             this.messageService.add({ severity: 'error', detail: 'Error al cargar sedes' });
+        }
+    }
+
+    private async cargarCatalogos() {
+        try {
+            const [p, c, e, t]: any[] = await Promise.all([
+                this.materialService.lista_pais('material-bibliografico/pais').toPromise(),
+                this.materialService.listarTodas().toPromise(),
+                this.materialService.lista_especialidad('material-bibliografico/especialidad').toPromise(),
+                this.materialService.lista_tipo_adquisicion('material-bibliografico/adquisicion').toPromise()
+            ]);
+            this.paisMap = new Map((p.data ?? p).map((x: any) => [x.paisId ?? x.id, x.nombrePais ?? x.descripcion]));
+            this.ciudadMap = new Map((c.data ?? c).map((x: any) => [x.ciudadCodigo ?? x.id, x.nombreCiudad ?? x.descripcion]));
+            this.especialidadMap = new Map((e.data ?? e).map((x: any) => [x.idEspecialidad, x.descripcion]));
+            this.tipoAdqMap = new Map((t.data ?? t).map((x: any) => [x.id ?? x.idTipoAdquisicion, x.descripcion]));
+        } catch (err) {
+            console.error('Error cargando catálogos', err);
         }
     }
 
@@ -124,28 +157,88 @@ export class ReporteMaterialBibliograficoDetallado {
             const res: any = await this.materialService.lista_tipo_material('catalogos/tipomaterial/activos').toPromise();
             const rawList: any[] = Array.isArray(res.data) ? res.data : Array.isArray(res) ? res : [];
             this.dataColeccion = rawList.map(t => new ClaseGeneral({ id: t.tipo.id, descripcion: t.descripcion, activo: t.activo ?? true, estado: 1 }));
-            this.dataColeccion.unshift({ id: 0, descripcion: 'TODOS', activo: true, estado: 1 });
-            this.coleccionFiltro = this.dataColeccion.find(c => c.id === 3) ?? this.dataColeccion[0];
+            this.coleccionFiltro = this.dataColeccion.find(c => c.id === 1) ?? this.dataColeccion[0];
         } catch (err) {
             this.messageService.add({ severity: 'error', detail: 'Error al cargar colecciones' });
         }
     }
 
     async ngOnInit() {
-        await Promise.all([this.cargarSedes(), this.cargarColecciones()]);
+        await Promise.all([this.cargarSedes(), this.cargarColecciones(), this.cargarCatalogos()]);
         await this.reporte();
     }
 
     reporte() {
         this.loading = true;
-        const tipo = this.coleccionFiltro?.id ?? 3;
+
+        const tipo = this.coleccionFiltro?.id ?? 1;
         const sedeId = this.sedeFiltro?.id && this.sedeFiltro.id !== 0 ? this.sedeFiltro.id : undefined;
         this.setColumns(tipo);
         const source = tipo === 3
             ? this.materialService.listarTesis(sedeId)
             : this.materialService.listarColeccionDetalle(tipo, sedeId);
         source.subscribe({
-            next: list => { this.data = list; this.loading = false; },
+            next: list => {
+                this.data = list.map(item => {
+                    const anyItem: any = item;
+                    if (anyItem.pais) {
+                        let desc = this.lookup(
+                            this.paisMap,
+                            anyItem.pais.descripcion,
+                            anyItem.pais.paisId,
+                            anyItem.pais.codigoPais,
+                            anyItem.pais.id
+                        );
+                        if (!desc && anyItem.pais.nombrePais)
+                            desc = anyItem.pais.nombrePais;
+                        if (desc) anyItem.pais.descripcion = desc;
+                    }
+                    if (anyItem.ciudad) {
+                        let desc = this.lookup(
+                            this.ciudadMap,
+                            anyItem.ciudad.descripcion,
+                            anyItem.ciudad.ciudadCodigo,
+                            anyItem.ciudad.id
+                        );
+                        if (!desc && anyItem.ciudad.nombreCiudad)
+                            desc = anyItem.ciudad.nombreCiudad;
+                        if (desc) anyItem.ciudad.descripcion = desc;
+                    }
+                    if (anyItem.especialidad) {
+                        const desc = this.lookup(
+                            this.especialidadMap,
+                            anyItem.especialidad.idEspecialidad,
+                            anyItem.especialidad.id
+                        );
+                        if (desc) anyItem.especialidad.descripcion = desc;
+                    }
+                    if (Array.isArray(anyItem.detalle)) {
+                        anyItem.detalle = anyItem.detalle.map((d: any) => {
+                            if (d.sede) {
+                                const desc = this.lookup(
+                                    this.sedeMap,
+                                    d.sede.descripcion,
+                                    d.sede.id,
+                                    d.codigoSede
+                                );
+                                if (desc) d.sede.descripcion = desc;
+                            }
+                            if (d.tipoAdquisicion) {
+                                const desc = this.lookup(
+                                    this.tipoAdqMap,
+                                    d.tipoAdquisicion.descripcion,
+                                    d.tipoAdquisicion.id,
+                                    d.tipoAdquisicionId
+                                );
+                                if (desc) d.tipoAdquisicion.descripcion = desc;
+                            }
+                            return d;
+                        });
+                    }
+                    return anyItem;
+                });
+                this.loading = false;
+            },
             error: () => { this.loading = false; }
         });
     }
@@ -180,8 +273,29 @@ export class ReporteMaterialBibliograficoDetallado {
                 { field: 'detalle.fechaIngreso', header: 'Fecha de Ingreso' },
                 { field: 'detalle.costo', header: 'Costo' },
                 { field: 'detalle.numeroFactura', header: 'N° de Factura' },
-                { field: 'detalle.idEstado', header: 'Estado' },
+                { field: 'detalle.estadoDescripcion', header: 'Estado' },
                 { field: 'nombreImagen', header: 'Imagen' }
+            ];
+            return;
+        }
+        if (tipo === 3) {
+            this.columns = [
+                { field: 'codigo', header: 'Código' },
+                { field: 'autorPrincipal', header: 'Autor' },
+                { field: 'titulo', header: 'Título' },
+                { field: 'pais.descripcion', header: 'País' },
+                { field: 'ciudad.descripcion', header: 'Ciudad' },
+                { field: 'numeroPaginas', header: 'N° de Hojas' },
+                { field: 'anioPublicacion', header: 'Año' },
+                { field: 'especialidad.descripcion', header: 'Especialidad' },
+                { field: 'descriptores', header: 'Descriptores' },
+                { field: 'notasTesis', header: 'Nota de tesis' },
+                { field: 'notasGeneral', header: 'Nota general' },
+                { field: 'detalle.numeroIngreso', header: 'N° de Ingreso' },
+                { field: 'detalle.sede.descripcion', header: 'Sede' },
+                { field: 'detalle.tipoAdquisicion.descripcion', header: 'Tipo de adquisición' },
+                { field: 'detalle.fechaIngreso', header: 'Fecha de Ingreso' },
+                { field: 'detalle.estadoDescripcion', header: 'Estado' }
             ];
             return;
         }
@@ -189,7 +303,6 @@ export class ReporteMaterialBibliograficoDetallado {
         let sample: any;
         switch (tipo) {
             case 2: sample = new Revista(); break;
-            case 3: sample = new Tesis(); break;
             default: sample = new Otro();
         }
         const cols: { field: string; header: string }[] = [];
@@ -305,6 +418,8 @@ export class ReporteMaterialBibliograficoDetallado {
             }
             return (
                 (value as any).descripcion ??
+                (value as any).nombrePais ??
+                (value as any).nombreCiudad ??
                 (value as any).titulo ??
                 (value as any).nombre ??
                 JSON.stringify(value)

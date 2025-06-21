@@ -25,6 +25,7 @@ export class Detalle {
     /** Máximo de horas de préstamo */
     maxHoras?: number | null;
     idEstado?: number;
+    estadoDescripcion?: string | null;
     existencias?: string | null;
     constructor(init?: Partial<Detalle>) {
         this.id = 0;
@@ -44,6 +45,7 @@ export class Detalle {
         this.horaFin = null;
         this.maxHoras = null;
         this.idEstado = undefined;
+        this.estadoDescripcion = null;
         this.existencias = null;
         // Inicialización opcional si se pasa un objeto
         Object.assign(this, init);

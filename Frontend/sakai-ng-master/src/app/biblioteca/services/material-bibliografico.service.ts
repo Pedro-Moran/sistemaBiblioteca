@@ -238,17 +238,19 @@ registrarEspecialidad(especialidad: any): Observable<any> {
             codigo: b.codigoLocalizacion ?? '',
             titulo: b.titulo ?? '',
             autorPrincipal: b.autorPersonal ?? '',
-            pais: (b as any).pais ?? null,
-            ciudad: (b as any).ciudad ?? null,
+            pais: (b as any).pais ?? (b.paisId ? { descripcion: b.paisId } as any : null),
+            ciudad: (b as any).ciudad ?? (b.ciudadCodigo ? { descripcion: b.ciudadCodigo } as any : null),
+            numeroPaginas: b.numeroPaginas ?? null,
             cantidad: b.existencias ?? 0,
+            anioPublicacion: b.anioPublicacion ?? null,
             anio: b.anioPublicacion?.toString() ?? '',
-            especialidad: (b as any).especialidad ?? null,
+            especialidad: (b as any).especialidad ?? (b.idEspecialidad ? { idEspecialidad: b.idEspecialidad, descripcion: String(b.idEspecialidad) } as any : null),
             formatoDigital: b.fladigitalizado ?? false,
             urlPublicacion: b.linkPublicacion ?? '',
             descriptores: b.descriptor ?? '',
             notasTesis: b.notaContenido ?? '',
-          notasGeneral: b.notaGeneral ?? '',
-            detalle: (b as any).detalles?.map((d: any) => new Detalle(d)) ?? []
+            notasGeneral: b.notaGeneral ?? '',
+            detalle: (b as any).detalles?.map((d: any) => this.mapDetalle(d)) ?? []
         })))
       );
     }
@@ -273,20 +275,23 @@ registrarEspecialidad(especialidad: any): Observable<any> {
               codigo: b.codigoLocalizacion ?? '',
               titulo: b.titulo ?? '',
               autorPrincipal: b.autorPersonal ?? '',
-              pais: (b as any).pais ?? null,
-              ciudad: (b as any).ciudad ?? null,
+
+              pais: (b as any).pais ?? (b.paisId ? { descripcion: b.paisId } as any : null),
+              ciudad: (b as any).ciudad ?? (b.ciudadCodigo ? { descripcion: b.ciudadCodigo } as any : null),
               descripcionFisica: (b as any).descripcionFisica ?? null,
+              numeroPaginas: b.numeroPaginas ?? null,
               cantidad: b.existencias ?? 0,
               anioPublicacion: b.anioPublicacion ?? null,
               anio: b.anioPublicacion?.toString() ?? '',
-              especialidad: (b as any).especialidad ?? null,
+              especialidad: (b as any).especialidad ?? (b.idEspecialidad ? { idEspecialidad: b.idEspecialidad, descripcion: String(b.idEspecialidad) } as any : null),
               formatoDigital: b.fladigitalizado ?? false,
               urlPublicacion: b.linkPublicacion ?? '',
               descriptores: b.descriptor ?? '',
-            notasTesis: b.notaContenido ?? '',
-            notasGeneral: b.notaGeneral ?? '',
-            portada: b.nombreImagen ? true : false,
-            detalle: (b as any).detalles?.map((d: any) => new Detalle(d)) ?? []
+              notasTesis: b.notaContenido ?? '',
+              notasGeneral: b.notaGeneral ?? '',
+              portada: b.nombreImagen ? true : false,
+              detalle: (b as any).detalles?.map((d: any) => this.mapDetalle(d)) ?? []
+
             });
             default: return this.mapToOtro(b);
           }
@@ -369,9 +374,10 @@ registrarEspecialidad(especialidad: any): Observable<any> {
       });
     }
 
-    private mapToOtro(b: BibliotecaDTO): Otro {
-      return new Otro({
-        id: b.id ?? 0,
+
+  private mapToOtro(b: BibliotecaDTO): Otro {
+    return new Otro({
+      id: b.id ?? 0,
         tituloArticulo: b.titulo ?? '',
         tituloRevista: b.editorialPublicacion ?? '',
         autorPrincipal: b.autorPersonal ?? '',
@@ -383,9 +389,30 @@ registrarEspecialidad(especialidad: any): Observable<any> {
         descriptores: b.descriptor ?? '',
         notasGeneral: b.notaGeneral ?? '',
         portada: b.nombreImagen ? true : false,
-        detalle: (b as any).detalles?.map((d: any) => new Detalle(d)) ?? []
-      });
+
+      detalle: (b as any).detalles?.map((d: any) => new Detalle(d)) ?? []
+    });
+  }
+
+  /**
+   * Crea un objeto Detalle asegurando que existan subobjetos
+   * para sede y tipo de adquisición a partir de los códigos
+   * recibidos desde el backend.
+   */
+  private mapDetalle(d: any): Detalle {
+    const det = new Detalle(d);
+    if (!det.sede && det.codigoSede != null) {
+      det.sede = { id: Number(det.codigoSede), descripcion: String(det.codigoSede), activo: true } as any;
     }
+    if (!det.tipoAdquisicion && det.tipoAdquisicionId != null) {
+      const id = typeof det.tipoAdquisicionId === 'number' ? det.tipoAdquisicionId : (det.tipoAdquisicionId as any).id;
+      det.tipoAdquisicion = { id, descripcion: String(id), activo: true } as any;
+    }
+    if (d.estadoDescripcion && !det.estadoDescripcion) {
+      det.estadoDescripcion = d.estadoDescripcion;
+    }
+    return det;
+  }
 
 catalogo(
     valor?: string,

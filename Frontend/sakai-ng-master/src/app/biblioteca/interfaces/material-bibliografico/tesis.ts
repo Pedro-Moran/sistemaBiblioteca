@@ -8,8 +8,9 @@ export class Tesis {
     autorPrincipal:string;
     pais:any;
     ciudad:any;
-    
+
     descripcionFisica:any;
+    numeroPaginas:any;
     cantidad:number;
     anioPublicacion:any;
     anio:string;
@@ -27,8 +28,9 @@ export class Tesis {
         this.titulo='';
         this.autorPrincipal='';   
         this.pais=null;      
-        this.ciudad=null;   
-        this.descripcionFisica=null;       
+        this.ciudad=null;
+        this.descripcionFisica=null;
+        this.numeroPaginas=null;
         this.cantidad=0;
         this.anioPublicacion=null;       
         this.anio='';
