@@ -270,4 +270,13 @@ public class UsuarioService {
         }
         return usuarioRepository.findByLoginContainingIgnoreCaseOrEmailContainingIgnoreCase(q, q);
     }
+
+    /** Incrementa el contador de logeos del usuario. */
+    public void incrementarContadorLogins(String login) {
+        usuarioRepository.findByLoginIgnoreCase(login).ifPresent(u -> {
+            long count = u.getLoginCount() == null ? 0L : u.getLoginCount();
+            u.setLoginCount(count + 1);
+            usuarioRepository.save(u);
+        });
+    }
 }

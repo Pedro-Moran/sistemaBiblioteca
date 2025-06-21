@@ -7,6 +7,8 @@ import com.miapp.model.TipoPrestamo;
 import com.miapp.repository.DetallePrestamoRepository;
 import com.miapp.repository.EquipoRepository;
 import com.miapp.repository.EstadoRepository;
+import com.miapp.repository.OcurrenciaBibliotecaRepository;
+import com.miapp.repository.UsuarioRepository;
 import com.miapp.spec.DetallePrestamoSpecs;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +41,8 @@ public class PrestamoService {
     private final SedeService sedeService;
     private final EmailService emailService;
     private final TaskScheduler scheduler;
+    private final OcurrenciaBibliotecaRepository ocurrenciaBibliotecaRepository;
+    private final UsuarioRepository usuarioRepository;
 
     public DetallePrestamo solicitarPrestamo(Long equipoId,
                                              Integer tipoUsuario,
@@ -315,6 +319,14 @@ public class PrestamoService {
         }
 
         return lista;
+    }
+
+    /**
+     * Reporte de visitantes de biblioteca virtual.
+     * Devuelve la cantidad de ocurrencias registradas por usuario.
+     */
+    public List<com.miapp.model.dto.VisitanteBibliotecaVirtualDTO> reporteVisitantesBibliotecaVirtual() {
+        return usuarioRepository.reporteVisitantesBibliotecaVirtual();
     }
 
 }

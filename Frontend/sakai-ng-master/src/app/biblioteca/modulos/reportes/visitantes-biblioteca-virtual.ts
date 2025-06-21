@@ -1,9 +1,12 @@
 import { Component } from '@angular/core';
+import { firstValueFrom } from 'rxjs';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { TooltipModule } from 'primeng/tooltip';
 import { TemplateModule } from '../../template.module';
 import { Sedes } from '../../interfaces/sedes';
 import { ClaseGeneral } from '../../interfaces/clase-general';
+import { PrestamosService } from '../../services/prestamos.service';
+import { VisitanteBibliotecaVirtualDTO } from '../../interfaces/reportes/visitante-biblioteca-virtual';
 
 @Component({
     selector: 'app-reporte-visitantes-biblioteca',
@@ -78,6 +81,28 @@ import { ClaseGeneral } from '../../interfaces/clase-general';
             </div>
        
     </p-toolbar>
+    <p-table [value]="resultados" [paginator]="true" [rows]="10" [loading]="loading">
+        <ng-template pTemplate="header">
+            <tr>
+                <th>Sede</th>
+                <th>Tipo documento</th>
+                <th>N° documento</th>
+                <th>Apellidos y nombres</th>
+                <th>Tipo usuario</th>
+                <th>Visitas</th>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-row>
+            <tr>
+                <td>{{ row.sede }}</td>
+                <td>{{ row.tipoDocumento }}</td>
+                <td>{{ row.numeroDocumento }}</td>
+                <td>{{ row.apellidosNombres }}</td>
+                <td>{{ row.tipoUsuario }}</td>
+                <td>{{ row.totalVisitas }}</td>
+            </tr>
+        </ng-template>
+    </p-table>
 </div>
 `,
             imports: [TemplateModule, TooltipModule],
@@ -104,9 +129,23 @@ export class ReporteVisitantesBibliotecaVirtual {
     dataTipoPrestamo: ClaseGeneral[] = [];
     tipoPrestamoFiltro: ClaseGeneral = new ClaseGeneral();
     loading: boolean = true;
+    resultados: VisitanteBibliotecaVirtualDTO[] = [];
+
+    constructor(private svc: PrestamosService, private messageService: MessageService) {}
 
     async ngOnInit() {
         await this.reporte();
     }
-    reporte(){}
+    async reporte() {
+        this.loading = true;
+        try {
+            this.resultados =
+                (await firstValueFrom(this.svc.reporteVisitantesBibliotecaVirtual())) ?? [];
+        } catch (error: any) {
+            const msg = error?.status === 403 ? 'No autorizado para ver el reporte.' : 'No fue posible cargar los datos.';
+            this.messageService.add({ severity: 'error', detail: msg });
+        } finally {
+            this.loading = false;
+        }
+    }
 }
