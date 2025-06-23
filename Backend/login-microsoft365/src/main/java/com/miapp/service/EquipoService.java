@@ -104,4 +104,10 @@ public class EquipoService {
         }
         return equipoRepository.search(q);
     }
+
+    public void eliminarEquipos(List<Long> ids) {
+        List<Equipo> registros = equipoRepository.findAllById(ids);
+        equipoRepository.deleteAllInBatch(registros);
+        equipoRepository.flush();
+    }
 }
