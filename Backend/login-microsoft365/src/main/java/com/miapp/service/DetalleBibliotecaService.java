@@ -40,6 +40,14 @@ public class DetalleBibliotecaService {
                 .collect(Collectors.toList());
     }
 
+    /** Devuelve los detalles en estado prestado (idEstado = 4) */
+    public List<DetalleBibliotecaDTO> findDetallesPrestados() {
+        List<DetalleBiblioteca> lista = detalleBibliotecaRepository.findByIdEstado(4L);
+        return lista.stream()
+                .map(mapper::toDetalleDto)
+                .collect(Collectors.toList());
+    }
+
     /** Obtiene un detalle por ID y lo mapea a DTO */
     public DetalleBibliotecaDTO findById(Long id) {
         return detalleBibliotecaRepository.findById(id)
