@@ -76,10 +76,6 @@ interface Column {
         (click)="limpiar()"pTooltip="Limpiar" tooltipPosition="bottom">
     </button>
         </div>
-        <div class="flex items-end">
-        <button pButton type="button" class="p-button-rounded p-button-danger" icon="pi pi-trash"
-                (click)="deleteSelected()" [disabled]="!selectedRows.length" pTooltip="Eliminar seleccionados" tooltipPosition="bottom"></button>
-        </div>
 
                     </div>
             </ng-template>
@@ -103,9 +99,13 @@ interface Column {
                        <div class="flex items-center justify-between">
                <p-button [outlined]="true" icon="pi pi-filter-slash" label="Limpiar" (click)="clear(dt1)" />
 
-               <p-iconfield>
-                   <input pInputText type="text" placeholder="Filtrar" #filter (input)="onGlobalFilter(dt1, $event)"/>
-               </p-iconfield>
+               <div class="flex items-center gap-2">
+                   <p-iconfield>
+                       <input pInputText type="text" placeholder="Filtrar" #filter (input)="onGlobalFilter(dt1, $event)"/>
+                   </p-iconfield>
+                   <button pButton type="button" class="p-button-danger" label="Eliminar seleccionados" icon="pi pi-trash"
+                           (click)="deleteSelected()" [disabled]="!selectedRows.length"></button>
+               </div>
            </div>
                        </ng-template>
                             <ng-template pTemplate="header">

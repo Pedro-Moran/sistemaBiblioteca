@@ -95,9 +95,13 @@ import { Estado } from '../../../interfaces/biblioteca-virtual/estado';
                        <div class="flex items-center justify-between">
                <p-button [outlined]="true" icon="pi pi-filter-slash" label="Limpiar" (click)="clear(dt1)" />
 
-               <p-iconfield>
-                   <input pInputText type="text" placeholder="Filtrar" #filter (input)="onGlobalFilter(dt1, $event)"/>
-               </p-iconfield>
+               <div class="flex items-center gap-2">
+                   <p-iconfield>
+                       <input pInputText type="text" placeholder="Filtrar" #filter (input)="onGlobalFilter(dt1, $event)"/>
+                   </p-iconfield>
+                   <button pButton type="button" class="p-button-danger" label="Eliminar seleccionados" icon="pi pi-trash"
+                           (click)="deleteSelected()" [disabled]="!selectedRows.length"></button>
+               </div>
            </div>
                        </ng-template>
                             <ng-template pTemplate="header">
