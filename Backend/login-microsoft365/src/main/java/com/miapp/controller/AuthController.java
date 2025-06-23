@@ -21,6 +21,7 @@ public class AuthController {
 
     private final UsuarioService usuarioService;
     private final JwtUtil jwtUtil;
+    private final RefreshTokenService refreshTokenService;
     private final AzureService azureService;
     private final TipoDocumentoService tipoDocumentoService;
     private final EspecialidadService especialidadService;
@@ -116,7 +117,8 @@ public class AuthController {
                     ? "Sin Rol"
                     : usuario.getRoles().iterator().next().getDescripcion();
             String jwt = jwtUtil.generateToken(usuario.getEmail(), rolDescripcion);
-            return ResponseEntity.ok(new LoginResponse("Registro y login exitoso", jwt));
+            RefreshToken refresh = refreshTokenService.createRefreshToken(usuario);
+            return ResponseEntity.ok(new LoginResponse("Registro y login exitoso", jwt, refresh.getToken()));
         }
 
         Usuario usuario = usuarioOpt.get();
@@ -125,8 +127,9 @@ public class AuthController {
                 : usuario.getRoles().iterator().next().getDescripcion();
         usuarioService.incrementarContadorLogins(usuario.getLogin());
         String jwt = jwtUtil.generateToken(usuario.getEmail(), rolDescripcion);
+        RefreshToken refresh = refreshTokenService.createRefreshToken(usuario);
 
-        return ResponseEntity.ok(new LoginResponse("Login exitoso", jwt));
+        return ResponseEntity.ok(new LoginResponse("Login exitoso", jwt, refresh.getToken()));
     }
 
     @PostMapping("/login")
@@ -139,12 +142,30 @@ public class AuthController {
                     : usuario.getRoles().iterator().next().getDescripcion();
             usuarioService.incrementarContadorLogins(usuario.getLogin());
             String jwt = jwtUtil.generateToken(usuario.getEmail(), rolDescripcion);
+            RefreshToken refresh = refreshTokenService.createRefreshToken(usuario);
             System.out.println(jwt);
-            return ResponseEntity.ok(new LoginResponse("Login exitoso", jwt));
+            return ResponseEntity.ok(new LoginResponse("Login exitoso", jwt, refresh.getToken()));
         } else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body("Credenciales incorrectas");
         }
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<LoginResponse> refreshToken(@RequestBody Map<String, String> request) {
+        String refreshToken = request.get("refreshToken");
+        return refreshTokenService.findByToken(refreshToken)
+                .map(refreshTokenService::verifyExpiration)
+                .map(rt -> {
+                    Usuario usuario = rt.getUsuario();
+                    String rol = usuario.getRoles().isEmpty() ? "Sin Rol" : usuario.getRoles().iterator().next().getDescripcion();
+                    String access = jwtUtil.generateToken(usuario.getEmail(), rol);
+                    refreshTokenService.deleteByUsuario(usuario);
+                    RefreshToken newToken = refreshTokenService.createRefreshToken(usuario);
+                    return ResponseEntity.ok(new LoginResponse("Token refrescado", access, newToken.getToken()));
+                })
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(new LoginResponse("Refresh token inválido", null, null)));
     }
 
     // Endpoint de registro público para auto-registro

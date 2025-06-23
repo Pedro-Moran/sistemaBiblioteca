@@ -27,6 +27,10 @@ public class NotificacionService {
         return repo.findByUsuarioDestinoAndLeidaFalse(usuario);
     }
 
+    public List<Notificacion> listarTodas(String usuario) {
+        return repo.findByUsuarioDestinoOrderByFechaCreacionDesc(usuario);
+    }
+
     public void marcarLeida(Long id) {
         Notificacion n = repo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Notificación no encontrada"));

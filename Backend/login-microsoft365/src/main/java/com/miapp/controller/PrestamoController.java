@@ -82,6 +82,13 @@ public class PrestamoController {
         return ResponseEntity.ok(pendientes);
     }
 
+    @GetMapping("/notificaciones")
+    public ResponseEntity<List<Notificacion>> listarTodas(Authentication auth) {
+        String usuario = auth.getName();
+        List<Notificacion> lista = notificacionService.listarTodas(usuario);
+        return ResponseEntity.ok(lista);
+    }
+
     /** Marca una notificación como leída */
     @PutMapping("/{id}/leer")
     public ResponseEntity<Void> marcarLeida(@PathVariable Long id) {
