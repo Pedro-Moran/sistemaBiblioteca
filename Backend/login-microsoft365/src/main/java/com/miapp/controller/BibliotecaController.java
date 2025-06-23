@@ -72,6 +72,12 @@ public class BibliotecaController {
         return ResponseEntity.ok(Map.of("status", 0));
     }
 
+    @PostMapping("/delete-bulk")
+    public ResponseEntity<?> deleteBulk(@RequestBody List<Long> ids) {
+        bibliotecaService.deleteAll(ids);
+        return ResponseEntity.ok(Map.of("status", 0, "message", "Registros eliminados correctamente"));
+    }
+
     @GetMapping("/ciudades")
     public ResponseEntity<?> listCiudades() {
         List<Ciudad> lista = bibliotecaService.listCiudades();

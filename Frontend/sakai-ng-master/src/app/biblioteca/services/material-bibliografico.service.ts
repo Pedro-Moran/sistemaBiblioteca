@@ -166,11 +166,27 @@ export class MaterialBibliograficoService {
   }
 
   eliminarMaterial(id: number): Observable<any> {
-      const url = `${this.apiUrl}/api/material-bibliografico/delete/${id}`;
-      return this.http.delete<any>(url, {
-        headers: new HttpHeaders().set('Authorization', `Bearer ${this.authService.getToken()}`)
-      });
-    }
+    const url = `${this.apiUrl}/api/material-bibliografico/delete/${id}`;
+    return this.http.delete<any>(url, {
+      headers: new HttpHeaders().set('Authorization', `Bearer ${this.authService.getToken()}`)
+    });
+  }
+
+  deleteBulk(ids: number[]): Observable<any> {
+    return this.http.post<any>(
+      `${this.apiUrl}/api/material-bibliografico/delete-bulk`,
+      ids,
+      { headers: new HttpHeaders().set('Authorization', `Bearer ${this.authService.getToken()}`) }
+    );
+  }
+
+  deleteBulkBiblioteca(ids: number[]): Observable<any> {
+    return this.http.post<any>(
+      `${this.apiUrl}/api/biblioteca/delete-bulk`,
+      ids,
+      { headers: new HttpHeaders().set('Authorization', `Bearer ${this.authService.getToken()}`) }
+    );
+  }
 
 registrarEspecialidad(especialidad: any): Observable<any> {
     const url = `${this.apiUrl}/registrar/especialidad`;
