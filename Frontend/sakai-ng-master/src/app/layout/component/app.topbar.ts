@@ -96,7 +96,7 @@ import { AuthService } from '../../biblioteca/services/auth.service';
                         <span>Profile</span>
                     </button>
                     <p-menu #profileMenu [popup]="true" [model]="profileItems" appendTo="body"></p-menu>
-                    <p-overlaybadge [value]="notificaciones.length" severity="danger">
+                    <p-overlaybadge [value]="unreadCount" severity="danger">
                       <button
                         type="button"
                         class="layout-topbar-action layout-topbar-action-highlight"
@@ -212,12 +212,16 @@ export class AppTopbar implements OnInit {
     highlightOcurrencias: number[] = [];
 
     get solicitudesNuevas(): number {
-      return this.notificaciones.filter(n => !n.mensaje.toLowerCase().includes('ocurrencia')).length;
+      return this.notificaciones.filter(n => !n.leida && !n.mensaje.toLowerCase().includes('ocurrencia')).length;
     }
 
     get ocurrenciasNuevas(): number {
-      return this.notificaciones.filter(n => n.mensaje.toLowerCase().includes('ocurrencia')).length;
+      return this.notificaciones.filter(n => !n.leida && n.mensaje.toLowerCase().includes('ocurrencia')).length;
     }
+
+
+    unreadCount = 0;
+
 
 
 
@@ -233,11 +237,12 @@ export class AppTopbar implements OnInit {
         this.initProfileMenu();
     }
 
-     loadNotifications() {
+    loadNotifications() {
         this.loadingNotifications = true;
-        this.prestamoService.getNotificacionesNoLeidas().subscribe({
+        this.prestamoService.getNotificaciones().subscribe({
           next: nots => {
             this.notificaciones = nots;
+            this.unreadCount = nots.filter(n => !n.leida).length;
             this.loadingNotifications = false;
           },
           error: () => this.loadingNotifications = false
@@ -307,12 +312,10 @@ export class AppTopbar implements OnInit {
 
   private marcarLeidas(ids: number[]) {
     ids.forEach(id => {
-      this.prestamoService.marcarLeida(id).subscribe({
-        next: () => {},
-        error: () => {}
-      });
+      this.prestamoService.marcarLeida(id).subscribe({ next: () => {}, error: () => {} });
+      const not = this.notificaciones.find(n => n.id === id);
+      if (not) { not.leida = true; }
     });
-    this.notificaciones = this.notificaciones.filter(n => !ids.includes(n.id));
   }
 
   private initProfileMenu() {

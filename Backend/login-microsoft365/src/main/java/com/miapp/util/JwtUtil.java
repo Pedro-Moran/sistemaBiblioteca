@@ -1,16 +1,12 @@
 package com.miapp.util;
 
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
-import org.springframework.security.oauth2.jwt.JwtException;
-import org.springframework.stereotype.Component;
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.algorithms.Algorithm;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import java.util.Date;
-import java.util.Map;
-
-import io.jsonwebtoken.*;
 
 
 @Component
@@ -19,8 +15,13 @@ public class JwtUtil {
     @Value("${jwt.secret}")
     private String secret;
 
-    @Value("${jwt.expiration}")
-    private Long expiration;
+    // Tiempo de expiración del token de acceso (24 h por defecto)
+    @Value("${jwt.expiration-ms:86400000}")
+    private long accessExpirationMs;
+
+    // Tiempo de expiración del refresh token (7 días por defecto)
+    @Value("${jwt.refresh-expiration-ms:604800000}")
+    private long refreshExpirationMs;
 
     /**
      * Genera un token JWT con el 'username' como subject.
@@ -32,13 +33,18 @@ public class JwtUtil {
 //                .withExpiresAt(new Date(System.currentTimeMillis() + expiration))
 //                .sign(Algorithm.HMAC256(secret));
 //    }
-    public String generateToken(String login, String role) {
-        long expirationTime = 86400000; // 24 horas en milisegundos
+    public String generateToken(String username, String role) {
+        return generateToken(username, role, accessExpirationMs);
+    }
+
+    public String generateToken(String username, String role, long expiration) {
+        Date now = new Date();
+        Date expiry = new Date(now.getTime() + expiration);
         return Jwts.builder()
-                .setSubject(login)
+                .setSubject(username)
                 .claim("role", role)
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
+                .setIssuedAt(now)
+                .setExpiration(expiry)
                 .signWith(Keys.hmacShaKeyFor(secret.getBytes()), SignatureAlgorithm.HS256)
                 .compact();
     }
@@ -65,6 +71,10 @@ public class JwtUtil {
                 .parseClaimsJws(token)
                 .getBody()
                 .getSubject();
+    }
+
+    public long getRefreshExpirationMs() {
+        return refreshExpirationMs;
     }
 
 

@@ -29,6 +29,7 @@ const httpOptions = {
 })
 export class AuthService {
   private TOKEN_NAME:string = 'upsjb_reserva';
+  private REFRESH_NAME:string = 'upsjb_refresh';
   private helper:JwtHelperService;/*
   private currentUserSubject: BehaviorSubject<User>;
   public currentUser: Observable<User>;*/
@@ -213,11 +214,12 @@ loginMicrosoft() {
 
   // Login manual: envía las credenciales y espera una respuesta con mensaje y token.
   loginManual(credentials: { email: string; password: string }): Observable<any> {
-      return this.http.post<{ message: string; token: string }>(`${this.apiUrl}/login`, credentials)
+      return this.http.post<LoginResponse>(`${this.apiUrl}/login`, credentials)
         .pipe(
           tap(response => {
             if (response.token) {
-              localStorage.setItem('upsjb_reserva', response.token);
+              localStorage.setItem(this.TOKEN_NAME, response.token);
+              localStorage.setItem(this.REFRESH_NAME, response.refreshToken);
               console.log('Token almacenado en localStorage:', response.token);
               this.scheduleAutoLogout();
             }
@@ -258,9 +260,25 @@ private resetInactivityTimer(): void {
     }
     localStorage.removeItem('currentUser');
     localStorage.removeItem(this.TOKEN_NAME);
+    localStorage.removeItem(this.REFRESH_NAME);
     // Redirige a la página de inicio luego de cerrar sesión
     this.router.navigate(['/']);
     return;
+  }
+
+  refreshAccessToken(): Observable<string> {
+    const refresh = localStorage.getItem(this.REFRESH_NAME);
+    if(!refresh){
+      return of('');
+    }
+    return this.http.post<LoginResponse>(`${this.apiUrl}/refresh`, {refreshToken: refresh})
+      .pipe(
+        tap(res => {
+          localStorage.setItem(this.TOKEN_NAME, res.token);
+          localStorage.setItem(this.REFRESH_NAME, res.refreshToken);
+        }),
+        map(res => res.token)
+      );
   }
 
   getEmail(): string {

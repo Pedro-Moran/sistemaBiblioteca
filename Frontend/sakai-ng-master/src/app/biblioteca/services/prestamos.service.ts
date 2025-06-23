@@ -72,7 +72,15 @@ export class PrestamosService {
         return this.http.get<{ status: string; data: any[] }>(`${this.apiUrl}/api/prestamos/mis-prestamos`);
     }
     getNotificacionesNoLeidas(): Observable<Notificacion[]> {
-        return this.http.get<Notificacion[]>(`${this.apiUrl}/api/prestamos/no-leidas`);
+        return this.http.get<Notificacion[]>(`${this.apiUrl}/api/prestamos/no-leidas`, {
+            headers: new HttpHeaders().set('Authorization', `Bearer ${this.authService.getToken()}`)
+        });
+    }
+
+    getNotificaciones(): Observable<Notificacion[]> {
+        return this.http.get<Notificacion[]>(`${this.apiUrl}/api/prestamos/notificaciones`, {
+            headers: new HttpHeaders().set('Authorization', `Bearer ${this.authService.getToken()}`)
+        });
     }
     listar(sede?: number, tipoUsuario?: string, tipoPrestamo?: string, escuela?: string, programa?: string, ciclo?: string, fechaInicio?: string, fechaFin?: string): Observable<DetallePrestamo[]> {
         let params = new HttpParams();
