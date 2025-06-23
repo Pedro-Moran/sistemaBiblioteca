@@ -600,7 +600,7 @@ listarUsuariosOcurrencia(id: number): Observable<OcurrenciaUsuario[]> {
       .pipe(map(resp => resp.data));
   }
 
-    listarTodosDetallesReservados(): Observable<DetalleBibliotecaDTO[]> {
+  listarTodosDetallesReservados(): Observable<DetalleBibliotecaDTO[]> {
       const headers = new HttpHeaders().set(
         'Authorization',
         `Bearer ${this.authService.getToken()}`
@@ -612,7 +612,21 @@ listarUsuariosOcurrencia(id: number): Observable<OcurrenciaUsuario[]> {
           { headers }
         )
         .pipe(map(resp => resp.data));
-    }
+  }
+
+  /** Lista los ejemplares prestados (pendientes de devolución) */
+  listarDetallesPrestados(): Observable<DetalleBibliotecaDTO[]> {
+    const headers = new HttpHeaders().set(
+      'Authorization',
+      `Bearer ${this.authService.getToken()}`
+    );
+    return this.http
+      .get<{ status: number; data: DetalleBibliotecaDTO[] }>(
+        `${this.apiUrl}/api/biblioteca/prestados`,
+        { headers }
+      )
+      .pipe(map(resp => resp.data));
+  }
   /**
    * Marca un detalle como “prestado”.
    */
@@ -649,6 +663,21 @@ listarUsuariosOcurrencia(id: number): Observable<OcurrenciaUsuario[]> {
     return this.http.put<any>(
       `${this.apiUrl}/api/biblioteca/detalles/estado`,
       payload,
+      { headers }
+    );
+  }
+
+  /**
+   * Registra la devolución de un ejemplar, cambiándolo a DISPONIBLE.
+   */
+  devolverDetalle(idDetalle: number): Observable<any> {
+    const headers = new HttpHeaders().set(
+      'Authorization',
+      `Bearer ${this.authService.getToken()}`
+    );
+    return this.http.post<any>(
+      `${this.apiUrl}/api/biblioteca/detalles/devolver`,
+      { idDetalleBiblioteca: idDetalle },
       { headers }
     );
   }

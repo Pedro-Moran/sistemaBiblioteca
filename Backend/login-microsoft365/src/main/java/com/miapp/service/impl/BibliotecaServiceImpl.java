@@ -416,6 +416,35 @@ public class BibliotecaServiceImpl implements BibliotecaService {
         }
     }
 
+    /**
+     * Marca un detalle como devuelto sin registrar notificaciones.
+     * También actualiza la cabecera si ya no quedan otros detalles pendientes.
+     */
+    @Transactional
+    public void devolverDetalle(Long detalleId, String usuario) {
+        DetalleBiblioteca detalle = detalleBibliotecaRepository
+                .findById(detalleId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Detalle no encontrado: " + detalleId));
+
+        detalle.setIdEstado(2L); // DISPONIBLE
+        detalle.setUsuarioModificacion(usuario);
+        detalle.setFechaModificacion(LocalDateTime.now());
+        detalleBibliotecaRepository.save(detalle);
+
+        Biblioteca bib = detalle.getBiblioteca();
+        boolean quedanPendientes = detalleBibliotecaRepository
+                .findByBibliotecaId(bib.getId()).stream()
+                .anyMatch(d -> Objects.equals(d.getIdEstado(), 1L));
+
+        if (!quedanPendientes) {
+            bib.setIdEstado(2L);
+            bib.setUsuarioModificacion(usuario);
+            bib.setFechaModificacion(LocalDateTime.now());
+            bibliotecaRepository.save(bib);
+        }
+    }
+
     public List<Biblioteca> buscarParaCatalogo(
             String valor,
             Long sedeId,

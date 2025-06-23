@@ -7,6 +7,7 @@ import com.miapp.model.dto.*;
 import com.miapp.service.CiudadService;
 import com.miapp.service.DetalleBibliotecaService;
 import com.miapp.service.impl.BibliotecaServiceImpl;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -183,6 +184,24 @@ public class BibliotecaController {
     public ResponseEntity<?> listReservados() {
         List<BibliotecaDTO> dtos = bibliotecaService.findReservados();
         return ResponseEntity.ok(Map.of("status", 0, "data", dtos));
+    }
+
+    /** Lista los ejemplares prestados (idEstado = 4) */
+    @GetMapping("/prestados")
+    public ResponseEntity<?> listPrestados() {
+        List<DetalleBibliotecaDTO> dtos = detalleService.findDetallesPrestados();
+        return ResponseEntity.ok(Map.of("status", 0, "data", dtos));
+    }
+
+    /** Marca un detalle como devuelto sin notificación */
+    @PostMapping("/detalles/devolver")
+    public ResponseEntity<?> devolverDetalle(
+            @RequestBody Map<String, Object> payload,
+            Authentication auth
+    ) {
+        Long id = Long.valueOf(payload.get("idDetalleBiblioteca").toString());
+        bibliotecaService.devolverDetalle(id, auth.getName());
+        return ResponseEntity.ok(Map.of("status", 0));
     }
 
     /** Devuelve los materiales bibliográficos disponibles (idEstado = 2) */
