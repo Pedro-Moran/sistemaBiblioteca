@@ -76,6 +76,10 @@ interface Column {
         (click)="limpiar()"pTooltip="Limpiar" tooltipPosition="bottom">
     </button>
         </div>
+        <div class="flex items-end">
+        <button pButton type="button" class="p-button-rounded p-button-danger" icon="pi pi-trash"
+                (click)="deleteSelected()" [disabled]="!selectedRows.length" pTooltip="Eliminar seleccionados" tooltipPosition="bottom"></button>
+        </div>
 
                     </div>
             </ng-template>
@@ -89,6 +93,7 @@ interface Column {
         </p-toolbar>
 
                         <p-table #dt1 [value]="data" dataKey="id" [rows]="10"
+                        [(selection)]="selectedRows" selectionMode="multiple"
                         [showCurrentPageReport]="true"
                         currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} registros"
                         [rowsPerPageOptions]="[10, 25, 50]" [loading]="loading" [rowHover]="true" styleClass="p-datatable-gridlines" [paginator]="true"
@@ -105,6 +110,7 @@ interface Column {
                        </ng-template>
                             <ng-template pTemplate="header">
                                 <tr>
+                                    <th style="width:3rem"><p-tableHeaderCheckbox></p-tableHeaderCheckbox></th>
                                     <th>Imagen</th>
                                     <th *ngFor="let col of columns" [pSortableColumn]="col.field">
                                         {{ col.header }}<p-sortIcon [field]="col.field"></p-sortIcon>
@@ -113,7 +119,8 @@ interface Column {
                                 </tr>
                             </ng-template>
                             <ng-template pTemplate="body" let-objeto>
-                                <tr>
+                                <tr [pSelectableRow]="objeto">
+                                    <td><p-tableCheckbox [value]="objeto"></p-tableCheckbox></td>
                                     <td>
                                         <img [src]="getImageUrl(objeto)" [alt]="objeto.titulo" width="50" class="shadow-lg" />
                                     </td>
@@ -130,12 +137,12 @@ interface Column {
                             </ng-template>
                             <ng-template pTemplate="emptymessage">
                                 <tr>
-                                    <td colspan="8">No se encontraron registros.</td>
+                                    <td [attr.colspan]="columns.length + 3">No se encontraron registros.</td>
                                 </tr>
                             </ng-template>
                             <ng-template pTemplate="loadingbody">
                                 <tr>
-                                    <td colspan="8">Cargando datos. Espere por favor.</td>
+                                    <td [attr.colspan]="columns.length + 3">Cargando datos. Espere por favor.</td>
                                 </tr>
                             </ng-template>
                         </p-table>
@@ -183,6 +190,7 @@ export class MaterialBibliografico {
   form: FormGroup = new FormGroup({});
   user: any;
   selectedItem: any;
+  selectedRows: any[] = [];
   @ViewChild('menu') menu!: Menu;
   @ViewChild('filter') filter!: ElementRef;
   items!: MenuItem[];
@@ -423,6 +431,35 @@ onSaved(): void {
       }
     });
   }
+
+  deleteSelected() {
+    if (!this.selectedRows.length) {
+      return;
+    }
+    this.confirmationService.confirm({
+      message: '¿Estás seguro(a) de eliminar los seleccionados?',
+      header: 'Confirmar',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'SI',
+      rejectLabel: 'NO',
+      accept: () => {
+        const ids = this.selectedRows.map(item => item.id);
+        this.loading = true;
+        this.materialBibliograficoService.deleteBulkBiblioteca(ids).subscribe({
+          next: () => {
+            this.messageService.add({ severity: 'success', summary: 'Satisfactorio', detail: 'Registros eliminados.' });
+            this.selectedRows = [];
+            this.listar();
+            this.loading = false;
+          },
+          error: () => {
+            this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo realizar el proceso.' });
+            this.loading = false;
+          }
+        });
+      }
+    });
+  }
   guardar() {
     this.loading = true;
     const data = { id: this.form.get('id')?.value, descripcion: this.form.get('descripcion')?.value, usuarioid: this.user.idusuario, activo: true, accion: 'registrar' };
@@ -464,23 +501,22 @@ onSaved(): void {
   async listarTiposRecurso() {
     this.loading = true;
     this.dataTipoRecurso = [];
-    this.genericoService.tiporecurso_get('api/catalogos/tipomaterial/activos')
-      .subscribe(
-        (result: any) => {
-          this.loading = false;
-          if (result.status == 0) {
-//             let recursosFiltrados = result.data.filter((recurso: { tipo: { id: any; }; }) => recurso.tipo.id === 1);
+    try {
+      const result: any = await this.genericoService
+        .tiporecurso_get('api/catalogos/tipomaterial/activos')
+        .toPromise();
 
-            this.dataTipoRecurso = result.data;
-
-            this.dataTipoRecursoFiltro = result.data;
-            this.tipoRecursoFiltro = this.dataTipoRecursoFiltro[0];
-          }
-        }
-        , (error: HttpErrorResponse) => {
-          this.loading = false;
-        }
-      );
+      if (result.status == 0) {
+        this.dataTipoRecurso = result.data;
+        this.dataTipoRecursoFiltro = result.data;
+        this.tipoRecursoFiltro = this.dataTipoRecursoFiltro[0];
+        this.setColumns();
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      this.loading = false;
+    }
   }
   async ListaSede() {
     try {

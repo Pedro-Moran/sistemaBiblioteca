@@ -18,6 +18,7 @@ public interface BibliotecaService {
     Biblioteca register(BibliotecaDTO dto, MultipartFile portada);
     Biblioteca update(Long id, BibliotecaDTO dto, MultipartFile portada);
     void delete(Long id);
+    void deleteAll(List<Long> ids);
     Optional<Biblioteca> findById(Long id);
     List<Biblioteca> listAll();
     BibliotecaDTO mapToDto(Biblioteca b);

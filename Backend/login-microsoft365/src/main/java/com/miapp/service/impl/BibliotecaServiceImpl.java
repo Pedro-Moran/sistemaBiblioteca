@@ -286,6 +286,13 @@ public class BibliotecaServiceImpl implements BibliotecaService {
     }
 
     @Override
+    public void deleteAll(List<Long> ids) {
+        List<Biblioteca> registros = bibliotecaRepository.findAllById(ids);
+        bibliotecaRepository.deleteAllInBatch(registros);
+        bibliotecaRepository.flush();
+    }
+
+    @Override
     public Optional<Biblioteca> findById(Long id) {
         return bibliotecaRepository.findById(id);
     }

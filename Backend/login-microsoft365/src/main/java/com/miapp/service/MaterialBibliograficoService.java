@@ -182,6 +182,13 @@ public class MaterialBibliograficoService {
         materialBibliograficoRepository.deleteById(id);
     }
 
+    @Transactional
+    public void deleteAll(List<Long> ids) {
+        List<MaterialBibliografico> materiales = materialBibliograficoRepository.findAllById(ids);
+        materialBibliograficoRepository.deleteAllInBatch(materiales);
+        materialBibliograficoRepository.flush();
+    }
+
     // Obtener por ID
     public Optional<MaterialBibliografico> getById(Long id) {
         return materialBibliograficoRepository.findById(id);

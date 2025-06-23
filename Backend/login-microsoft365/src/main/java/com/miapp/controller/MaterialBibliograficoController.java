@@ -76,6 +76,17 @@ public class MaterialBibliograficoController {
         }
     }
 
+    @PostMapping("/delete-bulk")
+    public ResponseEntity<?> deleteBulk(@RequestBody List<Long> ids) {
+        try {
+            service.deleteAll(ids);
+            return ResponseEntity.ok(Map.of("status", 0, "message", "Materiales eliminados correctamente"));
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("status", -1, "message", ex.getMessage()));
+        }
+    }
+
     // Endpoint para obtener por ID
     @GetMapping("/{id}")
     public ResponseEntity<?> getById(@PathVariable Long id) {
