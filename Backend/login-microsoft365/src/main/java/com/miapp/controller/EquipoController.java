@@ -62,6 +62,12 @@ public class EquipoController {
         }
     }
 
+    @PostMapping("/delete-bulk")
+    public ResponseEntity<?> eliminarEquipos(@RequestBody List<Long> ids) {
+        equipoService.eliminarEquipos(ids);
+        return ResponseEntity.ok(Map.of("status", 0, "message", "Registros eliminados correctamente"));
+    }
+
     @GetMapping("/list")
     public ResponseEntity<?> listarEquipos() {
         List<Equipo> lista = equipoService.listarEquipos();
