@@ -5,12 +5,12 @@ import { TemplateModule } from '../../template.module';
 import { ClaseGeneral } from '../../interfaces/clase-general';
 import { Sedes } from '../../interfaces/sedes';
 import { Table, TableRowCollapseEvent, TableRowExpandEvent } from 'primeng/table';
-import { HttpErrorResponse } from '@angular/common/http';
 import { MaterialBibliograficoService } from '../../services/material-bibliografico.service';
 import { GenericoService } from '../../services/generico.service';
 import { AuthService } from '../../services/auth.service';
 import { ModalDetalleMaterial } from './detalle-material';
-import { forkJoin } from 'rxjs';
+import { forkJoin, Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 @Component({
     selector: 'app-catalogo-enlinea',
@@ -453,21 +453,67 @@ export class CatalogoEnLineaComponent {
         this.detallesPorBiblioteca = {};
     }
     listar() {
-        // Recupera solo los registros en estado disponible (idEstado = 2)
-        this.materialBibliograficoService.api_libros_lista('api/biblioteca/disponibles')
-            .subscribe(
-                (result: any) => {
-                    this.loading = false;
-                    if (result.status == "0") {
-                        this.data = result.data.filter(
-                            (d: any) => (d.estadoId === 2 || d.estado?.descripcion === 'DISPONIBLE') && this.isDisponibleAhora(d)
-                        );
+        // Recupera solo las cabeceras disponibles
+        this.materialBibliograficoService
+            .api_libros_lista('api/biblioteca/disponibles')
+            .subscribe({
+                next: (result: any) => {
+                    if (result.status !== '0') {
+                        this.loading = false;
+                        return;
                     }
+
+                    const cabeceras = result.data.filter(
+                        (b: any) =>
+                            (b.estadoId === 2 || b.estado?.descripcion === 'DISPONIBLE') &&
+                            this.isDisponibleAhora(b)
+                    );
+
+                    if (cabeceras.length === 0) {
+                        this.data = [];
+                        this.loading = false;
+                        return;
+                    }
+
+                    const requests: Observable<{ cab: any; detalles: any[] }>[] = cabeceras.map((b: any) =>
+                        this.materialBibliograficoService
+                            .listarDetallesPorBiblioteca(b.id, false)
+                            .pipe(
+                                map((det: any[]) => ({
+                                    cab: b,
+                                    detalles: det.filter(
+                                        d =>
+                                            (d.idEstado === 2 || d.estado?.descripcion === 'DISPONIBLE') &&
+                                            this.isDisponibleAhora(d)
+                                    )
+                                }))
+                            )
+                    );
+
+                    forkJoin(requests).subscribe({
+                        next: (resp: { cab: any; detalles: any[] }[]) => {
+                            this.data = [];
+                            this.detallesPorBiblioteca = {};
+
+                            resp.forEach((r: { cab: any; detalles: any[] }) => {
+                                if (r.detalles.length > 0) {
+                                    this.data.push(r.cab);
+                                    this.detallesPorBiblioteca[r.cab.id] = r.detalles;
+                                }
+                            });
+
+                            this.loading = false;
+                        },
+                        error: () => {
+                            this.loading = false;
+                            this.messageService.add({ severity: 'error', detail: 'Error al cargar detalles' });
+                        }
+                    });
                 },
-                (error: HttpErrorResponse) => {
+                error: () => {
                     this.loading = false;
                 }
-            );
+            });
     }
     limpiar() { }
     onGlobalFilter(table: Table, event: Event) {
@@ -486,12 +532,18 @@ export class CatalogoEnLineaComponent {
         if (!row || !row.id) {
             return;
         }
+        if (this.detallesPorBiblioteca[row.id]) {
+            return;
+        }
+
         this.materialBibliograficoService
             .listarDetallesPorBiblioteca(row.id, false)
             .subscribe({
                 next: (lista: any[]) => {
                     this.detallesPorBiblioteca[row.id] = lista.filter(
-                        d => (d.idEstado === 2 || d.estado?.descripcion === 'DISPONIBLE')
+                        d =>
+                            (d.idEstado === 2 || d.estado?.descripcion === 'DISPONIBLE') &&
+                            this.isDisponibleAhora(d)
                     );
                 },
                 error: () => {
