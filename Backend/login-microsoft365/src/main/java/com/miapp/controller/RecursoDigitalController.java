@@ -58,6 +58,12 @@ public class RecursoDigitalController {
         return new ResponseDTO<>(0, "RECURSO ELIMINADO", null);
     }
 
+    @PostMapping("/delete-bulk")
+    public ResponseDTO<Void> eliminarVarios(@RequestBody List<Long> ids) {
+        srv.deleteAll(ids);
+        return new ResponseDTO<>(0, "RECURSOS ELIMINADOS", null);
+    }
+
     @PutMapping("/activo")
     public ResponseDTO<Void> cambiarEstado(@RequestBody CambioEstadoRequest r) {
         srv.cambiarEstado(r.getId(), r.getNuevoEstado(), r.getUsuario());

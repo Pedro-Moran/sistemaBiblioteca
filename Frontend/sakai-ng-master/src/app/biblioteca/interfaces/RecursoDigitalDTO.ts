@@ -3,6 +3,8 @@ export interface RecursoDigitalDTO {
    autor: string;
    titulo: string;
    tipoId?: number;
+   /** descripcion legible del tipo */
+   tipoDescripcion?: string;
    descripcion: string;
    enlace: string;
    estado: number;               // 1 = activo, 0 = inactivo

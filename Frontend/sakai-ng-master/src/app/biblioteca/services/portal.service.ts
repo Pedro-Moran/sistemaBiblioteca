@@ -246,6 +246,14 @@ saveRecursoDigital(formData: FormData): Observable<ResponseDTO<void>> {
       );
     }
 
+    deleteBulkRecursos(ids: number[]): Observable<ResponseDTO<void>> {
+      return this.http.post<ResponseDTO<void>>(
+        `${this.apiUrl}/auth/api/recursos-digitales/delete-bulk`,
+        ids,
+        { headers: this.authHeaders() }
+      );
+    }
+
     getNosotros(): Observable<NosotrosDTO> {
         return this.http.get<NosotrosDTO>(`${this.apiUrl}/api/nosotros`, { headers: this.authHeaders() });
       }
