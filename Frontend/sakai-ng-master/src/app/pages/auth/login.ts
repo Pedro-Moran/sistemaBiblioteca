@@ -107,6 +107,7 @@ export class Login {
           this.authService.loginManual(this.credentials).subscribe({
             next: (response) => {
                 this.authService.setAuthentication(response.token);
+                this.authService.openPendingResource();
                 this.router.navigate(['/main']);
             },
             error: (err) => {

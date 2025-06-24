@@ -53,4 +53,7 @@ public class RecursoDigital {
     @Lob
     @Column(name = "IMAGEN")
     private String imagen; // base64 o URL
+
+    @Column(name = "CLICKS")
+    private Long clicks;
 }

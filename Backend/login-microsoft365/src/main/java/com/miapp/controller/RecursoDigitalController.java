@@ -23,6 +23,16 @@ public class RecursoDigitalController {
         return new ResponseDTO<>(0, "OK", srv.listar());
     }
 
+    @GetMapping("/listar/tipo/{tipoId}")
+    public ResponseDTO<List<RecursoDigitalDTO>> listarPorTipo(@PathVariable Long tipoId) {
+        return new ResponseDTO<>(0, "OK", srv.listarPorTipo(tipoId));
+    }
+
+    @GetMapping("/enlace/{id}")
+    public ResponseDTO<String> obtenerEnlace(@PathVariable Long id) {
+        return new ResponseDTO<>(0, "OK", srv.obtenerEnlace(id));
+    }
+
     @PostMapping(
             value = "/registrar",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
