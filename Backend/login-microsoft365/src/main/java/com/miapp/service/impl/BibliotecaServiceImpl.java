@@ -461,6 +461,8 @@ public class BibliotecaServiceImpl implements BibliotecaService {
         String v = valor == null ? "" : valor.trim().toLowerCase();
 
         return bibliotecaRepository.findAll().stream()
+                // Exclude records whose cabecera está "en proceso" (idEstado = 1)
+                .filter(b -> !Objects.equals(b.getIdEstado(), 1L))
                 .filter(b -> {
                     if (!v.isEmpty()) {
                         // comparamos en minúsculas
@@ -474,16 +476,30 @@ public class BibliotecaServiceImpl implements BibliotecaService {
                     }
                     return true;
                 })
-                .filter(b -> sedeId == null || sedeId == 0
-                        || Objects.equals(b.getSede().getId(), sedeId))
+                .filter(b -> {
+                    if (sedeId == null || sedeId == 0) {
+                        return true;
+                    }
+                    // La sede real se encuentra en los detalles del material
+                    return detalleBibliotecaRepository
+                            .findByBibliotecaId(b.getId())
+                            .stream()
+                            .anyMatch(det ->
+                                    det.getSede() != null &&
+                                    Objects.equals(det.getSede().getId(), sedeId));
+                })
                 .filter(b -> {
                     if (tipoMaterialId == null || tipoMaterialId == 0) {
                         return true;
                     }
-                    return b.getTipoMaterial() != null
-                            && Objects.equals(
-                                    b.getTipoMaterial().getIdTipoMaterial(),
-                                    tipoMaterialId);
+                    // El tipo de material también se encuentra en los detalles
+                    return detalleBibliotecaRepository
+                            .findByBibliotecaId(b.getId())
+                            .stream()
+                            .anyMatch(det -> det.getTipoMaterial() != null
+                                    && Objects.equals(
+                                            det.getTipoMaterial().getIdTipoMaterial(),
+                                            tipoMaterialId));
                 })
                 .filter(b -> {
                     if (opcion == null || opcion.isBlank()) {
@@ -492,12 +508,28 @@ public class BibliotecaServiceImpl implements BibliotecaService {
                     // normalizamos el nombre de la opción también
                     switch (opcion.trim().toUpperCase()) {
                         case "TITULO":
+                        case "NOMBRE":
                             return b.getTitulo() != null
                                     && b.getTitulo().toLowerCase().contains(v);
                         case "AUTOR":
                             return b.getAutorPersonal() != null
                                     && b.getAutorPersonal().toLowerCase().contains(v);
-                        // ... otros casos ...
+                        case "CODIGO":
+                            return b.getCodigoLocalizacion() != null
+                                    && b.getCodigoLocalizacion().toLowerCase().contains(v);
+                        case "EDITORIAL":
+                            return b.getEditorialPublicacion() != null
+                                    && b.getEditorialPublicacion().toLowerCase().contains(v);
+                        case "TEMA":
+                            return b.getDescriptor() != null
+                                    && b.getDescriptor().toLowerCase().contains(v);
+                        case "DESCRIPCION":
+                            return b.getNotaGeneral() != null
+                                    && b.getNotaGeneral().toLowerCase().contains(v);
+                        case "GENERO":
+                            return b.getEspecialidad() != null
+                                    && b.getEspecialidad().getDescripcion() != null
+                                    && b.getEspecialidad().getDescripcion().toLowerCase().contains(v);
                         default:
                             return true;
                     }
@@ -528,9 +560,18 @@ public class BibliotecaServiceImpl implements BibliotecaService {
         return bibliotecaRepository
                 .findByIdEstado(2L)
                 .stream()
-                .filter(b -> tipoMaterialId == null ||
-                        (b.getTipoMaterial() != null &&
-                         Objects.equals(b.getTipoMaterial().getIdTipoMaterial(), tipoMaterialId)))
+                .filter(b -> {
+                    if (tipoMaterialId == null) {
+                        return true;
+                    }
+                    return detalleBibliotecaRepository
+                            .findByBibliotecaId(b.getId())
+                            .stream()
+                            .anyMatch(det -> det.getTipoMaterial() != null
+                                    && Objects.equals(
+                                            det.getTipoMaterial().getIdTipoMaterial(),
+                                            tipoMaterialId));
+                })
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
     }

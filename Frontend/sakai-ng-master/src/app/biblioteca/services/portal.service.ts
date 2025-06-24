@@ -233,7 +233,7 @@ saveRecursoDigital(formData: FormData): Observable<ResponseDTO<void>> {
       usuario: string
     ): Observable<ResponseDTO<void>> {
      return this.http.put<ResponseDTO<void>>(
-       `${this.apiUrl}/auth/api/recursos-digitales/activo`,
+       `${this.apiUrl}/api/recursos-digitales/activo`,
        { id, nuevoEstado, usuario },
        { headers: this.authHeaders() }
      );
@@ -241,7 +241,7 @@ saveRecursoDigital(formData: FormData): Observable<ResponseDTO<void>> {
 
     deleteRecursoDigital(id: number): Observable<ResponseDTO<void>> {
       return this.http.delete<ResponseDTO<void>>(
-        `${this.apiUrl}/auth/api/recursos-digitales/eliminar/${id}`,
+        `${this.apiUrl}/api/recursos-digitales/eliminar/${id}`,
         { headers: this.authHeaders() }
       );
     }
