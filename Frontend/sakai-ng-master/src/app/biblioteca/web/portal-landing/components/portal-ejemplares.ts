@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TabsModule } from 'primeng/tabs';
 import { SplitterModule } from 'primeng/splitter';
@@ -11,6 +11,7 @@ import { InputValidation } from '../../../input-validation';
 import { TemplateModule } from '../../../template.module';
 import { ButtonModule } from 'primeng/button';
 import { CarouselModule } from 'primeng/carousel';
+import { Carousel } from 'primeng/carousel';
 import { TagModule } from 'primeng/tag';
 import { Product, ProductService } from '../../../../pages/service/product.service';
 import { PhotoService } from '../../../../pages/service/photo.service';
@@ -19,6 +20,7 @@ import { PortalDetalleEjemplar } from './portal-detalle-ejemplar';
 import { PortalDisponibleEjemplar } from './portal-disponible-ejemplar';
 import { BibliotecaDTO } from '../../../interfaces/material-bibliografico/biblioteca.model';
 import { MaterialBibliograficoService } from '../../../services/material-bibliografico.service';
+import { environment } from '../../../../../environments/environment';
 @Component({
     selector: 'portal-ejemplares',
     standalone: true,
@@ -44,15 +46,15 @@ import { MaterialBibliograficoService } from '../../../services/material-bibliog
 
         </div>
         <div class="col-span-12 md:col-span-12 lg:col-span-12 p-0 lg:pb-8 mt-6 lg:mt-0">
-        <p-carousel [value]="materiales" [numVisible]="5" [numScroll]="3" [circular]="true" [responsiveOptions]="responsiveOptions" autoplayInterval="5000">
+        <p-carousel #carousel [value]="materiales" [numVisible]="5" [numScroll]="3" [circular]="true" [responsiveOptions]="responsiveOptions" autoplayInterval="5000" (onPage)="onCarouselPage()">
     <ng-template let-libro pTemplate="item">
         <div class="border border-surface-200 dark:border-surface-700 rounded m-2 p-4">
             <div class="mb-4">
                 <div class="relative mx-auto">
 
-                <img src="https://biblioteca.upsjb.edu.pe/lan/Imagenes/Uploads/UPSJB_1_30112024_133774580434692598_469.jpg"
+                <img [src]="getImageUrl(libro) || 'assets/logo.png'"
                 [alt]="libro.titulo" class="carousel-image rounded-border" />
-                    <p-tag [value]="libro.estadoId" class="absolute" styleClass="dark:!bg-surface-900" [ngStyle]="{ 'left.px': 5, 'top.px': 5 }" />
+                    <p-tag [value]="estado(libro)" [severity]="getSeverity(estado(libro))" class="absolute" styleClass="dark:!bg-surface-900" [ngStyle]="{ 'left.px': 5, 'top.px': 5 }" />
                 </div>
             </div>
             <div class="mb-4 font-medium" class="hover:text-primary focus:text-primary transition-colors">{{ libro.titulo }}</div>
@@ -64,8 +66,8 @@ import { MaterialBibliograficoService } from '../../../services/material-bibliog
                 <span>
 
                 <p-button outlined icon="pi pi-search-plus" styleClass="ml-2" pTooltip="Más información"
-                tooltipPosition="bottom" (click)="masInformacion()"/>
-                <p-button icon="pi pi-map-marker" styleClass="ml-2" pTooltip="Disponibilidad" tooltipPosition="bottom" (click)="disponible()"/>
+                tooltipPosition="bottom" (click)="masInformacion(libro, $event)"/>
+                <p-button icon="pi pi-map-marker" styleClass="ml-2" pTooltip="Disponibilidad" tooltipPosition="bottom" (click)="disponible(libro, $event)"/>
                     <!--<p-button icon="pi pi-calendar" styleClass="ml-2" pTooltip="Reservar"
                     tooltipPosition="bottom" (click)="reservar()"/>-->
                 </span>
@@ -98,6 +100,7 @@ export class PortalEjemplares implements OnInit{
     displayDisponibleDialog: boolean = false;
     objeto:any;
     materiales: BibliotecaDTO[] = [];
+    @ViewChild('carousel') carousel?: Carousel;
 
     galleriaResponsiveOptions: any[] = [
         {
@@ -144,7 +147,10 @@ export class PortalEjemplares implements OnInit{
 
 
               ngOnInit() {
-                this.materialBibliograficoService.listarMateriales()
+                // Cargar libros en estado disponible
+                // Cargar todos los materiales en estado disponible
+                this.materialBibliograficoService
+                      .listarDisponibles()
                       .subscribe(list => {
                         this.materiales = list;
                         // forzar que el carousel refresque
@@ -177,6 +183,50 @@ export class PortalEjemplares implements OnInit{
                 });
             }
 
+    /** Devuelve la URL de la imagen almacenada si existe */
+    getImageUrl(obj: BibliotecaDTO): string | undefined {
+        if ((obj as any).material?.url) {
+            const p = (obj as any).material.url as string;
+            return p.startsWith('http') ? p : `${environment.filesUrl}${p}`;
+        }
+        if (obj.rutaImagen) {
+            const base = obj.rutaImagen.startsWith('http')
+                ? obj.rutaImagen
+                : `${environment.filesUrl}${obj.rutaImagen.startsWith('/') ? '' : '/'}${obj.rutaImagen}`;
+
+            if (obj.nombreImagen) {
+                if (base.endsWith(obj.nombreImagen)) {
+                    return base;
+                }
+                const sep = base.endsWith('/') ? '' : '/';
+                return base + sep + obj.nombreImagen;
+            }
+            return base;
+        }
+        return undefined;
+    }
+
+    /** Devuelve la descripción del estado de la cabecera */
+    estado(b: BibliotecaDTO): string {
+        if (b.estadoDescripcion) {
+            return b.estadoDescripcion;
+        }
+        switch (b.estadoId) {
+            case 2:
+                return 'DISPONIBLE';
+            case 3:
+                return 'RESERVADO';
+            case 1:
+                return 'CREADO';
+            case 4:
+                return 'MANTENIMIENTO';
+            case 5:
+                return 'DESCARTE';
+            default:
+                return '';
+        }
+    }
+
 
     getSeverity(status: string) {
         switch (status) {
@@ -196,10 +246,11 @@ export class PortalEjemplares implements OnInit{
       reservar() {
         this.router.navigate(['/reservar']);
       }
-      masInformacion(){
-        this.objeto={
-            codigo:''
+      masInformacion(libro: BibliotecaDTO, event?: Event){
+        if (event) {
+            (event.target as HTMLElement).blur();
         }
+        this.objeto = libro;
         this.displayDialog = false;
         this.cd.detectChanges();
         setTimeout(() => {
@@ -207,12 +258,24 @@ export class PortalEjemplares implements OnInit{
             this.cd.detectChanges(); // Vuelve a detectar cambios para mostrar el diálogo
         }, 50);
       }
-      disponible(){
+      disponible(libro: BibliotecaDTO, event?: Event){
+        if (event) {
+            (event.target as HTMLElement).blur();
+        }
+        this.objeto = libro;
         this.displayDisponibleDialog = false;
         this.cd.detectChanges();
         setTimeout(() => {
             this.displayDisponibleDialog = true;
             this.cd.detectChanges(); // Vuelve a detectar cambios para mostrar el diálogo
         }, 50);
+      }
+
+      onCarouselPage(): void {
+        const active = document.activeElement as HTMLElement | null;
+        const carouselEl = this.carousel?.el?.nativeElement as HTMLElement | undefined;
+        if (active && carouselEl && carouselEl.contains(active)) {
+          active.blur();
+        }
       }
 }

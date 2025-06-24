@@ -157,6 +157,9 @@ public class BibliotecaResumenDTO {
     /** 46) ID de estado (1=en proceso, 2=disponible, 3=reservado, etc.) */
     private Long estadoId;
 
+    /** 46b) Descripción textual del estado */
+    private String estadoDescripcion;
+
     /** 47) Flag si tiene syllabus */
     private Boolean flasyllabus;
 

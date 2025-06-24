@@ -53,7 +53,10 @@ export interface BibliotecaDTO {
     demandante?: string;
     rutaImagen?: string;
     nombreImagen?: string;
+    /** Título de la revista fuente para artículos */
+    tituloRevistaFuente?: string;
     estadoId?: number;
+    estadoDescripcion?: string | null;
     flasyllabus?: boolean;
     fladigitalizado?: boolean;
     linkPublicacion?: string;
@@ -85,10 +88,14 @@ export interface DetalleBibliotecaDTO {
     tipoMaterialId?: number | null;
     tipoMaterial?: TipoMaterial | null;
     tipoAdquisicionId?: number | null;
+    /** Objeto de tipo de adquisición cuando viene anidado */
+    tipoAdquisicion?: TipoAdquisicion | null;
     numeroIngreso?: number;
     codigoBarra?: string;
     costo?: number | null;
     numeroFactura?: string | null;
+    /** Algunos servicios devuelven este campo */
+    nroFactura?: string | null;
     nroExistencia?: number;
     horaInicio?: string | null;
     horaFin?: string | null;

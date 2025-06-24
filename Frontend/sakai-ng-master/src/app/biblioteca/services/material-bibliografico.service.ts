@@ -241,6 +241,25 @@ registrarEspecialidad(especialidad: any): Observable<any> {
         );
     }
 
+    /** Obtiene todos los registros de biblioteca en estado disponible */
+  listarDisponibles(): Observable<BibliotecaDTO[]> {
+      return this.http
+        .get<{ status: number; data: BibliotecaDTO[] }>(
+          `${this.apiUrl}/api/biblioteca/disponibles`
+        )
+        .pipe(map(resp => resp.data));
+  }
+
+  /** Lista los registros disponibles filtrando por tipo de material */
+  listarDisponiblesPorTipoMaterial(tipo: number): Observable<BibliotecaDTO[]> {
+    return this.http
+      .get<{ status: number; data: BibliotecaDTO[] }>(
+        `${this.apiUrl}/api/biblioteca/disponibles-by-tipo`,
+        { params: { tipoMaterial: tipo } }
+      )
+      .pipe(map(resp => resp.data));
+  }
+
     /**
      * Lista los materiales de tipo Tesis.
      * Se filtra por el identificador del tipo de material correspondiente a las
@@ -277,6 +296,22 @@ registrarEspecialidad(especialidad: any): Observable<any> {
      */
     listarPorTipoMaterial(tipo?: number, sedeId?: number): Observable<BibliotecaDTO[]> {
       return this.catalogo(undefined, sedeId, tipo, 'disponibles');
+    }
+
+    /**
+     * Lista los materiales cuya cabecera no está en proceso (aprobados).
+     * Utiliza el endpoint de búsqueda general con el parámetro `soloEnProceso=false`.
+     */
+    listarAprobadosPorTipoMaterial(tipo?: number, sedeId?: number): Observable<BibliotecaDTO[]> {
+      let params = new HttpParams().set('soloEnProceso', 'false');
+      if (tipo != null) params = params.set('tipoMaterial', String(tipo));
+      if (sedeId != null) params = params.set('sedeId', String(sedeId));
+      return this.http
+        .get<{ status: number; data: BibliotecaDTO[] }>(
+          `${this.apiUrl}/api/biblioteca/search`,
+          { params }
+        )
+        .pipe(map(resp => resp.data));
     }
 
     /** Devuelve la lista de materiales ya mapeados según el tipo especificado */

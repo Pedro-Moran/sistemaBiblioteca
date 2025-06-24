@@ -165,6 +165,10 @@ public class BibliotecaMapper {
         dto.setUsuarioModificacion(b.getUsuarioModificacion());
         dto.setFechaModificacion(b.getFechaModificacion());
         dto.setEstadoId(b.getIdEstado());
+        if (b.getIdEstado() != null) {
+            estadoRepository.findById(b.getIdEstado())
+                    .ifPresent(e -> dto.setEstadoDescripcion(e.getDescripcion()));
+        }
 
         if (b.getTipoBiblioteca() != null) dto.setTipoBibliotecaId(b.getTipoBiblioteca().getId());
         if (b.getIdioma()         != null) dto.setIdiomaId(b.getIdioma().getId());
@@ -286,6 +290,10 @@ public class BibliotecaMapper {
             resumen.setRutaImagen(padre.getRutaImagen());
             resumen.setNombreImagen(padre.getNombreImagen());
             resumen.setEstadoId(padre.getIdEstado());
+            if (padre.getIdEstado() != null) {
+                estadoRepository.findById(padre.getIdEstado())
+                        .ifPresent(e -> resumen.setEstadoDescripcion(e.getDescripcion()));
+            }
             resumen.setFlasyllabus(padre.getFlasyllabus());
             resumen.setFladigitalizado(padre.getFladigitalizado());
             resumen.setLinkPublicacion(padre.getLinkPublicacion());

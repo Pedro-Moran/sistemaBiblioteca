@@ -64,6 +64,8 @@ public class BibliotecaDTO {
     private String rutaImagen;
     private String nombreImagen;
     private Long estadoId;
+    /** Descripción textual del estado */
+    private String estadoDescripcion;
     private Boolean flasyllabus;
     private Boolean fladigitalizado;
     private String linkPublicacion;

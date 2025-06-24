@@ -2,6 +2,8 @@ import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { RippleModule } from 'primeng/ripple';
 import { TemplateModule } from '../../../template.module';
+import { BibliotecaDTO, DetalleBibliotecaDTO } from '../../../interfaces/material-bibliografico/biblioteca.model';
+import { MaterialBibliograficoService } from '../../../services/material-bibliografico.service';
 
 @Component({
     selector: 'portal-disponible-ejemplar',
@@ -22,30 +24,26 @@ import { TemplateModule } from '../../../template.module';
     <!-- Detalles del libro -->
     <div class="col-span-12 space-y-3">
 
-        <p-table
-            [value]="detalle"
-            showGridlines>
-                <ng-template #header>
-                    <tr>
-                        <th>Local/Filial</th>
-                        <th>Tipo de Material</th>
-                        <th>Nro Ingreso</th>
-                        <th>Estado</th>
-                    </tr>
-                </ng-template>
-                <ng-template #body let-objetoDetalle>
-                    <tr>
-                        <td>{{ objetoDetalle.sede.descripcion }}</td>
-                        <td>{{ objetoDetalle.tipoMaterial.descripcion }}</td>
-                        <td>{{ objetoDetalle.nroIngreso }}</td>
-                        <td [ngClass]="objetoDetalle.estado.id === 1 ? 'text-primary' : 'text-green-500'">
-                        {{ objetoDetalle.estado.descripcion }}
-                        </td>
-                    </tr>
-                </ng-template>
-        </p-table>  
+        <p-table [value]="detalle" showGridlines>
+            <ng-template pTemplate="header">
+                <tr>
+                    <th>Local/Filial</th>
+                    <th>Tipo de Material</th>
+                    <th>Nro Ingreso</th>
+                    <th>Estado</th>
+                </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-objetoDetalle>
+                <tr>
+                    <td>{{ objetoDetalle.sede?.descripcion || '—' }}</td>
+                    <td>{{ objetoDetalle.tipoMaterial?.descripcion || '—' }}</td>
+                    <td>{{ objetoDetalle.numeroIngreso || '—' }}</td>
+                    <td>{{ estado(objetoDetalle) }}</td>
+                </tr>
+            </ng-template>
+        </p-table>
         <div class="text-gray-700">
-        <h4><b>Total de registros: </b>1</h4>
+            <h4><b>Total de registros: </b>{{ detalle.length }}</h4>
         </div>
     </div>
 </div>
@@ -54,26 +52,44 @@ import { TemplateModule } from '../../../template.module';
 
     `
 })
-export class PortalDisponibleEjemplar implements OnChanges{
+export class PortalDisponibleEjemplar implements OnChanges {
     @Input() displayDialog: boolean = false;
-    @Input() objeto: any = {};
-    detalle:any[]=[];
+    @Input() objeto: BibliotecaDTO | null = null;
 
-    async ngOnInit() {
-        this.detalle=[
-            {
-                "sede":{"id":1,"descripcion": "Sede A", "activo": true},
-                "nroIngreso":"39819",
-                "tipoAdquisicion":{"id":1,"descripcion": "Tipo A", "activo": true},
-                "tipoMaterial":{"id":1,"descripcion": "Tipo A", "activo": true},
-                "fechaIngreso":"14/11/2016",
-                "estado":{"id":1,"descripcion": "Prestado", "activo": true}
+    detalle: DetalleBibliotecaDTO[] = [];
+
+    constructor(private materialService: MaterialBibliograficoService) {}
+
+    ngOnChanges(changes: SimpleChanges): void {
+        if (changes['objeto'] && this.objeto) {
+            if (this.objeto.detalles && this.objeto.detalles.length) {
+                this.detalle = this.objeto.detalles;
+            } else if (this.objeto.id != null) {
+                this.materialService
+                    .listarDetallesPorBiblioteca(this.objeto.id, false)
+                    .subscribe(list => (this.detalle = list));
             }
-        ]
+        }
     }
-    ngOnChanges(changes: SimpleChanges) {
-        if (changes['displayDialog']) {
-            console.log('Cambio detectado en displayDialog:', this.displayDialog);
+
+    /** Devuelve la descripción textual del estado del detalle */
+    estado(det: DetalleBibliotecaDTO): string {
+        if (det.estadoDescripcion) {
+            return det.estadoDescripcion;
+        }
+        switch (det.idEstado) {
+            case 2:
+                return 'DISPONIBLE';
+            case 3:
+                return 'RESERVADO';
+            case 1:
+                return 'CREADO';
+            case 4:
+                return 'MANTENIMIENTO';
+            case 5:
+                return 'DESCARTE';
+            default:
+                return '';
         }
     }
 }
