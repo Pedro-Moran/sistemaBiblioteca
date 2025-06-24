@@ -18,5 +18,6 @@ public class RecursoDigitalDTO {
     private LocalDateTime fechaCreacion;
     private LocalDateTime fechaModificacion;
     private String imagenUrl; // base64 o ruta
+    private Long clicks;
 }
 

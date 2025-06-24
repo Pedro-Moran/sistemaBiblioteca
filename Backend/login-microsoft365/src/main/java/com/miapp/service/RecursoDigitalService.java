@@ -23,10 +23,20 @@ public class RecursoDigitalService {
         return repo.findAll().stream().map(this::toDto).collect(Collectors.toList());
     }
 
+    public List<RecursoDigitalDTO> listarPorTipo(Long tipoId) {
+        return repo.findByTipoId(tipoId).stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
+    }
+
     public void guardar(RecursoDigitalDTO dto, MultipartFile imagenFile) {
         RecursoDigital e = dto.getId() != null
                 ? repo.findById(dto.getId()).orElse(new RecursoDigital())
                 : new RecursoDigital();
+
+        if (e.getClicks() == null) {
+            e.setClicks(0L);
+        }
 
         e.setAutor(dto.getAutor());
         if (dto.getTipoId() != null) {
@@ -59,6 +69,18 @@ public class RecursoDigitalService {
         repo.save(e);
     }
 
+    public String obtenerEnlace(Long id) {
+        RecursoDigital e = repo.findById(id)
+                .orElseThrow(() -> new RuntimeException("No encontrado"));
+        if (e.getClicks() == null) {
+            e.setClicks(1L);
+        } else {
+            e.setClicks(e.getClicks() + 1);
+        }
+        repo.save(e);
+        return e.getEnlace();
+    }
+
     public void eliminar(Long id) {
         repo.deleteById(id);
     }
@@ -85,6 +107,7 @@ public class RecursoDigitalService {
         d.setFechaCreacion(e.getFechaCreacion());
         d.setFechaModificacion(e.getFechaModificacion());
         d.setImagenUrl(e.getImagen());
+        d.setClicks(e.getClicks());
         if (e.getTipo() != null) {
             d.setTipoId(e.getTipo().getId());
             d.setTipoDescripcion(e.getTipo().getDescripcion());

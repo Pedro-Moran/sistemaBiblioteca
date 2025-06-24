@@ -191,17 +191,28 @@ listarHorarios(): Observable<{ p_status: number; message: string; data: PortalHo
 
     listarRecursosDigitales(): Observable<ResponseDTO<RecursoDigitalDTO[]>> {
         return this.http.get<ResponseDTO<RecursoDigitalDTO[]>>(
-          `${this.apiUrl}/api/recursos-digitales/listar`,
-          { headers: this.authHeaders() }
+          `${this.apiUrl}/api/recursos-digitales/listar`
         );
       }
 
   listarTipoRecursos(): Observable<ResponseDTO<TipoRecurso[]>> {
       return this.http.get<ResponseDTO<TipoRecurso[]>>(
-        `${this.apiUrl}/api/tipos-recursos-digitales/listar`,
-        { headers: this.authHeaders() }
+        `${this.apiUrl}/api/tipos-recursos-digitales/listar`
       );
     }
+
+  listarRecursosDigitalesPorTipo(id: number): Observable<ResponseDTO<RecursoDigitalDTO[]>> {
+      return this.http.get<ResponseDTO<RecursoDigitalDTO[]>>(
+        `${this.apiUrl}/api/recursos-digitales/listar/tipo/${id}`
+      );
+    }
+
+  obtenerEnlaceRecurso(id: number): Observable<ResponseDTO<string>> {
+      return this.http.get<ResponseDTO<string>>(
+        `${this.apiUrl}/api/recursos-digitales/enlace/${id}`,
+        { headers: this.authHeaders() }
+      );
+  }
 saveRecursoDigital(formData: FormData): Observable<ResponseDTO<void>> {
   return this.http.post<ResponseDTO<void>>(
     `${this.apiUrl}/api/recursos-digitales/registrar`,

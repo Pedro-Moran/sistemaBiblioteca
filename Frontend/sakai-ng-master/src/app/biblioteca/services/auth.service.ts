@@ -13,6 +13,12 @@ import { catchError } from 'rxjs/operators';
 import { MsalService } from '@azure/msal-angular';
 import { AuthenticationResult } from '@azure/msal-browser';
 
+interface ResponseDTO<T> {
+  p_status: number;
+  message: string;
+  data: T;
+}
+
 
 
 
@@ -152,6 +158,27 @@ export class AuthService {
     return !this.helper.isTokenExpired(token);
   }
 
+  /**
+   * Abre en una nueva pestaña el recurso almacenado en localStorage tras iniciar sesión.
+   */
+  openPendingResource(): void {
+    const id = localStorage.getItem('redirectRecurso');
+    if (!id) return;
+    const headers = new HttpHeaders().set('Authorization', `Bearer ${this.getToken()}`);
+    this.http.get<ResponseDTO<string>>(
+      `${this.apiUrl}/api/recursos-digitales/enlace/${id}`,
+      { headers }
+    ).subscribe({
+      next: res => {
+        if (res.p_status === 0) {
+          window.open(res.data, '_blank');
+        }
+      },
+      error: () => {}
+    });
+    localStorage.removeItem('redirectRecurso');
+  }
+
 // Login con Office 365: se espera recibir el token de Microsoft (obtenido con MSAL, por ejemplo)
 // loginMicrosoft(msToken: string): Observable<LoginResponse> {
 //     return this.http.post<LoginResponse>(`${this.apiUrl}/login-microsoft`, { token: msToken });
@@ -181,7 +208,8 @@ loginMicrosoft() {
                   if (backendResponse.token) {
                     this.setAuthentication(backendResponse.token);
                     this.currentUserSubject.next(this.getUser());
-                    this.router.navigate(['/main']); // Redirige a la vista principal
+                    this.openPendingResource();
+                    this.router.navigate(['/main']);
                   }
                 },
                 error: (error) => {
