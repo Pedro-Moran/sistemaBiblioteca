@@ -23,31 +23,34 @@ import { PortalService, NosotrosDTO } from '../../services/portal.service';
   ],
   providers: [ MessageService, ConfirmationService ],
   template: `
-    <p-card header="Editar Nosotros">
-      <form [formGroup]="form" (ngSubmit)="guardar()">
-        <div class="p-fluid p-formgrid p-grid">
-          <div class="flex flex-col gap-2 md:w-1/4">
-            <label for="eyebrow">Subtitulo</label>
-            <input id="eyebrow" pInputText formControlName="eyebrow"/>
-          </div>
-          <div class="flex flex-col gap-2 md:w-1/4">
-            <label for="title">Título</label>
-            <input id="title" pInputText formControlName="title"/>
-          </div>
-          <div class="flex flex-col gap-2 md:w-1/4">
-            <label for="imageUrl">URL de la imagen</label>
-            <input id="imageUrl" pInputText formControlName="imageUrl"/>
-          </div>
-          <div class="flex flex-col gap-2 md:w-1/4">
-            <label for="body">Texto</label>
-            <textarea id="body" pInputTextarea rows="6" formControlName="body"></textarea>
-          </div>
-          <div class="flex flex-col gap-2 md:w-1/4">
-            <button pButton type="submit" label="Guardar" icon="pi pi-check" [disabled]="form.invalid"></button>
-          </div>
+    <div class="grid">
+      <div class="col-12">
+        <div class="card flex flex-col gap-4 w-full">
+          <h5>Nosotros</h5>
+          <form [formGroup]="form" (ngSubmit)="guardar()" class="grid grid-cols-12 gap-4">
+            <div class="flex flex-col gap-2 col-span-12 md:col-span-6 lg:col-span-3">
+              <label for="eyebrow">Subtitulo</label>
+              <input id="eyebrow" pInputText formControlName="eyebrow" />
+            </div>
+            <div class="flex flex-col gap-2 col-span-12 md:col-span-6 lg:col-span-3">
+              <label for="title">Título</label>
+              <input id="title" pInputText formControlName="title" />
+            </div>
+            <div class="flex flex-col gap-2 col-span-12 md:col-span-6 lg:col-span-3">
+              <label for="imageUrl">URL de la imagen</label>
+              <input id="imageUrl" pInputText formControlName="imageUrl" />
+            </div>
+            <div class="flex flex-col gap-2 col-span-12">
+              <label for="body">Texto</label>
+              <textarea id="body" pInputTextarea rows="6" formControlName="body"></textarea>
+            </div>
+            <div class="col-span-12 flex justify-end">
+              <button pButton type="submit" label="Guardar" icon="pi pi-check" [disabled]="form.invalid"></button>
+            </div>
+          </form>
         </div>
-      </form>
-    </p-card>
+      </div>
+    </div>
   `
 })
 export class Nosotros implements OnInit {
