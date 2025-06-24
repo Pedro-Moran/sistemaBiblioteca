@@ -524,6 +524,18 @@ public class BibliotecaServiceImpl implements BibliotecaService {
     }
 
     @Override
+    public List<BibliotecaDTO> findDisponiblesPorTipoMaterial(Long tipoMaterialId) {
+        return bibliotecaRepository
+                .findByIdEstado(2L)
+                .stream()
+                .filter(b -> tipoMaterialId == null ||
+                        (b.getTipoMaterial() != null &&
+                         Objects.equals(b.getTipoMaterial().getIdTipoMaterial(), tipoMaterialId)))
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public List<DetalleBibliotecaDTO> listarTodosDetallesReservados() {
         List<DetalleBiblioteca> listaEntidades = detalleBibliotecaRepository.findAllConBibliotecaReservados();
         return listaEntidades.stream()

@@ -217,6 +217,13 @@ public class BibliotecaController {
         return ResponseEntity.ok(Map.of("status", 0, "data", dtos));
     }
 
+    /** Lista disponibles filtrando por tipo de material */
+    @GetMapping("/disponibles-by-tipo")
+    public ResponseEntity<?> listDisponiblesByTipo(@RequestParam Long tipoMaterial) {
+        List<BibliotecaDTO> dtos = bibliotecaService.findDisponiblesPorTipoMaterial(tipoMaterial);
+        return ResponseEntity.ok(Map.of("status", 0, "data", dtos));
+    }
+
     /** Devuelve un detalle de biblioteca por su ID */
     @GetMapping("/detalles/{id}")
     public ResponseEntity<DetalleBibliotecaDTO> getDetalleById(@PathVariable Long id) {

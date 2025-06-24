@@ -28,6 +28,9 @@ public interface BibliotecaService {
     /** Lista todos los materiales bibliográficos con estado disponible (2) */
     List<BibliotecaDTO> findDisponibles();
 
+    /** Lista disponibles filtrando por tipo de material */
+    List<BibliotecaDTO> findDisponiblesPorTipoMaterial(Long tipoMaterialId);
+
     List<DetalleBibliotecaDTO> listarTodosDetallesReservados();
 
     /** Reporte de ejemplares más prestados */
