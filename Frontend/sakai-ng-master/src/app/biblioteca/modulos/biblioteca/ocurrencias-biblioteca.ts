@@ -97,7 +97,7 @@ import { OcurrenciaEventService } from '../../services/ocurrencia-event.service'
                                 <tr [ngClass]="{ 'highlight-row': objeto.highlight }">
                                     <td>
                                     <div class="flex flex-wrap justify-center gap-2">
-                                <p-button outlined icon="pi pi-pencil" pTooltip="Actualizar" tooltipPosition="bottom" (click)="editar(objeto)"/>
+                                <p-button outlined icon="pi pi-pencil" pTooltip="Actualizar" tooltipPosition="bottom" (click)="editar(objeto)" [disabled]="objeto.regulariza === 1"/>
                                                            </div>
                                     </td>
                                 <td>{{objeto.id}}</td>
@@ -108,7 +108,7 @@ import { OcurrenciaEventService } from '../../services/ocurrencia-event.service'
                                     <td>
                                         <div class="flex flex-wrap justify-center gap-2">
                                             <p-button outlined icon="pi pi-align-justify" pTooltip="Ver detalle" tooltipPosition="bottom" (click)="verDetalle(objeto)"/>
-                                            <p-button outlined icon="pi pi-dollar" pTooltip="Registrar costo" tooltipPosition="bottom" (click)="costear(objeto)"/>
+                                            <p-button outlined icon="pi pi-dollar" pTooltip="Registrar costo" tooltipPosition="bottom" (click)="costear(objeto)" [disabled]="objeto.regulariza === 1"/>
                                         </div>
                                     </td>
                                 </tr>
@@ -209,12 +209,18 @@ export class OcurrenciasBiblioteca implements OnInit {
         this.modalDetalleOcurrencia.openModal(obj.id!, false);
       }
         editar(obj: OcurrenciaDTO) {
+          if (obj.regulariza === 1) {
+            return;
+          }
           this.modalNuevoOcurrencia.openForEdit(obj);
         }
       nuevoRegistro(){
 //         this.modalNuevoOcurrencia.openModal();
       }
       costear(obj: OcurrenciaDTO) {
+        if (obj.regulariza === 1) {
+          return;
+        }
         // abrimos el modal en modo “costear”
         this.modalDetalleOcurrencia.openModal(obj.id!, true);
       }

@@ -32,6 +32,8 @@ export interface OcurrenciaDTO {
   tipoMaterial?: string;
   /** Estado del costo */
   estadoCosto?: number;
+  /** Indica si la ocurrencia está regularizada */
+  regulariza?: number;
   /** Indica si la ocurrencia pertenece a la biblioteca */
   esBiblioteca?: boolean;
   }
