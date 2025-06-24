@@ -7,6 +7,7 @@ import com.miapp.repository.RecursoDigitalRepository;
 import com.miapp.repository.TipoRecursoDigitalRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDateTime;
 import java.util.Base64;
@@ -83,6 +84,13 @@ public class RecursoDigitalService {
 
     public void eliminar(Long id) {
         repo.deleteById(id);
+    }
+
+    @Transactional
+    public void deleteAll(List<Long> ids) {
+        List<RecursoDigital> registros = repo.findAllById(ids);
+        repo.deleteAllInBatch(registros);
+        repo.flush();
     }
 
     public void cambiarEstado(Long id, Integer nuevoEstado, String usuario) {
