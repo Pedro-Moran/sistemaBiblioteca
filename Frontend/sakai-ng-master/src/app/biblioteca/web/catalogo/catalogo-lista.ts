@@ -17,6 +17,7 @@ import { Router } from '@angular/router';
 import { PortalDetalleEjemplar } from '../portal-landing/components/portal-detalle-ejemplar';
 import { PortalDisponibleEjemplar } from '../portal-landing/components/portal-disponible-ejemplar';
 import { BibliotecaDTO } from '../../interfaces/material-bibliografico/biblioteca.model';
+import { environment } from '../../../../environments/environment';
 
 @Component({
     selector: 'catalogo-lista',
@@ -98,7 +99,7 @@ import { BibliotecaDTO } from '../../interfaces/material-bibliografico/bibliotec
                     currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} registros"
                     [rowsPerPageOptions]="[10, 25, 50]" [loading]="loading" [rowHover]="true"
                     styleClass="p-datatable-gridlines" [paginator]="true"
-                    [globalFilterFields]="['codigo','titulo','editorial.autorPersonal','editorial.autorSecundario','editorial.anio']"
+                    [globalFilterFields]="['codigoLocalizacion','titulo','editorial.autorPersonal','editorial.autorSecundario','editorial.anio']"
                     responsiveLayout="scroll">
                     <ng-template pTemplate="caption">
 
@@ -113,7 +114,7 @@ import { BibliotecaDTO } from '../../interfaces/material-bibliografico/bibliotec
                     <ng-template pTemplate="header">
                         <tr>
                             <th style="width: 8rem" pSortableColumn="urlPortada">PORTADA <p-sortIcon field="urlPortada"></p-sortIcon></th>
-                            <th style="width: 4rem" pSortableColumn="codigo">CODIGO <p-sortIcon field="codigo"></p-sortIcon></th>
+                            <th style="width: 4rem" pSortableColumn="codigoLocalizacion">CODIGO <p-sortIcon field="codigoLocalizacion"></p-sortIcon></th>
                             <th style="min-width:200px" pSortableColumn="titulo"> TITULO <p-sortIcon field="titulo"></p-sortIcon></th>
                             <th style="min-width:200px" pSortableColumn="editorial.autorPersonal">AUTOR <p-sortIcon field="editorial.autorPersonal"></p-sortIcon></th>
                             <th style="width: 4rem" pSortableColumn="editorial.anio">AÑO <p-sortIcon
@@ -130,7 +131,7 @@ import { BibliotecaDTO } from '../../interfaces/material-bibliografico/bibliotec
 
                             </td>
                             <td>
-                                {{objeto.codigo}}
+                                {{objeto.codigoLocalizacion}}
                             </td>
                             <td>
                                 {{objeto.titulo}}
@@ -144,8 +145,8 @@ import { BibliotecaDTO } from '../../interfaces/material-bibliografico/bibliotec
                             </td>
                             <td class="text-center">
                             <div class="flex flex-wrap justify-center gap-2">
-                                <p-button outlined icon="pi pi-search-plus" pTooltip="Más información" tooltipPosition="bottom" (click)="masInformacion()"/>
-                                <p-button icon="pi pi-map-marker" pTooltip="Disponibilidad" tooltipPosition="bottom" (click)="disponible()"/>
+                                <p-button outlined icon="pi pi-search-plus" pTooltip="Más información" tooltipPosition="bottom" (click)="masInformacion(objeto)"/>
+                                <p-button icon="pi pi-map-marker" pTooltip="Disponibilidad" tooltipPosition="bottom" (click)="disponible(objeto)"/>
                                 <!--<p-button icon="pi pi-calendar" pTooltip="Reservar" tooltipPosition="bottom" (click)="reservar()"/>-->
                             </div>
 
@@ -214,16 +215,19 @@ export class CatalogoLista implements OnInit {
 
     async ListaSede() {
         try {
-            const result: any = await this.genericoService.sedes_get('conf/tipo-lista').toPromise();
-            if (result.status === "0") {
-                let sedes = [{ id: 0, descripcion: 'TODOS', activo: true, estado: 1 }, ...result.data];
-
-                this.dataSedeFiltro = sedes;
+            const result: any = await this.genericoService
+                .sedes_get('api/equipos/sedes')
+                .toPromise();
+            if (result.status === 0) {
+                this.dataSedeFiltro = [
+                    { id: 0, descripcion: 'TODOS', activo: true, estado: 1 },
+                    ...result.data,
+                ];
                 this.sedeFiltro = this.dataSedeFiltro[0];
             }
         } catch (error) {
             console.log(error);
-            this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Ocurrió un error. No se pudo cargar roles' });
+            this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Ocurrió un error. No se pudo cargar Sede' });
         }
 
     }
@@ -248,21 +252,25 @@ export class CatalogoLista implements OnInit {
     async listarTiposRecurso() {
         this.loading = true;
         this.dataTipoRecursoFiltro = [];
-        this.genericoService.tiporecurso_get(this.modulo + '/lista')
+        this.genericoService
+            .tiporecurso_get('api/catalogos/tipomaterial/activos')
             .subscribe(
                 (result: any) => {
                     this.loading = false;
-                    if (result.status == "0") {
-                        let recursosFiltrados = result.data.filter((recurso: { tipo: { id: any; }; }) => recurso.tipo.id === 1);
-
-                        let filtro = [{ id: 0, descripcion: 'TODOS', activo: true, estado: 1 }, ...recursosFiltrados];
-                        this.dataTipoRecursoFiltro = filtro;
+                    if (result.status === 0 || result.status === "0") {
+                        const tipos = (result.data as any[]).map(r => ({
+                            id: r.tipo?.id,
+                            descripcion: r.descripcion,
+                            activo: r.activo
+                        }));
+                        this.dataTipoRecursoFiltro = [
+                            { id: 0, descripcion: 'TODOS', activo: true, estado: 1 },
+                            ...tipos,
+                        ] as any;
                         this.tipoRecursoFiltro = this.dataTipoRecursoFiltro[0];
                     }
-                }
-                , (error: HttpErrorResponse) => {
-                    this.loading = false;
-                }
+                },
+                () => (this.loading = false)
             );
     }
 listar() {
@@ -275,9 +283,35 @@ listar() {
       this.opcionFiltro.descripcion
     )
     .subscribe(list => {
-      this.data = list;      // ahora son BibliotecaDTO[]
+      this.data = list
+        .filter(b => b.estadoId !== 1)
+        .map(b => ({
+          ...b,
+          urlPortada: this.getImageUrl(b)
+        }));
       this.loading = false;
     }, () => this.loading = false);
+}
+
+getImageUrl(obj: BibliotecaDTO): string | undefined {
+  if ((obj as any).material?.url) {
+    const p = (obj as any).material.url as string;
+    return p.startsWith('http') ? p : `${environment.filesUrl}${p}`;
+  }
+  if (obj.rutaImagen) {
+    const base = obj.rutaImagen.startsWith('http')
+      ? obj.rutaImagen
+      : `${environment.filesUrl}${obj.rutaImagen.startsWith('/') ? '' : '/'}${obj.rutaImagen}`;
+    if (obj.nombreImagen) {
+      if (base.endsWith(obj.nombreImagen)) {
+        return base;
+      }
+      const sep = base.endsWith('/') ? '' : '/';
+      return base + sep + obj.nombreImagen;
+    }
+    return base;
+  }
+  return undefined;
 }
 
     onGlobalFilter(table: Table, event: Event) {
@@ -297,24 +331,23 @@ listar() {
     reservar(){
         this.router.navigate(['/reservar']);
     }
-    masInformacion(){
-      this.objeto={
-          codigo:''
-      }
+    masInformacion(obj: BibliotecaDTO){
+      this.objeto = obj;
       this.displayDialog = false;
       this.cd.detectChanges();
       setTimeout(() => {
           this.displayDialog = true;
-          this.cd.detectChanges(); // Vuelve a detectar cambios para mostrar el diálogo
+          this.cd.detectChanges();
       }, 50);
 
     }
-    disponible(){
+    disponible(obj: BibliotecaDTO){
+        this.objeto = obj;
         this.displayDisponibleDialog = false;
         this.cd.detectChanges();
         setTimeout(() => {
             this.displayDisponibleDialog = true;
-            this.cd.detectChanges(); // Vuelve a detectar cambios para mostrar el diálogo
+            this.cd.detectChanges();
         }, 50);
     }
 }
