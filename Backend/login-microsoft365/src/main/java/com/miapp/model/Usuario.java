@@ -1,6 +1,7 @@
 package com.miapp.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
@@ -17,6 +18,7 @@ public class Usuario {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "IDUSUARIO")
+    @JsonProperty("id")
     private Long idUsuario;
 
     // Clave foránea a SEDE
@@ -42,6 +44,7 @@ public class Usuario {
     private String apellidoMaterno;
 
     @Column(name = "FECHANACIMIENTO")
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDateTime fechaNacimiento;
 
     @Column(name = "EMAIL", length = 100)
@@ -91,6 +94,74 @@ public class Usuario {
     /** Contador de logeos acumulados */
     @Column(name = "LOGIN_COUNT")
     private Long loginCount = 0L;
+
+    @JsonProperty("EMPLID")
+    @Column(name = "EMPLID")
+    private String emplid;
+
+    @JsonProperty("NATIONAL_ID_TYPE")
+    @Column(name = "NATIONAL_ID_TYPE")
+    private String nationalIdType;
+
+    @JsonProperty("NATIONAL_ID")
+    @Column(name = "NATIONAL_ID")
+    private String nationalId;
+
+    @JsonProperty("NAME")
+    @Column(name = "NAME")
+    private String name;
+
+    @JsonProperty("PROGRAM")
+    @Column(name = "PROGRAM")
+    private String program;
+
+    @JsonProperty("CAMPUS")
+    @Column(name = "CAMPUS")
+    private String campus;
+
+    @JsonProperty("FEC_NAC")
+    @Column(name = "FEC_NAC")
+    private String fecNac;
+
+    @JsonProperty("COUNTRY")
+    @Column(name = "COUNTRY")
+    private String country;
+
+    @JsonProperty("STATE")
+    @Column(name = "STATE")
+    private String state;
+
+    @JsonProperty("COUNTY")
+    @Column(name = "COUNTY")
+    private String county;
+
+    @JsonProperty("CITY")
+    @Column(name = "CITY")
+    private String city;
+
+    @JsonProperty("ADDRESS")
+    @Column(name = "ADDRESS")
+    private String address;
+
+    @JsonProperty("PHONE")
+    @Column(name = "PHONE")
+    private String phone;
+
+    @JsonProperty("CELL")
+    @Column(name = "CELL")
+    private String cell;
+
+    @JsonProperty("SEX")
+    @Column(name = "SEX")
+    private String sex;
+
+    @JsonProperty("AGE")
+    @Column(name = "AGE")
+    private Integer age;
+
+    @JsonProperty("EMAIL_INST")
+    @Column(name = "EMAIL_INST")
+    private String emailInst;
 
 
 

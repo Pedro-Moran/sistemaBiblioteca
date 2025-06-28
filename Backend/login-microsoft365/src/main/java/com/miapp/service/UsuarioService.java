@@ -44,12 +44,21 @@ public class UsuarioService {
     public Usuario registrarUsuario(Usuario usuario) {
         if (usuario.getIdUsuario() != null && usuario.getIdUsuario() == 0) {
             usuario.setIdUsuario(null);
+        } else if (usuario.getIdUsuario() != null && !usuarioRepository.existsById(usuario.getIdUsuario())) {
+            // Si el ID enviado no existe en la base de datos, se trata como un nuevo registro
+            usuario.setIdUsuario(null);
         }
 
         System.out.println(usuario.getEmail());
         // Verificar si el email ya existe
         if (usuarioRepository.findByEmail(usuario.getEmail()).isPresent()) {
             throw new RuntimeException("El email ya existe.");
+        }
+
+        // Verificar si el número de documento ya existe
+        if (usuario.getNumDocumento() != null &&
+                usuarioRepository.findByNumDocumento(usuario.getNumDocumento()).isPresent()) {
+            throw new RuntimeException("El número de documento ya existe.");
         }
 
         // Establecer el login como email

@@ -55,6 +55,7 @@ public class SecurityConfig {
                             "/auth/api/recursos-digitales/listar/tipo/**",
                             "/auth/api/tipos-recursos-digitales/listar",
                             "/auth/api/noticias/listar",
+                            "/auth/api/documento/**",
                             "/uploads/**").permitAll()
                     .anyRequest().authenticated()
             )
