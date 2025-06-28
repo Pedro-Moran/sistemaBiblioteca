@@ -4,13 +4,15 @@ import { FormGroup } from '@angular/forms';
 @Component({
     selector: 'app-input-validation',
     standalone: true,
-    template: ` <div class="invalid-feedback">
-    @for (error of errores; track error.error) {
-      @if (form?.get(modelo)?.hasError(error.error) &&
-          (form?.get(modelo)?.touched || form?.get(modelo)?.dirty)) {
-        <div class="text-red-500">{{ error.mensaje }}</div>
-      }
-    }
+    template: `
+  <div class="invalid-feedback">
+    <ng-container *ngFor="let error of errores">
+      <div *ngIf="form?.get(modelo)?.hasError(error.error) &&
+                  (form?.get(modelo)?.touched || form?.get(modelo)?.dirty)"
+           class="text-red-500">
+        {{ error.mensaje }}
+      </div>
+    </ng-container>
   </div>
   `
 })
