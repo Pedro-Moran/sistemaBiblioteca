@@ -57,3 +57,16 @@ Angular CLI does not come with an end-to-end testing framework by default. You c
 ## Additional Resources
 
 For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+
+## Docker deployment
+
+This project includes a multi-stage `Dockerfile` that builds the Angular application and serves it using Nginx. The provided `nginx.conf` ensures SPA routing works correctly by redirecting unknown paths to `index.html`.
+
+Build and run the container from this directory with:
+
+```bash
+docker build -t sakai-ng .
+docker run -p 8080:80 sakai-ng
+```
+
+After running the container, navigate to `http://localhost:8080`. You can reload any page without getting 404 errors.
