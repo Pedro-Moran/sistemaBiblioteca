@@ -390,7 +390,7 @@ export class AppMenu {
                         routerLink: ['/main/pages/crud']
                     },
                     {
-                        label: 'Not Found',
+                        label: 'No encontrado',
                         icon: 'pi pi-fw pi-exclamation-circle',
                         routerLink: ['/main/pages/notfound']
                     },
