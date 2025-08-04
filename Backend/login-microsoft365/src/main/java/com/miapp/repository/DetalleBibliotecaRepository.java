@@ -5,11 +5,24 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
+import org.springframework.data.repository.query.Param;
 
 public interface DetalleBibliotecaRepository extends JpaRepository<DetalleBiblioteca, Long> {
     // devuelve todos los detalles de una biblioteca
-    List<DetalleBiblioteca> findByBibliotecaId(Long bibliotecaId);
+    @Query("""
+            SELECT d
+            FROM DetalleBiblioteca d
+                LEFT JOIN FETCH d.sede
+                LEFT JOIN FETCH d.tipoAdquisicion
+                LEFT JOIN FETCH d.tipoMaterial
+            WHERE d.biblioteca.id = :bibliotecaId
+            """)
+    List<DetalleBiblioteca> findByBibliotecaId(@Param("bibliotecaId") Long bibliotecaId);
+
     List<DetalleBiblioteca> findByIdEstado(Long idEstado);
+    boolean existsByBiblioteca_IdAndSede_Id(Long bibliotecaId, Long sedeId);
+    boolean existsByBiblioteca_IdAndTipoMaterial_IdTipoMaterial(Long bibliotecaId, Long tipoMaterialId);
+    boolean existsByBiblioteca_IdAndIdEstado(Long bibliotecaId, Long idEstado);
     @Query("SELECT d " +
             "FROM DetalleBiblioteca d " +
             "     JOIN FETCH d.biblioteca b " +

@@ -7,6 +7,8 @@ import com.miapp.model.dto.*;
 import com.miapp.service.CiudadService;
 import com.miapp.service.DetalleBibliotecaService;
 import com.miapp.service.impl.BibliotecaServiceImpl;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.http.ResponseEntity;
@@ -15,7 +17,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 @RestController
@@ -51,11 +52,10 @@ public class BibliotecaController {
     }
 
     @GetMapping("/list")
-    public ResponseEntity<?> listAll() {
-        List<BibliotecaDTO> all = bibliotecaService.listAll().stream()
-                .map(bibliotecaService::mapToDto)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(Map.of("status", 0, "data", all));
+    public ResponseEntity<?> listAll(@RequestParam(defaultValue = "0") int page,
+                                     @RequestParam(defaultValue = "20") int size) {
+        Page<BibliotecaDTO> result = bibliotecaService.listAllPaged(PageRequest.of(page, size));
+        return ResponseEntity.ok(Map.of("status", 0, "data", result));
     }
 
     @GetMapping("/{id}")
@@ -96,20 +96,13 @@ public class BibliotecaController {
             @RequestParam(value = "opcion",        required = false) String opcion,
             @RequestParam(value = "valor",         required = false) String valor,
             @RequestParam(value = "soloEnProceso", required = false, defaultValue = "false")
-            boolean soloEnProceso
+            boolean soloEnProceso,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
     ) {
         try {
-            List<BibliotecaDTO> dtos = bibliotecaService.search(tipoMaterialId, opcion, valor).stream()
-                    .filter(b -> {
-                        // si piden “soloEnProceso”, dejo sólo idEstado == 1
-                        if (soloEnProceso) {
-                            return Objects.equals(b.getIdEstado(), 1L);
-                        }
-                        // si no, excluyo los idEstado == 1
-                        return !Objects.equals(b.getIdEstado(), 1L);
-                    })
-                    .map(bibliotecaService::mapToDto)
-                    .collect(Collectors.toList());
+            Page<BibliotecaDTO> dtos = bibliotecaService
+                    .search(tipoMaterialId, opcion, valor, soloEnProceso, PageRequest.of(page, size));
 
             return ResponseEntity.ok(Map.of("status", 0, "data", dtos));
         } catch (Exception ex) {

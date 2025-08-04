@@ -195,6 +195,19 @@ public class BibliotecaMapper {
                     b.getSede().getDescripcion(),
                     b.getSede().getActivo()
             ));
+        } else if (b.getDetalles() != null) {
+            b.getDetalles().stream()
+                    .map(DetalleBiblioteca::getSede)
+                    .filter(java.util.Objects::nonNull)
+                    .findFirst()
+                    .ifPresent(s -> {
+                        dto.setSedeId(s.getId());
+                        dto.setSede(new com.miapp.model.SedeDTO(
+                                s.getId(),
+                                s.getDescripcion(),
+                                s.getActivo()
+                        ));
+                    });
         }
         if (b.getTipoAdquisicion() != null) {
             dto.setTipoAdquisicionId(b.getTipoAdquisicion().getId());

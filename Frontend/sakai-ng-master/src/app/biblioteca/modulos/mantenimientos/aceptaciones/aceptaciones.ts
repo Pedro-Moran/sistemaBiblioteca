@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 import { MessageService, ConfirmationService, MenuItem } from 'primeng/api';
 import { Menu } from 'primeng/menu';
 import { Message } from 'primeng/message';
-import { Table, TableRowCollapseEvent, TableRowExpandEvent } from 'primeng/table';
+import { Table, TableRowCollapseEvent, TableRowExpandEvent, TableLazyLoadEvent } from 'primeng/table';
 import { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { TooltipModule } from 'primeng/tooltip';
 import { ClaseGeneral } from '../../../interfaces/clase-general';
@@ -76,12 +76,13 @@ import { OcurrenciaEventService } from '../../../services/ocurrencia-event.servi
 
         </p-toolbar>
 
-                        <p-table #dt1 [value]="data" dataKey="id" [rows]="10"
+                        <p-table #dt1 [value]="data" dataKey="id" [lazy]="true" (onLazyLoad)="loadData($event)"
+                        [paginator]="true" [rows]="size" [totalRecords]="totalRecords"
                         [showCurrentPageReport]="true"
                         [expandedRowKeys]="expandedRows" (onRowExpand)="onRowExpand($event)" (onRowCollapse)="onRowCollapse($event)"
                         currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} registros"
-                        [rowsPerPageOptions]="[10, 25, 50]" [loading]="loading" [rowHover]="true" styleClass="p-datatable-gridlines" [paginator]="true"
-                        [globalFilterFields]="['id','codigo','material.titulo','material.autorPrincipal','material.autorSecundario','material.anioPublicacion','estado.descripcion']" responsiveLayout="scroll">
+                        [rowsPerPageOptions]="[10, 25, 50]" [loading]="loading" [rowHover]="true" styleClass="p-datatable-gridlines"
+                        [globalFilterFields]="['id','codigo','material.titulo','material.autorPrincipal','material.autorSecundario','material.anioPublicacion','estadoDescripcion']" responsiveLayout="scroll">
                         <ng-template pTemplate="caption">
 
                        <div class="flex items-center justify-between">
@@ -113,22 +114,22 @@ import { OcurrenciaEventService } from '../../../services/ocurrencia-event.servi
                                 <td>
                                 <img [src]="objeto.url" [alt]="objeto.titulo" width="50" class="shadow-lg" />
                                     </td>
-                                <td>{{objeto.codigo}}
+                                <td>{{ objeto.codigo || '-' }}
                                     </td>
                                     <td>
-                                        {{objeto.titulo}}
+                                        {{ objeto.titulo || '-' }}
 
                                     </td>
                                     <td>
-                                        {{objeto.autorPrincipal}}<br/>
-                                        <span>{{objeto.autorSecundario}}</span>
+                                        {{ objeto.autorPrincipal || '-' }}<br/>
+                                        <span>{{ objeto.autorSecundario || '-' }}</span>
 
                                     </td>
                                     <td>
-                                        {{objeto?.anioPublicacion}}
+                                        {{ objeto?.anioPublicacion || '-' }}
                                     </td>
                                     <td>
-                                        {{objeto?.descripcion}}
+                                        {{ objeto?.descripcion || '-' }}
                                     </td>
                                     <td class="text-center">
                                     <p-button icon="pi pi-search" rounded outlined (click)="verDetalle(objeto)"/>
@@ -160,14 +161,14 @@ import { OcurrenciaEventService } from '../../../services/ocurrencia-event.servi
         </ng-template>
         <ng-template pTemplate="body" let-objetoDetalle>
             <tr [ngClass]="{ 'highlight-row': objetoDetalle.highlight }">
-                <td>{{ objetoDetalle.numeroIngreso  }}</td>
-                <td>{{ objetoDetalle.sede?.descripcion }}</td>
-                <td>{{ objetoDetalle.tipoAdquisicion?.descripcion }}</td>
-                <td>{{ objetoDetalle.tipoMaterial?.descripcion }}</td>
-                <td>{{ objetoDetalle.fechaIngreso }}</td>
+                <td>{{ objetoDetalle.numeroIngreso || '-' }}</td>
+                <td>{{ objetoDetalle.sede?.descripcion || '-' }}</td>
+                <td>{{ objetoDetalle.tipoAdquisicion?.descripcion || '-' }}</td>
+                <td>{{ objetoDetalle.tipoMaterial?.descripcion || '-' }}</td>
+                <td>{{ objetoDetalle.fechaIngreso || '-' }}</td>
                 <td>
                  <span [ngClass]="objetoDetalle.estado?.id === 1 ? 'text-primary' : 'text-green-500'">
-                    {{ objetoDetalle.estado?.descripcion }}
+                    {{ objetoDetalle.estado?.descripcion || '-' }}
                   </span>
                 </td>
                 <td>
@@ -244,6 +245,7 @@ export class Aceptaciones implements OnInit, AfterViewInit {
   @ViewChild('menu') menu!: Menu;
   @ViewChild('filter') filter!: ElementRef;
   @ViewChild('modalOcurrencia') modal!: ModalNuevoOcurencia;
+  @ViewChild('dt1') dt1!: Table;
   dataSede: Sedes[] = [];
   sedeFiltro: Sedes = new Sedes();
   filtros: ClaseGeneral[] = [];
@@ -257,6 +259,10 @@ export class Aceptaciones implements OnInit, AfterViewInit {
   detallePorId: { [bibliotecaId: number]: any[] } = {};
   /** Detalle seleccionado para registrar ocurrencia */
   selectedDetalleOcurrencia: any | null = null;
+  page: number = 0;
+  size: number = 10;
+  totalRecords: number = 0;
+  private baseEndpoint: string = '';
 
   constructor(private materialBibliograficoService: MaterialBibliograficoService, private genericoService: GenericoService, private fb: FormBuilder,
     private router: Router, private authService: AuthService, private confirmationService: ConfirmationService, private messageService: MessageService,
@@ -280,6 +286,7 @@ export class Aceptaciones implements OnInit, AfterViewInit {
     this.ocurrenciaEvents.ocurrenciaAutorizada.subscribe(() => {
       this.listar();
     });
+    this.listar();
   }
   async ngOnInit() {
     // this.user = this.authService.getUser();
@@ -291,7 +298,6 @@ export class Aceptaciones implements OnInit, AfterViewInit {
       await this.cargarTipoAdquisicion();
       await this.listaTipoMaterial();
       await this.cargarEstados();
-      await this.listar();
   }
 
 
@@ -346,20 +352,34 @@ export class Aceptaciones implements OnInit, AfterViewInit {
       );
   }
     async listar() {
-      this.loading = true;
-      const sedeParam   = this.sedeFiltro?.id  ? `sedeId=${this.sedeFiltro.id}&` : '';
+    const sedeParam   = this.sedeFiltro?.id  ? `sedeId=${this.sedeFiltro.id}&` : '';
       const opcionParam = this.opcionFiltro?.descripcion
                             ? `opcion=${encodeURIComponent(this.opcionFiltro.descripcion)}&`
                             : '';
       const valorParam  = `valor=${encodeURIComponent(this.palabraClave.trim())}`;
       const extra       = `soloEnProceso=true`;
-      const endpoint    = `api/biblioteca/search?${sedeParam}${opcionParam}${valorParam}&${extra}`;
+      this.baseEndpoint = `api/biblioteca/search?${sedeParam}${opcionParam}${valorParam}&${extra}`;
+      this.totalRecords = 0;
+      this.data = [];
+      this.dt1.reset();
+    }
 
+    loadData(event: TableLazyLoadEvent) {
+      if (!this.baseEndpoint) {
+        return;
+      }
+      this.loading = true;
+      this.page = (event.first ?? 0) / (event.rows ?? this.size);
+      this.size = event.rows ?? this.size;
+      const endpoint = `${this.baseEndpoint}&page=${this.page}&size=${this.size}`;
       this.materialBibliograficoService.search_get(endpoint)
         .subscribe(
           (res: any) => {
-            this.data = Array.isArray(res) ? res : res.data;
-            this.loading = false;
+            const pageData = res?.data ?? res;
+            const content  = Array.isArray(pageData?.content) ? pageData.content : [];
+            this.data      = content.filter((b: any) => (b.estadoDescripcion || '').toUpperCase() === 'EN PROCESO');
+            this.totalRecords = pageData?.totalElements ?? 0;
+            this.loading   = false;
           },
           (err: HttpErrorResponse) => {
             console.error(err);

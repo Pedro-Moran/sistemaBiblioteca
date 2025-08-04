@@ -3,6 +3,8 @@ package com.miapp.service;
 import com.miapp.model.Ciudad;
 import com.miapp.model.dto.BibliotecaDTO;
 import com.miapp.model.Biblioteca;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 import com.miapp.model.dto.CambioEstadoBibliotecaRequest;
 import com.miapp.model.dto.DetalleBibliotecaDTO;
@@ -21,9 +23,11 @@ public interface BibliotecaService {
     void deleteAll(List<Long> ids);
     Optional<Biblioteca> findById(Long id);
     List<Biblioteca> listAll();
+    Page<BibliotecaDTO> listAllPaged(Pageable pageable);
     BibliotecaDTO mapToDto(Biblioteca b);
     List<Ciudad> listCiudades();
-    List<Biblioteca> search(Long tipoMaterialId, String opcion, String valor);
+    Page<BibliotecaDTO> search(Long tipoMaterialId, String opcion, String valor,
+                               boolean soloEnProceso, Pageable pageable);
     List<BibliotecaDTO> findReservados();
     /** Lista todos los materiales bibliográficos con estado disponible (2) */
     List<BibliotecaDTO> findDisponibles();
