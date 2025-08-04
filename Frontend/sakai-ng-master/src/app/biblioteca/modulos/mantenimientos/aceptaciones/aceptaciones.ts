@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 import { MessageService, ConfirmationService, MenuItem } from 'primeng/api';
 import { Menu } from 'primeng/menu';
 import { Message } from 'primeng/message';
-import { Table, TableRowCollapseEvent, TableRowExpandEvent } from 'primeng/table';
+import { Table, TableRowCollapseEvent, TableRowExpandEvent, TableLazyLoadEvent } from 'primeng/table';
 import { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { TooltipModule } from 'primeng/tooltip';
 import { ClaseGeneral } from '../../../interfaces/clase-general';
@@ -22,6 +22,7 @@ import { TipoMaterial } from '../../../interfaces/material-bibliografico/tipo-ma
 import { TipoAdquisicion } from '../../../interfaces/material-bibliografico/tipo-adquisicion';
 import { ModalNuevoOcurencia } from '../../laboratorio-computo/modal-nuevo-ocurrencia';
 import { OcurrenciaEventService } from '../../../services/ocurrencia-event.service';
+import { environment } from '../../../../../environments/environment';
 
 
 @Component({
@@ -76,12 +77,13 @@ import { OcurrenciaEventService } from '../../../services/ocurrencia-event.servi
 
         </p-toolbar>
 
-                        <p-table #dt1 [value]="data" dataKey="id" [rows]="10"
+                        <p-table #dt1 [value]="data" dataKey="id" [lazy]="true" (onLazyLoad)="loadData($event)"
+                        [paginator]="true" [(first)]="first" [rows]="size" [totalRecords]="totalRecords"
                         [showCurrentPageReport]="true"
                         [expandedRowKeys]="expandedRows" (onRowExpand)="onRowExpand($event)" (onRowCollapse)="onRowCollapse($event)"
                         currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} registros"
-                        [rowsPerPageOptions]="[10, 25, 50]" [loading]="loading" [rowHover]="true" styleClass="p-datatable-gridlines" [paginator]="true"
-                        [globalFilterFields]="['id','codigo','material.titulo','material.autorPrincipal','material.autorSecundario','material.anioPublicacion','estado.descripcion']" responsiveLayout="scroll">
+                        [rowsPerPageOptions]="[10, 25, 50]" [loading]="loading" [rowHover]="true" styleClass="p-datatable-gridlines"
+                        [globalFilterFields]="['id','codigo','titulo','autor','anioPublicacion','estadoDescripcion','tipoMaterialDescripcion']" responsiveLayout="scroll">
                         <ng-template pTemplate="caption">
 
                        <div class="flex items-center justify-between">
@@ -97,10 +99,10 @@ import { OcurrenciaEventService } from '../../../services/ocurrencia-event.servi
                                 <th style="width: 5rem"></th>
                                     <th  >Imagen</th>
                                     <th pSortableColumn="codigo" style="width: 4rem">Codigo<p-sortIcon field="codigo"></p-sortIcon></th>
-                                    <th pSortableColumn="material.titulo" style="min-width:200px">Titulo<p-sortIcon field="material.titulo"></p-sortIcon></th>
-                                    <th pSortableColumn="material.autorPrincipal" style="min-width:200px">Autor<p-sortIcon field="material.autorPrincipal"></p-sortIcon></th>
-                                    <th pSortableColumn="material.anioPublicacion" style="width: 8rem">Año<p-sortIcon field="material.anioPublicacion"></p-sortIcon></th>
-                                    <th pSortableColumn="coleccion.descripcion" style="width: 4rem" >Colecci&oacute;n<p-sortIcon field="coleccion.descripcion"></p-sortIcon></th>
+                                    <th pSortableColumn="titulo" style="min-width:200px">Titulo<p-sortIcon field="titulo"></p-sortIcon></th>
+                                    <th pSortableColumn="autor" style="min-width:200px">Autor<p-sortIcon field="autor"></p-sortIcon></th>
+                                    <th pSortableColumn="anioPublicacion" style="width: 8rem">Año<p-sortIcon field="anioPublicacion"></p-sortIcon></th>
+                                    <th pSortableColumn="tipoMaterialDescripcion" style="width: 4rem" >Tipo de material<p-sortIcon field="tipoMaterialDescripcion"></p-sortIcon></th>
                                     <th style="width: 4rem" >Opciones</th>
 
                                 </tr>
@@ -111,24 +113,21 @@ import { OcurrenciaEventService } from '../../../services/ocurrencia-event.servi
                 <p-button type="button" pRipple [pRowToggler]="objeto" [text]="true" [rounded]="true" [plain]="true" [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'" />
             </td>
                                 <td>
-                                <img [src]="objeto.url" [alt]="objeto.titulo" width="50" class="shadow-lg" />
+                                <img [src]="getImageUrl(objeto)" [alt]="objeto.titulo" width="50" class="shadow-lg" />
                                     </td>
-                                <td>{{objeto.codigo}}
-                                    </td>
-                                    <td>
-                                        {{objeto.titulo}}
-
+                                <td>{{ objeto.codigo || '-' }}
                                     </td>
                                     <td>
-                                        {{objeto.autorPrincipal}}<br/>
-                                        <span>{{objeto.autorSecundario}}</span>
-
+                                        {{ objeto.titulo || '-' }}
                                     </td>
                                     <td>
-                                        {{objeto?.anioPublicacion}}
+                                        {{ objeto.autor || '-' }}
                                     </td>
                                     <td>
-                                        {{objeto?.descripcion}}
+                                        {{ objeto?.anioPublicacion || '-' }}
+                                    </td>
+                                    <td>
+                                        {{ objeto?.tipoMaterialDescripcion || '-' }}
                                     </td>
                                     <td class="text-center">
                                     <p-button icon="pi pi-search" rounded outlined (click)="verDetalle(objeto)"/>
@@ -160,14 +159,14 @@ import { OcurrenciaEventService } from '../../../services/ocurrencia-event.servi
         </ng-template>
         <ng-template pTemplate="body" let-objetoDetalle>
             <tr [ngClass]="{ 'highlight-row': objetoDetalle.highlight }">
-                <td>{{ objetoDetalle.numeroIngreso  }}</td>
-                <td>{{ objetoDetalle.sede?.descripcion }}</td>
-                <td>{{ objetoDetalle.tipoAdquisicion?.descripcion }}</td>
-                <td>{{ objetoDetalle.tipoMaterial?.descripcion }}</td>
-                <td>{{ objetoDetalle.fechaIngreso }}</td>
+                <td>{{ objetoDetalle.numeroIngreso || '-' }}</td>
+                <td>{{ objetoDetalle.sede?.descripcion || '-' }}</td>
+                <td>{{ objetoDetalle.tipoAdquisicion?.descripcion || '-' }}</td>
+                <td>{{ objetoDetalle.tipoMaterial?.descripcion || '-' }}</td>
+                <td>{{ objetoDetalle.fechaIngreso || '-' }}</td>
                 <td>
                  <span [ngClass]="objetoDetalle.estado?.id === 1 ? 'text-primary' : 'text-green-500'">
-                    {{ objetoDetalle.estado?.descripcion }}
+                    {{ objetoDetalle.estado?.descripcion || '-' }}
                   </span>
                 </td>
                 <td>
@@ -244,6 +243,7 @@ export class Aceptaciones implements OnInit, AfterViewInit {
   @ViewChild('menu') menu!: Menu;
   @ViewChild('filter') filter!: ElementRef;
   @ViewChild('modalOcurrencia') modal!: ModalNuevoOcurencia;
+  @ViewChild('dt1') dt1!: Table;
   dataSede: Sedes[] = [];
   sedeFiltro: Sedes = new Sedes();
   filtros: ClaseGeneral[] = [];
@@ -257,6 +257,11 @@ export class Aceptaciones implements OnInit, AfterViewInit {
   detallePorId: { [bibliotecaId: number]: any[] } = {};
   /** Detalle seleccionado para registrar ocurrencia */
   selectedDetalleOcurrencia: any | null = null;
+  page: number = 0;
+  size: number = 10;
+  totalRecords: number = 0;
+  first: number = 0;
+  private baseEndpoint: string = '';
 
   constructor(private materialBibliograficoService: MaterialBibliograficoService, private genericoService: GenericoService, private fb: FormBuilder,
     private router: Router, private authService: AuthService, private confirmationService: ConfirmationService, private messageService: MessageService,
@@ -280,6 +285,7 @@ export class Aceptaciones implements OnInit, AfterViewInit {
     this.ocurrenciaEvents.ocurrenciaAutorizada.subscribe(() => {
       this.listar();
     });
+    this.listar();
   }
   async ngOnInit() {
     // this.user = this.authService.getUser();
@@ -291,7 +297,6 @@ export class Aceptaciones implements OnInit, AfterViewInit {
       await this.cargarTipoAdquisicion();
       await this.listaTipoMaterial();
       await this.cargarEstados();
-      await this.listar();
   }
 
 
@@ -353,16 +358,40 @@ export class Aceptaciones implements OnInit, AfterViewInit {
                             : '';
       const valorParam  = `valor=${encodeURIComponent(this.palabraClave.trim())}`;
       const extra       = `soloEnProceso=true`;
-      const endpoint    = `api/biblioteca/search?${sedeParam}${opcionParam}${valorParam}&${extra}`;
+      this.baseEndpoint = `api/biblioteca/search?${sedeParam}${opcionParam}${valorParam}&${extra}`;
+      this.totalRecords = 0;
+      this.data = [];
+      this.first = 0;
+      this.loadData({ first: 0, rows: this.size });
+    }
 
+    loadData(event: TableLazyLoadEvent) {
+      if (!this.baseEndpoint) {
+        return;
+      }
+      this.loading = true;
+      this.first = event.first ?? 0;
+      this.page  = this.first / (event.rows ?? this.size);
+      this.size  = event.rows ?? this.size;
+      const endpoint = `${this.baseEndpoint}&page=${this.page}&size=${this.size}`;
       this.materialBibliograficoService.search_get(endpoint)
         .subscribe(
           (res: any) => {
-            this.data = Array.isArray(res) ? res : res.data;
-            this.loading = false;
+            const pageData = res?.data ?? res;
+            const content  = Array.isArray(pageData?.content) ? pageData.content : [];
+            this.data = content
+              .filter((b: any) => (b.estadoDescripcion || '').toUpperCase() === 'EN PROCESO')
+              .map((b: any) => ({
+                ...b,
+                autor: b.autorPersonal || b.autorSecundario || b.autorInstitucional || '',
+                tipoMaterialDescripcion: this.tipoMaterialLista.find(t => t.id === b.tipoMaterialId)?.descripcion || ''
+              }));
+            this.totalRecords = pageData?.page?.totalElements ?? pageData?.totalElements ?? pageData?.total ?? content.length;
           },
           (err: HttpErrorResponse) => {
             console.error(err);
+          },
+          () => {
             this.loading = false;
           }
         );
@@ -454,6 +483,42 @@ aceptarDetalle(detalle: any) {
     }
     this.router.navigate(['/main/biblioteca/ocurrencias']);
   }
+
+  /** Indica si el material es de tipo ARTICULO */
+  esArticulo(obj: any): boolean {
+    const desc = obj?.tipoMaterial?.descripcion || '';
+    return desc.toLowerCase() === 'articulo';
+  }
+
+  /** Indica si la tabla detalle debe mostrar la columna Tipo de Adquisición */
+  shouldShowTipoAdquisicion(prod: any): boolean {
+    const det = this.detallePorId[prod.id] || [];
+    return det.some(d => !this.esArticulo(d));
+  }
+
+  /** Devuelve la URL de la imagen almacenada si existe */
+  getImageUrl(obj: any): string | undefined {
+    if (obj.material?.url) {
+      const p = obj.material.url as string;
+      return p.startsWith('http') ? p : `${environment.filesUrl}${p}`;
+    }
+    if (obj.rutaImagen) {
+      const base = obj.rutaImagen.startsWith('http')
+        ? obj.rutaImagen
+        : `${environment.filesUrl}${obj.rutaImagen.startsWith('/') ? '' : '/'}${obj.rutaImagen}`;
+
+      if (obj.nombreImagen) {
+        if (base.endsWith(obj.nombreImagen)) {
+          return base;
+        }
+        const sep = base.endsWith('/') ? '' : '/';
+        return base + sep + obj.nombreImagen;
+      }
+      return base;
+    }
+    return undefined;
+  }
+
   private async listaTipoMaterial() {
     try {
       const res: any = await this.materialBibliograficoService
@@ -466,9 +531,9 @@ aceptarDetalle(detalle: any) {
           ? res.data
           : [];
 
-      this.tipoMaterialLista = rawList.map(t => new TipoMaterial({
-        id:            t.tipo.id,
-        idTipoMaterial: t.tipo.id,
+      this.tipoMaterialLista = rawList.map((t: any) => new TipoMaterial({
+        id:            t.idTipoMaterial ?? t.id ?? t.tipo?.id,
+        idTipoMaterial: t.idTipoMaterial ?? t.id ?? t.tipo?.id,
         descripcion:   t.descripcion,
         activo:        t.activo
       }));

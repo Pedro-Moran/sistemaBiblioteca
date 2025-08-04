@@ -9,7 +9,10 @@ import com.miapp.service.EmailService;
 import com.miapp.service.NotificacionService;
 import com.miapp.service.FileStorageService;
 import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Subquery;
 import jakarta.transaction.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -218,7 +221,9 @@ public class BibliotecaServiceImpl implements BibliotecaService {
             }
             // 2) Sede
             e.setSede(det.getCodigoSede() != null
-                    ? sedeRepository.findById(det.getCodigoSede()).orElse(null)
+                    ? sedeRepository.findById(det.getCodigoSede())
+                            .orElseThrow(() -> new RuntimeException(
+                                    "Sede no encontrada: " + det.getCodigoSede()))
                     : null);
 
             // 3) Tipo de Material
@@ -309,34 +314,53 @@ public class BibliotecaServiceImpl implements BibliotecaService {
     }
 
     @Override
-    public List<Biblioteca> search(Long tipoMaterialId, String opcion, String valor) {
+    public Page<BibliotecaDTO> listAllPaged(Pageable pageable) {
+        return bibliotecaRepository.findAll(pageable)
+                .map(this::mapToDto);
+    }
+
+    @Override
+    public Page<BibliotecaDTO> search(Long tipoMaterialId, String opcion, String valor,
+                                      boolean soloEnProceso, Pageable pageable) {
         Specification<Biblioteca> spec = (root, query, cb) -> {
             List<Predicate> preds = new ArrayList<>();
 
-            // 1) Filtrar por tipoMaterial usando subconsulta EXISTS
             if (tipoMaterialId != null) {
                 preds.add(cb.equal(root.get("tipoMaterial").get("id"), tipoMaterialId));
             }
 
-            // 2) Filtrar por 'opcion' y 'valor' con LIKE
-            if (opcion != null && !opcion.isBlank()
-                    && valor  != null && !valor.isBlank()) {
-
+            if (opcion != null && !opcion.isBlank() && valor != null && !valor.isBlank()) {
                 String pattern = "%" + valor.toLowerCase() + "%";
 
                 if ("editorial".equalsIgnoreCase(opcion)) {
-                    // ejemplo: buscar en editorialPublicacion
                     preds.add(cb.like(cb.lower(root.get("editorialPublicacion")), pattern));
                 } else {
-                    // campo directo de Biblioteca
                     preds.add(cb.like(cb.lower(root.get(opcion)), pattern));
                 }
+            }
+
+            if (soloEnProceso) {
+                Subquery<Long> sq = query.subquery(Long.class);
+                var d = sq.from(DetalleBiblioteca.class);
+                sq.select(cb.literal(1L))
+                        .where(
+                                cb.equal(d.get("biblioteca").get("id"), root.get("id")),
+                                cb.equal(d.get("idEstado"), 1L)
+                        );
+                preds.add(cb.exists(sq));
+            } else {
+                preds.add(
+                        cb.or(
+                                cb.notEqual(root.get("idEstado"), 1L),
+                                cb.isNull(root.get("idEstado"))
+                        )
+                );
             }
 
             return cb.and(preds.toArray(new Predicate[0]));
         };
 
-        return bibliotecaRepository.findAll(spec);
+        return bibliotecaRepository.findAll(spec, pageable).map(this::mapToDto);
     }
 
     public List<DetalleBiblioteca> listDetallesByBiblioteca(Long bibliotecaId, boolean soloEnProceso) {
@@ -411,8 +435,7 @@ public class BibliotecaServiceImpl implements BibliotecaService {
         // 2) Busca si quedan otros detalles pendientes en esta misma biblioteca
         Biblioteca bib = detalle.getBiblioteca();
         boolean quedanPendientes = detalleBibliotecaRepository
-                .findByBibliotecaId(bib.getId()).stream()
-                .anyMatch(d -> Objects.equals(d.getIdEstado(), 1L));
+                .existsByBiblioteca_IdAndIdEstado(bib.getId(), 1L);
 
         // 3) Si NO hay pendientes, entonces actualiza el estado de la biblioteca
         if (!quedanPendientes) {
@@ -441,8 +464,7 @@ public class BibliotecaServiceImpl implements BibliotecaService {
 
         Biblioteca bib = detalle.getBiblioteca();
         boolean quedanPendientes = detalleBibliotecaRepository
-                .findByBibliotecaId(bib.getId()).stream()
-                .anyMatch(d -> Objects.equals(d.getIdEstado(), 1L));
+                .existsByBiblioteca_IdAndIdEstado(bib.getId(), 1L);
 
         if (!quedanPendientes) {
             bib.setIdEstado(2L);
@@ -482,11 +504,7 @@ public class BibliotecaServiceImpl implements BibliotecaService {
                     }
                     // La sede real se encuentra en los detalles del material
                     return detalleBibliotecaRepository
-                            .findByBibliotecaId(b.getId())
-                            .stream()
-                            .anyMatch(det ->
-                                    det.getSede() != null &&
-                                    Objects.equals(det.getSede().getId(), sedeId));
+                            .existsByBiblioteca_IdAndSede_Id(b.getId(), sedeId);
                 })
                 .filter(b -> {
                     if (tipoMaterialId == null || tipoMaterialId == 0) {
@@ -494,12 +512,7 @@ public class BibliotecaServiceImpl implements BibliotecaService {
                     }
                     // El tipo de material también se encuentra en los detalles
                     return detalleBibliotecaRepository
-                            .findByBibliotecaId(b.getId())
-                            .stream()
-                            .anyMatch(det -> det.getTipoMaterial() != null
-                                    && Objects.equals(
-                                            det.getTipoMaterial().getIdTipoMaterial(),
-                                            tipoMaterialId));
+                            .existsByBiblioteca_IdAndTipoMaterial_IdTipoMaterial(b.getId(), tipoMaterialId);
                 })
                 .filter(b -> {
                     if (opcion == null || opcion.isBlank()) {

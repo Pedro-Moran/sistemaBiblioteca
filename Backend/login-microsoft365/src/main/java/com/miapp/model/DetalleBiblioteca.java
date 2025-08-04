@@ -18,7 +18,8 @@ import java.time.LocalDateTime;
 public class DetalleBiblioteca {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "detalle_seq")
+    @SequenceGenerator(name = "detalle_seq", sequenceName = "SEQ_DETALLE_BIBLIOTECA", allocationSize = 1)
     @Column(name = "IDDETALLEBIBLIOTECA")
     private Long idDetalle;
 
@@ -31,6 +32,7 @@ public class DetalleBiblioteca {
     // FK a sede
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "CODIGOSEDE")
+    @NotFound(action = NotFoundAction.IGNORE)
     private Sede sede;
 
     // FK a tipoAdquisicion
