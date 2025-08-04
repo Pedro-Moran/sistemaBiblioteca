@@ -9,6 +9,7 @@ import com.miapp.service.DetalleBibliotecaService;
 import com.miapp.service.impl.BibliotecaServiceImpl;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.http.ResponseEntity;
@@ -54,7 +55,8 @@ public class BibliotecaController {
     @GetMapping("/list")
     public ResponseEntity<?> listAll(@RequestParam(defaultValue = "0") int page,
                                      @RequestParam(defaultValue = "20") int size) {
-        Page<BibliotecaDTO> result = bibliotecaService.listAllPaged(PageRequest.of(page, size));
+        Page<BibliotecaDTO> result = bibliotecaService
+                .listAllPaged(PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id")));
         return ResponseEntity.ok(Map.of("status", 0, "data", result));
     }
 
@@ -102,7 +104,8 @@ public class BibliotecaController {
     ) {
         try {
             Page<BibliotecaDTO> dtos = bibliotecaService
-                    .search(tipoMaterialId, opcion, valor, soloEnProceso, PageRequest.of(page, size));
+                    .search(tipoMaterialId, opcion, valor, soloEnProceso,
+                            PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id")));
 
             return ResponseEntity.ok(Map.of("status", 0, "data", dtos));
         } catch (Exception ex) {
