@@ -56,7 +56,7 @@ public class BibliotecaController {
     public ResponseEntity<?> listAll(@RequestParam(defaultValue = "0") int page,
                                      @RequestParam(defaultValue = "20") int size) {
         Page<BibliotecaDTO> result = bibliotecaService
-                .listAllPaged(PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id")));
+                .listAllPaged(PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "id")));
         return ResponseEntity.ok(Map.of("status", 0, "data", result));
     }
 
@@ -105,7 +105,7 @@ public class BibliotecaController {
         try {
             Page<BibliotecaDTO> dtos = bibliotecaService
                     .search(tipoMaterialId, opcion, valor, soloEnProceso,
-                            PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id")));
+                            PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "id")));
 
             return ResponseEntity.ok(Map.of("status", 0, "data", dtos));
         } catch (Exception ex) {

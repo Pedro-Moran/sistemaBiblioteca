@@ -382,9 +382,9 @@ export class Aceptaciones implements OnInit, AfterViewInit {
           (res: any) => {
             const pageData = res?.data ?? res;
             const content  = Array.isArray(pageData?.content) ? pageData.content : [];
-            content.sort((a: any, b: any) => (b.id ?? 0) - (a.id ?? 0));
-            this.data      = content.filter((b: any) => (b.estadoDescripcion || '').toUpperCase() === 'EN PROCESO');
-            const total = (pageData?.totalElements ?? pageData?.total ?? content.length);
+            content.sort((a: any, b: any) => (a.id ?? 0) - (b.id ?? 0));
+            this.data = content;
+            const total = pageData?.page?.totalElements ?? pageData?.totalElements ?? pageData?.total ?? content.length;
             this.totalRecords = total;
           },
           (err: HttpErrorResponse) => {
