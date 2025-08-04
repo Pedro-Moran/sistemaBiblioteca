@@ -83,7 +83,7 @@ import { environment } from '../../../../../environments/environment';
                         [expandedRowKeys]="expandedRows" (onRowExpand)="onRowExpand($event)" (onRowCollapse)="onRowCollapse($event)"
                         currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} registros"
                         [rowsPerPageOptions]="[10, 25, 50]" [loading]="loading" [rowHover]="true" styleClass="p-datatable-gridlines"
-                        [globalFilterFields]="['id','codigo','titulo','autorSecundario','autorPersonal','autorInstitucional','anioPublicacion','estadoDescripcion']" responsiveLayout="scroll">
+                        [globalFilterFields]="['id','codigo','titulo','autor','anioPublicacion','estadoDescripcion','tipoMaterialDescripcion']" responsiveLayout="scroll">
                         <ng-template pTemplate="caption">
 
                        <div class="flex items-center justify-between">
@@ -100,11 +100,9 @@ import { environment } from '../../../../../environments/environment';
                                     <th  >Imagen</th>
                                     <th pSortableColumn="codigo" style="width: 4rem">Codigo<p-sortIcon field="codigo"></p-sortIcon></th>
                                     <th pSortableColumn="titulo" style="min-width:200px">Titulo<p-sortIcon field="titulo"></p-sortIcon></th>
-                                    <th pSortableColumn="autorSecundario" style="min-width:200px">Autor Secundario<p-sortIcon field="autorSecundario"></p-sortIcon></th>
-                                    <th pSortableColumn="autorPersonal" style="min-width:200px">Autor Personal<p-sortIcon field="autorPersonal"></p-sortIcon></th>
-                                    <th pSortableColumn="autorInstitucional" style="min-width:200px">Autor Institucional<p-sortIcon field="autorInstitucional"></p-sortIcon></th>
+                                    <th pSortableColumn="autor" style="min-width:200px">Autor<p-sortIcon field="autor"></p-sortIcon></th>
                                     <th pSortableColumn="anioPublicacion" style="width: 8rem">Año<p-sortIcon field="anioPublicacion"></p-sortIcon></th>
-                                    <th pSortableColumn="coleccion.descripcion" style="width: 4rem" >Colecci&oacute;n<p-sortIcon field="coleccion.descripcion"></p-sortIcon></th>
+                                    <th pSortableColumn="tipoMaterialDescripcion" style="width: 4rem" >Tipo de material<p-sortIcon field="tipoMaterialDescripcion"></p-sortIcon></th>
                                     <th style="width: 4rem" >Opciones</th>
 
                                 </tr>
@@ -123,19 +121,13 @@ import { environment } from '../../../../../environments/environment';
                                         {{ objeto.titulo || '-' }}
                                     </td>
                                     <td>
-                                        {{ objeto.autorSecundario || '-' }}
-                                    </td>
-                                    <td>
-                                        {{ objeto.autorPersonal || '-' }}
-                                    </td>
-                                    <td>
-                                        {{ objeto.autorInstitucional || '-' }}
+                                        {{ objeto.autor || '-' }}
                                     </td>
                                     <td>
                                         {{ objeto?.anioPublicacion || '-' }}
                                     </td>
                                     <td>
-                                        {{ objeto?.descripcion || '-' }}
+                                        {{ objeto?.tipoMaterialDescripcion || '-' }}
                                     </td>
                                     <td class="text-center">
                                     <p-button icon="pi pi-search" rounded outlined (click)="verDetalle(objeto)"/>
@@ -146,7 +138,7 @@ import { environment } from '../../../../../environments/environment';
                             </ng-template>
                             <ng-template #expandedrow let-product>
                             <tr>
-                            <td colspan="10">
+                            <td colspan="8">
 
 
                             <p-table
@@ -215,12 +207,12 @@ import { environment } from '../../../../../environments/environment';
                             </ng-template>
                             <ng-template pTemplate="emptymessage">
                                 <tr>
-                                    <td colspan="10">No se encontraron registros.</td>
+                                    <td colspan="8">No se encontraron registros.</td>
                                 </tr>
                             </ng-template>
                             <ng-template pTemplate="loadingbody">
                                 <tr>
-                                    <td colspan="10">Cargando datos. Espere por favor.</td>
+                                    <td colspan="8">Cargando datos. Espere por favor.</td>
                                 </tr>
                             </ng-template>
                         </p-table>
@@ -387,10 +379,14 @@ export class Aceptaciones implements OnInit, AfterViewInit {
           (res: any) => {
             const pageData = res?.data ?? res;
             const content  = Array.isArray(pageData?.content) ? pageData.content : [];
-            content.sort((a: any, b: any) => (a.id ?? 0) - (b.id ?? 0));
-            this.data = content;
-            const total = pageData?.page?.totalElements ?? pageData?.totalElements ?? pageData?.total ?? content.length;
-            this.totalRecords = total;
+            this.data = content
+              .filter((b: any) => (b.estadoDescripcion || '').toUpperCase() === 'EN PROCESO')
+              .map((b: any) => ({
+                ...b,
+                autor: b.autorPersonal || b.autorSecundario || b.autorInstitucional || '',
+                tipoMaterialDescripcion: this.tipoMaterialLista.find(t => t.id === b.tipoMaterialId)?.descripcion || ''
+              }));
+            this.totalRecords = pageData?.page?.totalElements ?? pageData?.totalElements ?? pageData?.total ?? content.length;
           },
           (err: HttpErrorResponse) => {
             console.error(err);
