@@ -22,6 +22,7 @@ import { TipoMaterial } from '../../../interfaces/material-bibliografico/tipo-ma
 import { TipoAdquisicion } from '../../../interfaces/material-bibliografico/tipo-adquisicion';
 import { ModalNuevoOcurencia } from '../../laboratorio-computo/modal-nuevo-ocurrencia';
 import { OcurrenciaEventService } from '../../../services/ocurrencia-event.service';
+import { environment } from '../../../../../environments/environment';
 
 
 @Component({
@@ -77,7 +78,7 @@ import { OcurrenciaEventService } from '../../../services/ocurrencia-event.servi
         </p-toolbar>
 
                         <p-table #dt1 [value]="data" dataKey="id" [lazy]="true" (onLazyLoad)="loadData($event)"
-                        [paginator]="true" [rows]="size" [totalRecords]="totalRecords"
+                        [paginator]="true" [(first)]="first" [rows]="size" [totalRecords]="totalRecords"
                         [showCurrentPageReport]="true"
                         [expandedRowKeys]="expandedRows" (onRowExpand)="onRowExpand($event)" (onRowCollapse)="onRowCollapse($event)"
                         currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} registros"
@@ -112,7 +113,7 @@ import { OcurrenciaEventService } from '../../../services/ocurrencia-event.servi
                 <p-button type="button" pRipple [pRowToggler]="objeto" [text]="true" [rounded]="true" [plain]="true" [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'" />
             </td>
                                 <td>
-                                <img [src]="objeto.url" [alt]="objeto.titulo" width="50" class="shadow-lg" />
+                                <img [src]="getImageUrl(objeto)" [alt]="objeto.titulo" width="50" class="shadow-lg" />
                                     </td>
                                 <td>{{ objeto.codigo || '-' }}
                                     </td>
@@ -262,6 +263,7 @@ export class Aceptaciones implements OnInit, AfterViewInit {
   page: number = 0;
   size: number = 10;
   totalRecords: number = 0;
+  first: number = 0;
   private baseEndpoint: string = '';
 
   constructor(private materialBibliograficoService: MaterialBibliograficoService, private genericoService: GenericoService, private fb: FormBuilder,
@@ -352,7 +354,8 @@ export class Aceptaciones implements OnInit, AfterViewInit {
       );
   }
     async listar() {
-    const sedeParam   = this.sedeFiltro?.id  ? `sedeId=${this.sedeFiltro.id}&` : '';
+      this.loading = true;
+      const sedeParam   = this.sedeFiltro?.id  ? `sedeId=${this.sedeFiltro.id}&` : '';
       const opcionParam = this.opcionFiltro?.descripcion
                             ? `opcion=${encodeURIComponent(this.opcionFiltro.descripcion)}&`
                             : '';
@@ -361,6 +364,7 @@ export class Aceptaciones implements OnInit, AfterViewInit {
       this.baseEndpoint = `api/biblioteca/search?${sedeParam}${opcionParam}${valorParam}&${extra}`;
       this.totalRecords = 0;
       this.data = [];
+      this.first = 0;
       this.dt1.reset();
     }
 
@@ -369,8 +373,9 @@ export class Aceptaciones implements OnInit, AfterViewInit {
         return;
       }
       this.loading = true;
-      this.page = (event.first ?? 0) / (event.rows ?? this.size);
-      this.size = event.rows ?? this.size;
+      this.first = event.first ?? 0;
+      this.page  = this.first / (event.rows ?? this.size);
+      this.size  = event.rows ?? this.size;
       const endpoint = `${this.baseEndpoint}&page=${this.page}&size=${this.size}`;
       this.materialBibliograficoService.search_get(endpoint)
         .subscribe(
@@ -378,11 +383,12 @@ export class Aceptaciones implements OnInit, AfterViewInit {
             const pageData = res?.data ?? res;
             const content  = Array.isArray(pageData?.content) ? pageData.content : [];
             this.data      = content.filter((b: any) => (b.estadoDescripcion || '').toUpperCase() === 'EN PROCESO');
-            this.totalRecords = pageData?.totalElements ?? 0;
-            this.loading   = false;
+            this.totalRecords = pageData?.totalElements ?? content.length;
           },
           (err: HttpErrorResponse) => {
             console.error(err);
+          },
+          () => {
             this.loading = false;
           }
         );
@@ -474,6 +480,42 @@ aceptarDetalle(detalle: any) {
     }
     this.router.navigate(['/main/biblioteca/ocurrencias']);
   }
+
+  /** Indica si el material es de tipo ARTICULO */
+  esArticulo(obj: any): boolean {
+    const desc = obj?.tipoMaterial?.descripcion || '';
+    return desc.toLowerCase() === 'articulo';
+  }
+
+  /** Indica si la tabla detalle debe mostrar la columna Tipo de Adquisición */
+  shouldShowTipoAdquisicion(prod: any): boolean {
+    const det = this.detallePorId[prod.id] || [];
+    return det.some(d => !this.esArticulo(d));
+  }
+
+  /** Devuelve la URL de la imagen almacenada si existe */
+  getImageUrl(obj: any): string | undefined {
+    if (obj.material?.url) {
+      const p = obj.material.url as string;
+      return p.startsWith('http') ? p : `${environment.filesUrl}${p}`;
+    }
+    if (obj.rutaImagen) {
+      const base = obj.rutaImagen.startsWith('http')
+        ? obj.rutaImagen
+        : `${environment.filesUrl}${obj.rutaImagen.startsWith('/') ? '' : '/'}${obj.rutaImagen}`;
+
+      if (obj.nombreImagen) {
+        if (base.endsWith(obj.nombreImagen)) {
+          return base;
+        }
+        const sep = base.endsWith('/') ? '' : '/';
+        return base + sep + obj.nombreImagen;
+      }
+      return base;
+    }
+    return undefined;
+  }
+
   private async listaTipoMaterial() {
     try {
       const res: any = await this.materialBibliograficoService
