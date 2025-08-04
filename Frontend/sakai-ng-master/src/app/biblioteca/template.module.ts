@@ -9,6 +9,7 @@ import { RippleModule } from 'primeng/ripple';
 import { MultiSelectModule } from 'primeng/multiselect';
 import { DropdownModule } from 'primeng/dropdown';
 import { ProgressBarModule } from 'primeng/progressbar';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { ToastModule } from 'primeng/toast';
 import { SliderModule } from 'primeng/slider';
 import { RatingModule } from 'primeng/rating';
@@ -64,6 +65,7 @@ import { OverlayBadgeModule } from 'primeng/overlaybadge';
         MultiSelectModule,
         DropdownModule,
         ProgressBarModule,
+        ProgressSpinnerModule,
         ToastModule,
         SliderModule,
         RatingModule,
@@ -88,6 +90,7 @@ import { OverlayBadgeModule } from 'primeng/overlaybadge';
         MultiSelectModule,
         DropdownModule,
         ProgressBarModule,
+        ProgressSpinnerModule,
         ToastModule,
         SliderModule,
         RatingModule,

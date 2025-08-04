@@ -13,7 +13,7 @@ import { PortalService } from '../../services/portal.service';
 import { Material } from '../../interfaces/material-bibliografico/material';
 import { TipoRecurso } from '../../interfaces/tipo-recurso';
 import { MaterialBibliograficoService } from '../../services/material-bibliografico.service';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { PortalDetalleEjemplar } from '../portal-landing/components/portal-detalle-ejemplar';
 import { PortalDisponibleEjemplar } from '../portal-landing/components/portal-disponible-ejemplar';
 import { BibliotecaDTO } from '../../interfaces/material-bibliografico/biblioteca.model';
@@ -37,7 +37,7 @@ import { environment } from '../../../../environments/environment';
 
         <div class="flex flex-col flex-1 gap-2">
             <label for="palabra-clave" class="block text-sm font-medium text-gray-700">Busqueda</label>
-            <input pInputText id="palabra-clave" type="text" placeholder="Buscar Libros, Articulos y más" [(ngModel)]="palabraClave"/>
+            <input pInputText id="palabra-clave" type="text" placeholder="Buscar Libros, Articulos y más" [(ngModel)]="palabraClave" (keydown.enter)="listar()"/>
         </div>
 
         <div class="flex items-end">
@@ -59,6 +59,7 @@ import { environment } from '../../../../environments/environment';
                     pTooltip="Filtrar"
                     tooltipPosition="bottom">
             </button>
+            <p-progressSpinner *ngIf="loading" styleClass="w-4 h-4"></p-progressSpinner>
         </div>
     </div>
     <div class="flex flex-wrap w-full gap-4">
@@ -196,7 +197,7 @@ export class CatalogoLista implements OnInit {
     objeto:any;
     palabraClave: string = '';
 
-    constructor( private router: Router,private materialBibliograficoService: MaterialBibliograficoService, private portalService: PortalService, private reservasService: ReservasService, private genericoService: GenericoService,
+    constructor( private router: Router, private route: ActivatedRoute,private materialBibliograficoService: MaterialBibliograficoService, private portalService: PortalService, private reservasService: ReservasService, private genericoService: GenericoService,
 
         usuariooService: UsuarioService, private fb: FormBuilder, private messageService: MessageService, private confirmationService: ConfirmationService,private cd: ChangeDetectorRef) { }
     async ngOnInit() {
@@ -210,6 +211,7 @@ export class CatalogoLista implements OnInit {
         await this.listarTiposRecurso();
         await this.listaFiltros();
         await this.ListaSede();
+        this.palabraClave = this.route.snapshot.queryParamMap.get('valor') ?? '';
         await this.listar();
     }
 
@@ -275,13 +277,12 @@ export class CatalogoLista implements OnInit {
     }
 listar() {
   this.loading = true;
+  const opcion = this.opcionFiltro?.id === 0 ? undefined : this.opcionFiltro?.descripcion;
+  const sede = this.sedeFiltro?.id || undefined;
+  const tipo = this.tipoRecursoFiltro?.id || undefined;
+  const valor = this.palabraClave?.trim() || undefined;
   this.materialBibliograficoService
-    .catalogo(
-      this.palabraClave,
-      this.sedeFiltro.id,
-      this.tipoRecursoFiltro.id,
-      this.opcionFiltro.descripcion
-    )
+    .catalogo(valor, sede, tipo, opcion)
     .subscribe(list => {
       this.data = list
         .filter(b => b.estadoId !== 1)

@@ -51,6 +51,8 @@ public class SecurityConfig {
                             "/auth/api/biblioteca/disponibles",
                             "/auth/api/biblioteca/disponibles-by-tipo",
                             "/auth/api/biblioteca/search",
+                            "/auth/api/catalogos/**",
+                            "/auth/api/equipos/sedes",
                             "/auth/material-bibliografico/especialidad",
                             "/auth/api/nosotros",
                             "/auth/api/horarios/listar",
