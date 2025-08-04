@@ -18,14 +18,12 @@ public interface BibliotecaRepository
     List<Biblioteca> findByIdEstado(Long idEstado);
 
     @EntityGraph(attributePaths = {
-            "especialidad", "pais", "ciudad", "tipoMaterial",
-            "detalles", "detalles.sede"
+            "especialidad", "pais", "ciudad", "tipoMaterial"
     })
     Page<Biblioteca> findAll(Pageable pageable);
 
     @EntityGraph(attributePaths = {
-            "especialidad", "pais", "ciudad", "tipoMaterial",
-            "detalles", "detalles.sede"
+            "especialidad", "pais", "ciudad", "tipoMaterial"
     })
     Page<Biblioteca> findAll(Specification<Biblioteca> spec, Pageable pageable);
 }

@@ -365,7 +365,7 @@ export class Aceptaciones implements OnInit, AfterViewInit {
       this.totalRecords = 0;
       this.data = [];
       this.first = 0;
-      this.dt1.reset();
+      this.loadData({ first: 0, rows: this.size });
     }
 
     loadData(event: TableLazyLoadEvent) {
