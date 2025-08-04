@@ -571,9 +571,19 @@ async listar() {
     this.materialBibliograficoService.search_get(endpoint)
       .subscribe(
         (result: any) => {
-          // Supongamos que el endpoint devuelve directamente un array
           console.log(result);
-          const lista = Array.isArray(result) ? result : result.data;
+
+          // Normalizamos la respuesta para trabajar siempre con un arreglo
+          const lista: any[] = Array.isArray(result?.data?.content)
+            ? result.data.content
+            : Array.isArray(result?.content)
+            ? result.content
+            : Array.isArray(result?.data)
+            ? result.data
+            : Array.isArray(result)
+            ? result
+            : [];
+
           this.data = lista.filter((b: any) => Number(b.estadoId) === 2);
           this.loading = false;
         },
@@ -584,66 +594,87 @@ async listar() {
       );
 
   }
-//   else {
-//     // Si no se ingresó palabra clave, se filtra según el tipo de material.
-//     if (this.tipoRecursoFiltro?.tipo?.id === 1) { // Libro
-//       this.lista_libros();
-//     } else if (this.tipoRecursoFiltro?.tipo?.id === 2) { // Revista
-//       this.lista_revistas();
-//     } else {
-//       this.lista_otro();
-//     }
-//   }
+  else {
+    // Si no se ingresó palabra clave, se filtra según el tipo de material.
+    if (this.tipoRecursoFiltro?.tipo?.id === 1) { // Libro
+      this.lista_libros();
+    } else if (this.tipoRecursoFiltro?.tipo?.id === 2) { // Revista
+      this.lista_revistas();
+    } else {
+      this.lista_otro();
+    }
+  }
 }
 
 
-//   lista_libros(){
-//
-//     this.materialBibliograficoService.api_libros_lista('api/material-bibliografico/libros')
-//       .subscribe(
-//         (result: any) => {
-//           this.loading = false;
-//           if (result.status == "0") {
-//             this.data = result.data;
-//           }
-//         }
-//         , (error: HttpErrorResponse) => {
-//           this.loading = false;
-//         }
-//       );
-//   }
-//
-//   lista_revistas(){
-//
-//     this.materialBibliograficoService.api_revistas_lista('api/material-bibliografico/revistas')
-//       .subscribe(
-//         (result: any) => {
-//           this.loading = false;
-//           if (result.status == "0") {
-//             this.data = result.data;
-//           }
-//         }
-//         , (error: HttpErrorResponse) => {
-//           this.loading = false;
-//         }
-//       );
-//   }
-//
-//   lista_otro(){
-//
-//     this.materialBibliograficoService.api_otros_lista(this.modulo + '/lista')
-//       .subscribe(
-//         (result: any) => {console.log(result);
-//           this.loading = false;
-//           if (result.status == "0") {
-//             this.data = result.data;
-//           }
-//         }
-//         , (error: HttpErrorResponse) => {
-//           this.loading = false;
-//         }
-//       );
-//   }
+  lista_libros() {
+    this.materialBibliograficoService
+      .api_libros_lista('api/material-bibliografico/libros')
+      .subscribe(
+        (result: any) => {
+          const lista: any[] = Array.isArray(result?.data?.content)
+            ? result.data.content
+            : Array.isArray(result?.content)
+            ? result.content
+            : Array.isArray(result?.data)
+            ? result.data
+            : Array.isArray(result)
+            ? result
+            : [];
+          this.data = lista.filter((b: any) => Number(b.estadoId) === 2);
+          this.loading = false;
+        },
+        (error: HttpErrorResponse) => {
+          this.loading = false;
+        }
+      );
+  }
+
+  lista_revistas() {
+    this.materialBibliograficoService
+      .api_revistas_lista('api/material-bibliografico/revistas')
+      .subscribe(
+        (result: any) => {
+          const lista: any[] = Array.isArray(result?.data?.content)
+            ? result.data.content
+            : Array.isArray(result?.content)
+            ? result.content
+            : Array.isArray(result?.data)
+            ? result.data
+            : Array.isArray(result)
+            ? result
+            : [];
+          this.data = lista.filter((b: any) => Number(b.estadoId) === 2);
+          this.loading = false;
+        },
+        (error: HttpErrorResponse) => {
+          this.loading = false;
+        }
+      );
+  }
+
+  lista_otro() {
+    this.materialBibliograficoService
+      .api_otros_lista(this.modulo + '/lista')
+      .subscribe(
+        (result: any) => {
+          const lista: any[] = Array.isArray(result?.data?.content)
+            ? result.data.content
+            : Array.isArray(result?.content)
+            ? result.content
+            : Array.isArray(result?.data)
+            ? result.data
+            : Array.isArray(result)
+            ? result
+            : [];
+          this.data = lista.filter((b: any) => Number(b.estadoId) === 2);
+          this.loading = false;
+        },
+        (error: HttpErrorResponse) => {
+          this.loading = false;
+        }
+      );
+  }
   cambiarEstadoRegistro(objeto: Ejemplar) {
     let estado = "";
     if (objeto.activo) {
