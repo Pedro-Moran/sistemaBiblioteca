@@ -46,6 +46,7 @@ import { environment } from '../../../../../environments/environment';
 
         </div>
         <div class="col-span-12 md:col-span-12 lg:col-span-12 p-0 lg:pb-8 mt-6 lg:mt-0">
+        <ng-container *ngIf="materiales.length; else noLibros">
         <p-carousel #carousel [value]="materiales" [numVisible]="5" [numScroll]="3" [circular]="true" [responsiveOptions]="responsiveOptions" autoplayInterval="5000" (onPage)="onCarouselPage()">
     <ng-template let-libro pTemplate="item">
         <div class="border border-surface-200 dark:border-surface-700 rounded m-2 p-4">
@@ -75,6 +76,10 @@ import { environment } from '../../../../../environments/environment';
         </div>
     </ng-template>
 </p-carousel>
+        </ng-container>
+        <ng-template #noLibros>
+            <p class="text-center text-gray-500">No hay registros</p>
+        </ng-template>
         </div>
 
     </div>
@@ -152,7 +157,7 @@ export class PortalEjemplares implements OnInit{
                 this.materialBibliograficoService
                       .listarDisponibles()
                       .subscribe(list => {
-                        this.materiales = list;
+                        this.materiales = Array.isArray(list) ? list : [];
                         // forzar que el carousel refresque
                         this.cd.detectChanges();
                       });

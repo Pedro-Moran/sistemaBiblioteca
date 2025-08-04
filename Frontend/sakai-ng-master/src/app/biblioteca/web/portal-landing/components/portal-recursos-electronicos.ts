@@ -47,6 +47,7 @@ import { RecursoDigitalDTO } from '../../../interfaces/RecursoDigitalDTO';
                                 <p-tabpanel *ngFor="let t of tipos; let i = index" [value]="i">
                                 <section class="">
 
+                                    <ng-container *ngIf="data.length; else noRecursos">
                                     <div class="grid grid-cols-12 gap-4 justify-between mt-20 md:mt-0">
                                             <div class="col-span-12 lg:col-span-4 p-0 md:p-4" *ngFor="let item of data">
                                                 <div class="p-4 flex flex-col border-surface-200 dark:border-surface-600 pricing-card cursor-pointer border-2 hover:border-primary duration-300 transition-all" style="border-radius: 10px">
@@ -58,6 +59,10 @@ import { RecursoDigitalDTO } from '../../../interfaces/RecursoDigitalDTO';
                                                 </div>
                                             </div>
                                         </div>
+                                    </ng-container>
+                                    <ng-template #noRecursos>
+                                        <p class="text-center text-gray-500">No hay registros</p>
+                                    </ng-template>
 
                                 </section>
                                 </p-tabpanel>

@@ -21,11 +21,13 @@ public class RecursoDigitalService {
     private final TipoRecursoDigitalRepository tipoRepo;
 
     public List<RecursoDigitalDTO> listar() {
-        return repo.findAll().stream().map(this::toDto).collect(Collectors.toList());
+        return repo.findByEstado(1).stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
     }
 
     public List<RecursoDigitalDTO> listarPorTipo(Long tipoId) {
-        return repo.findByTipoId(tipoId).stream()
+        return repo.findByTipoIdAndEstado(tipoId, 1).stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
     }
