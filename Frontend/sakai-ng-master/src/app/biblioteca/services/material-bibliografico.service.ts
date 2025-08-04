@@ -2,13 +2,13 @@ import { HttpClient, HttpHeaders, HttpParams  } from '@angular/common/http';
 import { EjemplarPrestadoDTO } from '../interfaces/reportes/ejemplar-prestado';
 import { EjemplarNoPrestadoDTO } from '../interfaces/reportes/ejemplar-no-prestado';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { AuthService } from './auth.service';
 import { environment } from '../../../environments/environment';
 import { BibliotecaDTO } from '../../biblioteca/interfaces/material-bibliografico/biblioteca.model';
 import { Ciudad } from '../../biblioteca/interfaces/material-bibliografico/ciudad';
 import { OcurrenciaDTO } from '../interfaces/ocurrenciaDTO';
-import { map } from 'rxjs/operators';
+import { map, catchError } from 'rxjs/operators';
 import { DetallePrestamo } from '../interfaces/detalle-prestamo';
 import { Usuario } from '../interfaces/usuario';
 import { Equipo } from '../interfaces/biblioteca-virtual/equipo';
@@ -247,7 +247,10 @@ registrarEspecialidad(especialidad: any): Observable<any> {
         .get<{ status: number; data: BibliotecaDTO[] }>(
           `${this.apiUrl}/api/biblioteca/disponibles`
         )
-        .pipe(map(resp => resp.data));
+        .pipe(
+          map(resp => resp?.data ?? []),
+          catchError(() => of([]))
+        );
   }
 
   /** Lista los registros disponibles filtrando por tipo de material */
@@ -257,7 +260,10 @@ registrarEspecialidad(especialidad: any): Observable<any> {
         `${this.apiUrl}/api/biblioteca/disponibles-by-tipo`,
         { params: { tipoMaterial: tipo } }
       )
-      .pipe(map(resp => resp.data));
+      .pipe(
+        map(resp => resp?.data ?? []),
+        catchError(() => of([]))
+      );
   }
 
     /**

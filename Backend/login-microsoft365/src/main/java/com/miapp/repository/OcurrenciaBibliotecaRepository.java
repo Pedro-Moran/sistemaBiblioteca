@@ -62,6 +62,8 @@ public interface OcurrenciaBibliotecaRepository
             ") " +
             "FROM DetalleBiblioteca d JOIN d.biblioteca b " +
             "WHERE coalesce(d.cantidadPrestamos, 0) > 0 " +
+            "AND d.idEstado = 2 " +
+            "AND b.idEstado = 2 " +
             "ORDER BY d.idDetalle DESC")
     List<EjemplarPrestadoDTO> reporteEjemplarMasPrestado();
 
