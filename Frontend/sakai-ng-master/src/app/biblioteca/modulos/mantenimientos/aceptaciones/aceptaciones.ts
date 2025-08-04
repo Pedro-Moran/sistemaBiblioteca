@@ -83,7 +83,7 @@ import { environment } from '../../../../../environments/environment';
                         [expandedRowKeys]="expandedRows" (onRowExpand)="onRowExpand($event)" (onRowCollapse)="onRowCollapse($event)"
                         currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} registros"
                         [rowsPerPageOptions]="[10, 25, 50]" [loading]="loading" [rowHover]="true" styleClass="p-datatable-gridlines"
-                        [globalFilterFields]="['id','codigo','material.titulo','material.autorPrincipal','material.autorSecundario','material.anioPublicacion','estadoDescripcion']" responsiveLayout="scroll">
+                        [globalFilterFields]="['id','codigo','titulo','autorSecundario','autorPersonal','autorInstitucional','anioPublicacion','estadoDescripcion']" responsiveLayout="scroll">
                         <ng-template pTemplate="caption">
 
                        <div class="flex items-center justify-between">
@@ -99,9 +99,11 @@ import { environment } from '../../../../../environments/environment';
                                 <th style="width: 5rem"></th>
                                     <th  >Imagen</th>
                                     <th pSortableColumn="codigo" style="width: 4rem">Codigo<p-sortIcon field="codigo"></p-sortIcon></th>
-                                    <th pSortableColumn="material.titulo" style="min-width:200px">Titulo<p-sortIcon field="material.titulo"></p-sortIcon></th>
-                                    <th pSortableColumn="material.autorPrincipal" style="min-width:200px">Autor<p-sortIcon field="material.autorPrincipal"></p-sortIcon></th>
-                                    <th pSortableColumn="material.anioPublicacion" style="width: 8rem">Año<p-sortIcon field="material.anioPublicacion"></p-sortIcon></th>
+                                    <th pSortableColumn="titulo" style="min-width:200px">Titulo<p-sortIcon field="titulo"></p-sortIcon></th>
+                                    <th pSortableColumn="autorSecundario" style="min-width:200px">Autor Secundario<p-sortIcon field="autorSecundario"></p-sortIcon></th>
+                                    <th pSortableColumn="autorPersonal" style="min-width:200px">Autor Personal<p-sortIcon field="autorPersonal"></p-sortIcon></th>
+                                    <th pSortableColumn="autorInstitucional" style="min-width:200px">Autor Institucional<p-sortIcon field="autorInstitucional"></p-sortIcon></th>
+                                    <th pSortableColumn="anioPublicacion" style="width: 8rem">Año<p-sortIcon field="anioPublicacion"></p-sortIcon></th>
                                     <th pSortableColumn="coleccion.descripcion" style="width: 4rem" >Colecci&oacute;n<p-sortIcon field="coleccion.descripcion"></p-sortIcon></th>
                                     <th style="width: 4rem" >Opciones</th>
 
@@ -119,12 +121,15 @@ import { environment } from '../../../../../environments/environment';
                                     </td>
                                     <td>
                                         {{ objeto.titulo || '-' }}
-
                                     </td>
                                     <td>
-                                        {{ objeto.autorPrincipal || '-' }}<br/>
-                                        <span>{{ objeto.autorSecundario || '-' }}</span>
-
+                                        {{ objeto.autorSecundario || '-' }}
+                                    </td>
+                                    <td>
+                                        {{ objeto.autorPersonal || '-' }}
+                                    </td>
+                                    <td>
+                                        {{ objeto.autorInstitucional || '-' }}
                                     </td>
                                     <td>
                                         {{ objeto?.anioPublicacion || '-' }}
@@ -141,7 +146,7 @@ import { environment } from '../../../../../environments/environment';
                             </ng-template>
                             <ng-template #expandedrow let-product>
                             <tr>
-                            <td colspan="8">
+                            <td colspan="10">
 
 
                             <p-table
@@ -210,12 +215,12 @@ import { environment } from '../../../../../environments/environment';
                             </ng-template>
                             <ng-template pTemplate="emptymessage">
                                 <tr>
-                                    <td colspan="8">No se encontraron registros.</td>
+                                    <td colspan="10">No se encontraron registros.</td>
                                 </tr>
                             </ng-template>
                             <ng-template pTemplate="loadingbody">
                                 <tr>
-                                    <td colspan="8">Cargando datos. Espere por favor.</td>
+                                    <td colspan="10">Cargando datos. Espere por favor.</td>
                                 </tr>
                             </ng-template>
                         </p-table>
