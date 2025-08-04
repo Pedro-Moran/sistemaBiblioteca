@@ -482,20 +482,30 @@ public class BibliotecaServiceImpl implements BibliotecaService {
     ) {
         String v = valor == null ? "" : valor.trim().toLowerCase();
 
-        return bibliotecaRepository.findAll().stream()
+        return bibliotecaRepository
+                .findAll()
+                .stream()
                 // Exclude records whose cabecera está "en proceso" (idEstado = 1)
                 .filter(b -> !Objects.equals(b.getIdEstado(), 1L))
                 .filter(b -> {
-                    if (!v.isEmpty()) {
-                        // comparamos en minúsculas
-                        boolean matchTitulo = b.getTitulo() != null
-                                && b.getTitulo().toLowerCase().contains(v);
-                        boolean matchAutor = b.getAutorPersonal() != null
-                                && b.getAutorPersonal().toLowerCase().contains(v);
-                        if (!(matchTitulo || matchAutor)) {
-                            return false;
-                        }
+                    if (v.isEmpty()) {
+                        return true;
                     }
+
+                    // Cuando no se especifica una opción, buscamos en todos los campos relevantes
+                    if (opcion == null || opcion.isBlank() || opcion.trim().equalsIgnoreCase("Cualquier campo")) {
+                        return (b.getTitulo() != null && b.getTitulo().toLowerCase().contains(v))
+                                || (b.getAutorPersonal() != null && b.getAutorPersonal().toLowerCase().contains(v))
+                                || (b.getCodigoLocalizacion() != null && b.getCodigoLocalizacion().toLowerCase().contains(v))
+                                || (b.getEditorialPublicacion() != null && b.getEditorialPublicacion().toLowerCase().contains(v))
+                                || (b.getDescriptor() != null && b.getDescriptor().toLowerCase().contains(v))
+                                || (b.getNotaGeneral() != null && b.getNotaGeneral().toLowerCase().contains(v))
+                                || (b.getEspecialidad() != null
+                                    && b.getEspecialidad().getDescripcion() != null
+                                    && b.getEspecialidad().getDescripcion().toLowerCase().contains(v));
+                    }
+
+                    // Si se indica una opción, se delega el filtrado específico al switch final
                     return true;
                 })
                 .filter(b -> {
@@ -515,30 +525,24 @@ public class BibliotecaServiceImpl implements BibliotecaService {
                             .existsByBiblioteca_IdAndTipoMaterial_IdTipoMaterial(b.getId(), tipoMaterialId);
                 })
                 .filter(b -> {
-                    if (opcion == null || opcion.isBlank()) {
+                    if (opcion == null || opcion.isBlank() || opcion.trim().equalsIgnoreCase("Cualquier campo")) {
                         return true;
                     }
                     // normalizamos el nombre de la opción también
                     switch (opcion.trim().toUpperCase()) {
                         case "TITULO":
                         case "NOMBRE":
-                            return b.getTitulo() != null
-                                    && b.getTitulo().toLowerCase().contains(v);
+                            return b.getTitulo() != null && b.getTitulo().toLowerCase().contains(v);
                         case "AUTOR":
-                            return b.getAutorPersonal() != null
-                                    && b.getAutorPersonal().toLowerCase().contains(v);
+                            return b.getAutorPersonal() != null && b.getAutorPersonal().toLowerCase().contains(v);
                         case "CODIGO":
-                            return b.getCodigoLocalizacion() != null
-                                    && b.getCodigoLocalizacion().toLowerCase().contains(v);
+                            return b.getCodigoLocalizacion() != null && b.getCodigoLocalizacion().toLowerCase().contains(v);
                         case "EDITORIAL":
-                            return b.getEditorialPublicacion() != null
-                                    && b.getEditorialPublicacion().toLowerCase().contains(v);
+                            return b.getEditorialPublicacion() != null && b.getEditorialPublicacion().toLowerCase().contains(v);
                         case "TEMA":
-                            return b.getDescriptor() != null
-                                    && b.getDescriptor().toLowerCase().contains(v);
+                            return b.getDescriptor() != null && b.getDescriptor().toLowerCase().contains(v);
                         case "DESCRIPCION":
-                            return b.getNotaGeneral() != null
-                                    && b.getNotaGeneral().toLowerCase().contains(v);
+                            return b.getNotaGeneral() != null && b.getNotaGeneral().toLowerCase().contains(v);
                         case "GENERO":
                             return b.getEspecialidad() != null
                                     && b.getEspecialidad().getDescripcion() != null
