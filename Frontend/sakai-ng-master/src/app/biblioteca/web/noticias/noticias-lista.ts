@@ -10,7 +10,8 @@ import { Table } from 'primeng/table';
 import { Menu } from 'primeng/menu';
 import { HttpErrorResponse } from '@angular/common/http';
 import { PortalService } from '../../services/portal.service';
-import { Material } from '../../interfaces/material-bibliografico/material';
+import { PortalNoticia } from '../../interfaces/portalNoticias';
+import { environment } from '../../../../environments/environment';
 
 @Component({
     selector: 'noticias-lista',
@@ -34,7 +35,7 @@ import { Material } from '../../interfaces/material-bibliografico/material';
         
         <div class="flex flex-col flex-1 gap-2">
             <label for="palabra-clave" class="block text-sm font-medium text-muted-color">Buscar noticia</label>
-            <input pInputText id="palabra-clave" type="text" />
+            <input pInputText id="palabra-clave" type="text" [(ngModel)]="palabraClave" (keydown.enter)="listar()" />
         </div>
         
         <div class="flex items-end">
@@ -170,8 +171,8 @@ import { Material } from '../../interfaces/material-bibliografico/material';
 export class NoticiasLista implements OnInit {
     layout: 'list' | 'grid' = 'grid';
     options = ['list', 'grid'];
-    modulo: string = "catalogo";
-    data: Material[] = [];
+    data: PortalNoticia[] = [];
+    palabraClave: string = '';
     @ViewChild('menu') menu!: Menu;
     @ViewChild('filter') filter!: ElementRef;
     items: MenuItem[] | undefined;
@@ -202,22 +203,42 @@ export class NoticiasLista implements OnInit {
     }
 
     listar() {
-
         this.loading = true;
-        this.portalService.api_noticias(this.modulo)
-            .subscribe(
-                (result: any) => {
-                    this.loading = false;
-                    if (result.status == "0") {
-                        this.data = result.data;
-                    }
-                    this.loading = false;
-                }
-                , (error: HttpErrorResponse) => {
-                    this.loading = false;
-                }
-            );
+        this.portalService.api_noticias(this.palabraClave).subscribe({
+            next: (result: any) => {
+                const noticias: PortalNoticia[] = result?.data ?? [];
+                this.data = noticias.map(n => new PortalNoticia({
+                    ...n,
+                    titulo: n.titular ?? n.titulo,
+                    detalle: n.descripcion ?? n.detalle,
+                    anunciante: n.autor ?? n.anunciante,
+                    link: n.enlace ?? n.link,
+                    fecha: n.fechacreacion ?? n.fecha,
+                    urlPortada: this.buildImageUrl(n)
+                }));
 
+                if (this.palabraClave) {
+                    const term = this.palabraClave.toLowerCase();
+                    this.data = this.data.filter(n =>
+                        n.titulo.toLowerCase().includes(term) ||
+                        n.detalle.toLowerCase().includes(term)
+                    );
+                }
+
+                this.loading = false;
+            },
+            error: (_error: HttpErrorResponse) => {
+                this.loading = false;
+            }
+        });
+    }
+
+    private buildImageUrl(n: PortalNoticia): string {
+        const raw = n.urlPortada || (n as any).imagenUrl || n.imagen;
+        if (!raw) {
+            return 'assets/logo.png';
+        }
+        return raw.startsWith('http') ? raw : `${environment.filesUrl}/uploads/noticias/${raw}`;
     }
     async ListaSituacion() {
         try {
