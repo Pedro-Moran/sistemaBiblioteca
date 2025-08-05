@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -59,9 +59,9 @@ export interface LoginCredentials {
                             <div class="flex items-center justify-between mt-2 mb-8 gap-8">
                                 <div class="flex items-center">
                                     <p-checkbox [(ngModel)]="checked" id="rememberme1" binary class="mr-2"></p-checkbox>
-                                    <label for="rememberme1">Remember me</label>
+                                    <label for="rememberme1">Recordarme</label>
                                 </div>
-                                <span class="font-medium no-underline ml-2 text-right cursor-pointer text-primary">Forgot password?</span>
+                                <span class="font-medium no-underline ml-2 text-right cursor-pointer text-primary" (click)="onForgotPassword()">¿Olvidaste tu contraseña?</span>
                             </div>
                             <p-button label="Iniciar sesión" styleClass="w-full" (click)="onLogin()"></p-button>
                         </div>
@@ -71,7 +71,7 @@ export interface LoginCredentials {
         </div>
     `
 })
-export class Login {
+export class Login implements OnInit {
     email: string = '';
 
     password: string = '';
@@ -79,29 +79,60 @@ export class Login {
     checked: boolean = false;
     credentials: LoginCredentials = { email: '', password: '' };
 
-    constructor(private msalService:MsalService, private authService: AuthService, private router: Router) {}
+    constructor(private msalService: MsalService, private authService: AuthService, private router: Router) {}
 
      loginWithMicrosoft() {
         this.authService.loginMicrosoft();
      }
+    ngOnInit(): void {
+        const remembered = localStorage.getItem('rememberedEmail');
+        if (remembered) {
+            this.credentials.email = remembered;
+            this.checked = true;
+        }
+    }
 
     onLogin(): void {
-        // Aquí puedes agregar validaciones adicionales o confiar en el formulario
         if (this.credentials.email && this.credentials.password) {
-          this.authService.loginManual(this.credentials).subscribe({
-            next: (response) => {
-                this.authService.setAuthentication(response.token);
-                this.authService.openPendingResource();
-                this.router.navigate(['/main']);
+            this.authService.loginManual(this.credentials).subscribe({
+                next: (response) => {
+                    this.authService.setAuthentication(response.token);
+                    this.authService.openPendingResource();
+                    if (this.checked) {
+                        localStorage.setItem('rememberedEmail', this.credentials.email);
+                    } else {
+                        localStorage.removeItem('rememberedEmail');
+                    }
+                    this.router.navigate(['/main']);
+                },
+                error: (err) => {
+                    alert('Credenciales incorrectas');
+                    console.error('Error en login manual:', err);
+                }
+            });
+        } else {
+            alert('Por favor ingresa email y contraseña');
+        }
+    }
+
+    onForgotPassword(): void {
+        if (!this.credentials.email) {
+            alert('Ingresa tu email para recuperar la contraseña');
+            return;
+        }
+        this.authService.forgotPassword(this.credentials.email).subscribe({
+            next: (res) => {
+                if (res.token) {
+                    this.router.navigate(['/auth/reset-password'], { queryParams: { token: res.token } });
+                } else {
+                    alert(res.message || 'No se pudo generar el token');
+                }
             },
             error: (err) => {
-              alert('Credenciales incorrectas');
-              console.error('Error en login manual:', err);
+                const msg = err.error?.message || 'Error al solicitar recuperación de contraseña';
+                alert(msg);
             }
-          });
-        } else {
-          alert('Por favor ingresa email y contraseña');
-        }
-      }
+        });
+    }
 
 }
