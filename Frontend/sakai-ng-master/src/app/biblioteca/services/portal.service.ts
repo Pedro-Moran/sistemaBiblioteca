@@ -93,11 +93,12 @@ export class PortalService {
     );*/
     return this.http.get<any[]>('assets/demo/biblioteca/portalRecursosElectronicos.json');
   }
-  api_noticias(modulo: any):Observable<any>{
-    /*return this.http.get<any[]>(`${this.apiUrl}/${modulo}`
-    ,{ headers: new HttpHeaders().set('Authorization',`Bearer ${this.authService.getToken()}`)}
-    );*/
-    return this.http.get<any[]>('assets/demo/biblioteca/portalNoticias.json');
+  api_noticias(busqueda?: string): Observable<ListDTO<PortalNoticia[]>> {
+    const params = busqueda ? `?q=${encodeURIComponent(busqueda)}` : '';
+    return this.http.get<ListDTO<PortalNoticia[]>>(
+      `${this.apiUrl}/api/noticias/listar${params}`,
+      { headers: this.authHeaders() }
+    );
   }
 
     // Listar, con parámetros opcionales ?start=yyyy-MM-dd&end=yyyy-MM-dd

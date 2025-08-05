@@ -24,20 +24,9 @@ import { RecursoDigitalDTO } from '../../../interfaces/RecursoDigitalDTO';
     template: ` <div id="portal-recursos-electronicos" class="py-6 px-6 lg:px-20 mt-8 mx-0 lg:mx-20">
     <div class="grid grid-cols-12 gap-4 justify-center">
 
-    <div class="col-span-12 flex justify-between items-center mt-20 mb-6">
-
+    <div class="col-span-12 flex justify-center items-center mt-20 mb-6">
     <div class="text-surface-900 dark:text-surface-0 font-normal mb-2 text-4xl">Recursos electr&oacute;nicos</div>
-
-            <button (click)="recursos()"
-    class="px-4 py-2 text-base font-medium border-2 border-gray-300 text-gray-700
-        bg-white rounded-full shadow-md transition-all duration-300
-        hover:bg-gray-100 hover:shadow-lg
-        dark:bg-primary dark:text-white dark:border-primary
-        dark:hover:bg-primary dark:hover:border-primary dark:hover:text-white">
-    Ver Todo →
-</button>
-
-        </div>
+    </div>
         <div class="col-span-12 md:col-span-12 lg:col-span-12 p-0 lg:pb-8 mt-6 lg:mt-0">
         <p-tabs [value]="activeIndex" scrollable (valueChange)="cambiarTipo($event)">
                             <p-tablist>
@@ -101,9 +90,6 @@ export class PortalRecursosElectronicos implements OnInit{
    }
 
 
-      recursos() {
-        this.router.navigate(['/recursos-electronicos']);
-      }
       cambiarTipo(index: any){
         const i = Number(index);
         this.activeIndex = i;

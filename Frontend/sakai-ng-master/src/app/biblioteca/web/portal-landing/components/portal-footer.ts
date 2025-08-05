@@ -66,6 +66,14 @@ import { Router, RouterModule } from '@angular/router';
                 </div>
             </div>
         </div>
+        <div class="mt-8 flex flex-col items-center text-center">
+            <p>❓¿Tienes un reclamo?<br/>
+                <a href="https://libroreclamaciones.upsjb.edu.pe/#/formulario" class="underline text-pink-400">Ingresa aquí</a>
+            </p>
+            <a href="https://libroreclamaciones.upsjb.edu.pe/#/formulario">
+                <img src="assets/libroreclamaciones.png" class="h-12 mt-2" alt="Libro de Reclamaciones" />
+            </a>
+        </div>
         </div>
     `
 })
