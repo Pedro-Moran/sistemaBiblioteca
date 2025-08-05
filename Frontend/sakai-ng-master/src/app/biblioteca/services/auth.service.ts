@@ -255,6 +255,36 @@ loginMicrosoft() {
         );
     }
 
+  forgotPassword(email: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/forgot-password`, { email })
+      .pipe(
+        catchError(err => {
+          console.error('Error en forgotPassword:', err);
+          throw err;
+        })
+      );
+  }
+
+  validateResetToken(token: string): Observable<any> {
+    return this.http.get<any>(`${environment.filesUrl}/reset-password`, { params: { token } })
+      .pipe(
+        catchError(err => {
+          console.error('Error en validateResetToken:', err);
+          throw err;
+        })
+      );
+  }
+
+  resetPassword(token: string, password: string): Observable<any> {
+    return this.http.post<any>(`${environment.filesUrl}/reset-password`, { token, password })
+      .pipe(
+        catchError(err => {
+          console.error('Error en resetPassword:', err);
+          throw err;
+        })
+      );
+  }
+
 // Registro manual: envía los datos del usuario
 register(userData: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/register`, userData);

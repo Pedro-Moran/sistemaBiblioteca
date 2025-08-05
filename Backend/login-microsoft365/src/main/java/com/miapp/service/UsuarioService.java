@@ -115,6 +115,11 @@ public class UsuarioService {
         return Optional.empty();
     }
 
+    public void actualizarPassword(Usuario usuario, String nuevaPassword) {
+        usuario.setPassword(passwordEncoder.encode(nuevaPassword));
+        usuarioRepository.save(usuario);
+    }
+
     // Buscar usuario por email
     public Optional<Usuario> buscarPorEmail(String email) {
         return usuarioRepository.findByEmail(email);

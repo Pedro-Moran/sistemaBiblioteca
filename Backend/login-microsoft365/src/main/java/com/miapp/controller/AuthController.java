@@ -5,7 +5,6 @@ import com.miapp.model.*;
 import com.miapp.repository.RolRepository;
 import com.miapp.service.*;
 import com.miapp.util.JwtUtil;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,6 +25,7 @@ public class AuthController {
     private final TipoDocumentoService tipoDocumentoService;
     private final EspecialidadService especialidadService;
     private final TipoMaterialService tipoMaterialService;
+    private final PasswordResetService passwordResetService;
 
     /**
      * Endpoint al que redirige Azure AD después de un login exitoso.
@@ -149,6 +149,20 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body("Credenciales incorrectas");
         }
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<Map<String, String>> forgotPassword(@RequestBody Map<String, String> request) {
+        String email = request.get("email");
+        return usuarioService.buscarPorEmail(email)
+                .map(usuario -> {
+                    String token = passwordResetService.createToken(usuario);
+                    return ResponseEntity.ok(Map.of(
+                            "token", token,
+                            "message", "Token generado"));
+                })
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("message", "Correo no encontrado")));
     }
 
     @PostMapping("/refresh")
