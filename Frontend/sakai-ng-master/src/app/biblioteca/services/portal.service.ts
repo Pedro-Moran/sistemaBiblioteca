@@ -36,11 +36,10 @@ export class PortalService {
     const token = this.authService.getToken();
     return new HttpHeaders().set('Authorization', `Bearer ${token}`);
   }
-  conf_event_get(modulo: any):Observable<any>{
-    /*return this.http.get<any[]>(`${this.apiUrl}/${modulo}`
-    ,{ headers: new HttpHeaders().set('Authorization',`Bearer ${this.authService.getToken()}`)}
-    );*/
-    return this.http.get<any[]>('assets/demo/biblioteca/data.json');
+  conf_event_get(modulo: any): Observable<any> {
+    return this.http.get<any[]>(`${this.apiUrl}/${modulo}`,
+      { headers: this.authHeaders() }
+    );
   }
   conf_event_post(request: any,modulo: any):Observable<any>{
     return this.http.post<any>(`${this.apiUrl}/${modulo}`
@@ -62,36 +61,31 @@ export class PortalService {
         }
     );
   }
-  api_libros_electronicos_lista(modulo: any):Observable<any>{
-    /*return this.http.get<any[]>(`${this.apiUrl}/${modulo}`
-    ,{ headers: new HttpHeaders().set('Authorization',`Bearer ${this.authService.getToken()}`)}
-    );*/
-    return this.http.get<any[]>('assets/demo/biblioteca/librosElectronicos.json');
+  api_libros_electronicos_lista(modulo: any): Observable<any> {
+    return this.http.get<any[]>(`${this.apiUrl}/${modulo}`,
+      { headers: this.authHeaders() }
+    );
   }
 
-  tipo_get(modulo: any):Observable<any>{
-    /*return this.http.get<any[]>(`${this.apiUrl}/${modulo}`
-    ,{ headers: new HttpHeaders().set('Authorization',`Bearer ${this.authService.getToken()}`)}
-    );*/
-    return this.http.get<any[]>('assets/demo/biblioteca/tipoRecursosElectronicos.json');
+  tipo_get(modulo: any): Observable<any> {
+    return this.http.get<any[]>(`${this.apiUrl}/${modulo}`,
+      { headers: this.authHeaders() }
+    );
   }
-  api_horarios_lista(modulo: any):Observable<any>{
-    /*return this.http.get<any[]>(`${this.apiUrl}/${modulo}`
-    ,{ headers: new HttpHeaders().set('Authorization',`Bearer ${this.authService.getToken()}`)}
-    );*/
-    return this.http.get<any[]>('assets/demo/biblioteca/portalHorarios.json');
+  api_horarios_lista(modulo: any): Observable<any> {
+    return this.http.get<any[]>(`${this.apiUrl}/${modulo}`,
+      { headers: this.authHeaders() }
+    );
   }
-  api_catalogo_enlinea(modulo: any):Observable<any>{
-    /*return this.http.get<any[]>(`${this.apiUrl}/${modulo}`
-    ,{ headers: new HttpHeaders().set('Authorization',`Bearer ${this.authService.getToken()}`)}
-    );*/
-    return this.http.get<any[]>('assets/demo/biblioteca/portalCatalogo.json');
+  api_catalogo_enlinea(modulo: any): Observable<any> {
+    return this.http.get<any[]>(`${this.apiUrl}/${modulo}`,
+      { headers: this.authHeaders() }
+    );
   }
-  api_recursos_electronicos(modulo: any):Observable<any>{
-    /*return this.http.get<any[]>(`${this.apiUrl}/${modulo}`
-    ,{ headers: new HttpHeaders().set('Authorization',`Bearer ${this.authService.getToken()}`)}
-    );*/
-    return this.http.get<any[]>('assets/demo/biblioteca/portalRecursosElectronicos.json');
+  api_recursos_electronicos(modulo: any): Observable<any> {
+    return this.http.get<any[]>(`${this.apiUrl}/${modulo}`,
+      { headers: this.authHeaders() }
+    );
   }
   api_noticias(busqueda?: string): Observable<ListDTO<PortalNoticia[]>> {
     const params = busqueda ? `?q=${encodeURIComponent(busqueda)}` : '';
