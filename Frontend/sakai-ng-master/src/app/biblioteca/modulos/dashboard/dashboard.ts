@@ -47,7 +47,7 @@ export class Dashboard {
     }
   async ListaSede() {
     try {
-      const result: any = await this.genericoService.sedes_get('conf/tipo-lista').toPromise();
+      const result: any = await this.genericoService.sedes_get('sede/lista-activo').toPromise();
       if (result.status === "0") {
         
         this.dataSedesFiltro = result.data;
