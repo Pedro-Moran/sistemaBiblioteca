@@ -4,8 +4,8 @@
 
 export const environment = {
     production: false,
-    apiUrl: 'http://localhost:8080/auth',
-    filesUrl:   'http://localhost:8080'
+    apiUrl: 'http://localhost:8080/auth', // TODO: cambiar a 'https://backdev-campus.upsjb.edu.pe/api-biblioteca-app/auth' en producción
+    filesUrl:   'http://localhost:8080'    // TODO: cambiar a 'https://backdev-campus.upsjb.edu.pe/api-biblioteca-app' en producción
   };
 
   /*

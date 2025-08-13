@@ -242,7 +242,10 @@ loginMicrosoft() {
 
   // Login manual: envía las credenciales y espera una respuesta con mensaje y token.
   loginManual(credentials: { email: string; password: string }): Observable<any> {
-      return this.http.post<LoginResponse>(`${this.apiUrl}/login`, credentials)
+      // En producción, asegúrate de que el backend permita el origen (CORS)
+      // y que se envíe el encabezado "Content-Type".
+      const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+      return this.http.post<LoginResponse>(`${this.apiUrl}/login`, credentials, { headers })
         .pipe(
           tap(response => {
             if (response.token) {
