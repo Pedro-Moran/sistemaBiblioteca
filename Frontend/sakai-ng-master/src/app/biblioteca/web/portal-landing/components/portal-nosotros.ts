@@ -202,9 +202,10 @@ export class PortalNosotros implements OnInit{
             }
           });
       }
-   public getImageUrl(fileName: string): string {
-      // Construye la URL absoluta usando el env:
-      return `${environment.filesUrl}/uploads/recursos/${fileName}`;
+
+   public getImageUrl(path: string): string {
+      // El backend ya devuelve la ruta relativa del archivo
+      return `${environment.filesUrl}${path}`;
     }
 
 }
