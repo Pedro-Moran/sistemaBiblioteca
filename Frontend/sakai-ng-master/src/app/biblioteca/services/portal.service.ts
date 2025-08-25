@@ -236,14 +236,14 @@ saveRecursoDigital(formData: FormData): Observable<ResponseDTO<void>> {
     }
 
     getNosotros(): Observable<NosotrosDTO> {
-        return this.http.get<NosotrosDTO>(`${this.apiUrl}/api/nosotros`, { headers: this.authHeaders() });
+        return this.http.get<NosotrosDTO>(`${this.apiUrl}/auth/api/nosotros`, { headers: this.authHeaders() });
       }
 
-  saveNosotros(dto: NosotrosDTO): Observable<void> {
+  saveNosotros(formData: FormData): Observable<void> {
     return this.http.post<void>(
-      `${this.apiUrl}/api/nosotros`,
-      dto,                                           // <-- cuerpo JSON
-      { headers: this.authHeaders().set('Content-Type','application/json') }
+      `${this.apiUrl}/auth/api/nosotros`,
+      formData,
+      { headers: this.authHeaders() }
     );
   }
   }
